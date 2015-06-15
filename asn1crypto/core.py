@@ -2,13 +2,15 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
+import sys
 import re
 from collections import OrderedDict
 from datetime import datetime, timedelta, tzinfo
 
 from . import teletex_codec
 
-try:
+# Python 2
+if sys.version_info <= (3,):
     str_cls = unicode  #pylint: disable=E0602
     byte_cls = str
     py2 = True
@@ -53,7 +55,8 @@ try:
 
         utc = utc()
 
-except (NameError):
+# Python 3
+else:
     str_cls = str
     byte_cls = bytes
     py2 = False
@@ -859,8 +862,8 @@ class BitString(Primitive, ValueMap, object):
             value = ''.join(map(str_cls, value))
 
         elif isinstance(value, int):
-            self._native = tuple(map(int, tuple(value)))
             value = '{0:b}'.format(value)
+            self._native = tuple(map(int, tuple(value)))
 
         size = max(self._map.keys()) + 1
         if len(value) != size:
@@ -2250,17 +2253,11 @@ class UTCTime(AbstractTime):
 
         strlen = len(string)
 
-        if strlen == 8:
-            return datetime.strptime(string, '%y%m%d%H')
-
         if strlen == 10:
             return datetime.strptime(string, '%y%m%d%H%M')
 
         if strlen == 12:
             return datetime.strptime(string, '%y%m%d%H%M%S')
-
-        if strlen == 16:
-            return datetime.strptime(string, '%y%m%d%H%M%S.%f')
 
         return string
 

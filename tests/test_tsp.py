@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-from asn1crypto import tsa, cms, core
+from asn1crypto import tsp, cms, core
 
 
 tests_root = os.path.dirname(__file__)
@@ -14,11 +14,11 @@ fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 
 
-class TSATests(unittest.TestCase):
+class TSPTests(unittest.TestCase):
 
     def test_parse_request(self):
-        with open(os.path.join(fixtures_dir, 'tsa_request'), 'rb') as f:
-            request = tsa.TimeStampReq.load(f.read())
+        with open(os.path.join(fixtures_dir, 'tsp_request'), 'rb') as f:
+            request = tsp.TimeStampReq.load(f.read())
 
         self.assertEqual(
             'v1',
@@ -42,8 +42,8 @@ class TSATests(unittest.TestCase):
         )
 
     def test_parse_response(self):
-        with open(os.path.join(fixtures_dir, 'tsa_response'), 'rb') as f:
-            response = tsa.TimeStampResp.load(f.read())
+        with open(os.path.join(fixtures_dir, 'tsp_response'), 'rb') as f:
+            response = tsp.TimeStampResp.load(f.read())
 
         status_info = response['status']
         token = response['time_stamp_token']
@@ -88,7 +88,7 @@ class TSATests(unittest.TestCase):
         )
         self.assertIsInstance(
             tst_info,
-            tsa.TSTInfo
+            tsp.TSTInfo
         )
         self.assertEqual(
             'v1',

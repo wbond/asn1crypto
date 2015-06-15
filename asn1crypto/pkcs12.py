@@ -5,15 +5,17 @@ from __future__ import absolute_import
 from .algos import DigestInfo
 from .core import (
     Any,
+    BMPString,
     Integer,
     ObjectIdentifier,
     OctetString,
     Sequence,
     SequenceOf,
+    SetOf,
 )
 from .cms import ContentInfo, SignedData
 from .keys import PrivateKeyInfo, EncryptedPrivateKeyInfo
-from .x509 import Attributes, Certificate
+from .x509 import Certificate
 
 
 
@@ -31,6 +33,42 @@ class Version(Integer):
     _map = {
         3: 'v3'
     }
+
+
+class AttributeType(ObjectIdentifier):
+    _map = {
+        # https://tools.ietf.org/html/rfc2985#page-18
+        '1.2.840.113549.1.9.20': 'friendly_name',
+        '1.2.840.113549.1.9.21': 'local_key_id',
+        # https://support.microsoft.com/en-us/kb/287547
+        '1.3.6.1.4.1.311.17.1': 'microsoft_local_machine_keyset',
+    }
+
+
+class SetOfBMPString(SetOf):
+    _child_spec = BMPString
+
+
+class SetOfOctetString(SetOf):
+    _child_spec = OctetString
+
+
+class Attribute(Sequence):
+    _fields = [
+        ('type', AttributeType),
+        ('values', SetOf, {'spec': Any}),
+    ]
+
+    _oid_pair = ('type', 'values')
+    _oid_specs = {
+        'friendly_name': SetOfBMPString,
+        'local_key_id': SetOfOctetString,
+        'microsoft_csp_name': SetOfBMPString,
+    }
+
+
+class Attributes(SequenceOf):
+    _child_spec = Attribute
 
 
 class Pfx(Sequence):

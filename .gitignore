@@ -6,3 +6,4 @@ build/
 dist/
 tests/output/
 .DS_Store
+tmp/
