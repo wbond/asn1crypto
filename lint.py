@@ -21,7 +21,6 @@ files = [
     'ocsp.py',
     'pdf.py',
     'pkcs12.py',
-    'pkcs5.py',
     'teletex_codec.py',
     'tsa.py',
     'x509.py',

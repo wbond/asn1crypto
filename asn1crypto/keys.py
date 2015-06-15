@@ -5,7 +5,7 @@ from __future__ import absolute_import
 import hashlib
 from decimal import localcontext
 
-from .algos import DigestAlgorithm
+from .algos import DigestAlgorithm, EncryptionAlgorithm
 from .core import (
     Any,
     Choice,
@@ -20,7 +20,6 @@ from .core import (
     SequenceOf,
     SetOf,
 )
-from .pkcs5 import Pkcs5EncryptionAlgorithm
 
 try:
     # Python 2
@@ -497,7 +496,7 @@ class EncryptedPrivateKeyInfo(Sequence):
     """
 
     _fields = [
-        ('encryption_algorithm', Pkcs5EncryptionAlgorithm),
+        ('encryption_algorithm', EncryptionAlgorithm),
         ('encrypted_data', OctetString),
     ]
 

@@ -14,7 +14,7 @@ a bunch of ASN.1 structures for use with various common cryptography standards:
 | PKCS#1 v2.1 (RSA keys) | [`asn1crypto.keys`](asn1crypto/keys.py)     | [RFC3447](https://tools.ietf.org/html/rfc3447)                                                                         |
 | DSA keys               | [`asn1crypto.keys`](asn1crypto/keys.py)     | [RFC3279](https://tools.ietf.org/html/rfc3279)                                                                         |
 | Elliptic curve keys    | [`asn1crypto.keys`](asn1crypto/keys.py)     | [SECG SEC1 V2](http://www.secg.org/sec1-v2.pdf)                                                                        |
-| PKCS#5 v2.1            | [`asn1crypto.pkcs5`](asn1crypto/pkcs5.py)   | [PKCS#5 v2.1](http://www.emc.com/collateral/white-papers/h11302-pkcs5v2-1-password-based-cryptography-standard-wp.pdf) |
+| PKCS#5 v2.1            | [`asn1crypto.algos`](asn1crypto/algos.py)   | [PKCS#5 v2.1](http://www.emc.com/collateral/white-papers/h11302-pkcs5v2-1-password-based-cryptography-standard-wp.pdf) |
 | CMS (and PKCS#7)       | [`asn1crypto.cms`](asn1crypto/cms.py)       | [RFC5652](https://tools.ietf.org/html/rfc5652), [RFC2315](https://tools.ietf.org/html/rfc2315)                         |
 | TSP                    | [`asn1crypto.tsp`](asn1crypto/tsp.py)       | [RFC3161](https://tools.ietf.org/html/rfc3161)                                                                         |
 | PDF signatures         | [`asn1crypto.pdf`](asn1crypto/pdf.py)       | [PDF 1.7](http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/pdf/pdfs/PDF32000_2008.pdf)                           |
@@ -54,7 +54,6 @@ pre-defined data types.
  - [X509 certificates](asn1crypto/x509.py), `asn1crypto.x509`
  - [Certificate revocation lists (CRLs)](asn1crypto/crl.py), `asn1crypto.crl`
  - [Online certificate status protocol (OCSP)](asn1crypto/ocsp.py), `asn1crypto.ocsp`
- - [Private key encryption (PKCS#5)](asn1crypto/pkcs5.py), `asn1crypto.pkcs5`
  - [Private key/certificate containers (PKCS#12)](asn1crypto/pkcs12.py), `asn1crypto.pkcs12`
  - [Cryptographic message syntax (CMS, PKCS#7)](asn1crypto/cms.py), `asn1crypto.cms`
  - [Time stamp protocol (TSP)](asn1crypto/tsp.py), `asn1crypto.tsp`
