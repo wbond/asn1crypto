@@ -257,7 +257,7 @@ class Asn1Value():
         """
         return '<%s %s>' % (self.__class__.__name__, repr(self.contents))
 
-    def dump(self, force=False):
+    def dump(self, force=False, normal_tagging=False):
         """
         Encodes the value using DER
 
@@ -265,26 +265,34 @@ class Asn1Value():
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
 
+        :param normal_tagging:
+            Ignore implicit or explicit tagging when serializing
+
         :return:
             A byte string of the DER-encoded value
         """
 
-        if self.header is None:
+        if (self.header is None) or normal_tagging:
             header = b''
+            trailer = b''
 
             id_num = 0
             id_num |= self.class_ << 6
             id_num |= self.method << 5
 
-            if self.tag >= 31:
-                header += chr_cls(id_num | 31)
+            if normal_tagging:
+                tag = self.__class__.tag
+            else:
                 tag = self.tag
+
+            if tag >= 31:
+                header += chr_cls(id_num | 31)
                 while tag > 0:
                     continuation_bit = 0x80 if tag > 0x7F else 0
                     header += chr_cls(continuation_bit | (tag & 0x7F))
                     tag = tag >> 7
             else:
-                header += chr_cls(id_num | self.tag)
+                header += chr_cls(id_num | tag)
 
             length = len(self.contents)
             if length <= 127:
@@ -294,20 +302,26 @@ class Asn1Value():
                 header += chr_cls(0x80 | len(length_bytes))
                 header += length_bytes
 
-            self.header = header
-
-            if self.tag_type == 'explicit':
+            if self.tag_type == 'explicit' and not normal_tagging:
                 container = Asn1Value()
                 container.method = 1
                 container.class_ = self.explicit_class
                 container.tag = self.explicit_tag
-                container.contents = self.header + self.contents + self.trailer
+                container.contents = header + self.contents + trailer
                 # Force the container to generate the header and footer
                 container.dump()
-                self.header = container.header + self.header
-                self.trailer += container.trailer
+                header = container.header + header
+                trailer += container.trailer
 
-        return self.header + self.contents + self.trailer
+            if not normal_tagging:
+                self.header = header
+                self.trailer = trailer
+
+        else:
+            header = self.header
+            trailer = self.trailer
+
+        return header + self.contents + trailer
 
 
 class ValueMap():
@@ -358,13 +372,16 @@ class NoValue(Asn1Value):
 
         return None
 
-    def dump(self, force=False):
+    def dump(self, force=False, normal_tagging=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
+
+        :param normal_tagging:
+            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -436,13 +453,16 @@ class Any(Asn1Value):
             self._parsed = (parsed_value, spec, spec_params)
         return self._parsed[0]
 
-    def dump(self, force=False):
+    def dump(self, force=False, normal_tagging=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
+
+        :param normal_tagging:
+            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -451,7 +471,7 @@ class Any(Asn1Value):
         if self._parsed is None:
             self.parse()
 
-        return self._parsed[0].dump(force=force)
+        return self._parsed[0].dump(force=force, normal_tagging=normal_tagging)
 
 
 class Choice(Asn1Value):
@@ -627,7 +647,7 @@ class Choice(Asn1Value):
 
         return '[%s %s]' % (CLASS_NUM_TO_NAME_MAP[class_].upper(), tag)
 
-    def dump(self, force=False):
+    def dump(self, force=False, normal_tagging=False):
         """
         Encodes the value using DER
 
@@ -635,11 +655,14 @@ class Choice(Asn1Value):
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
 
+        :param normal_tagging:
+            Ignore implicit or explicit tagging when serializing
+
         :return:
             A byte string of the DER-encoded value
         """
 
-        return self.chosen.dump(force=force)
+        return self.chosen.dump(force=force, normal_tagging=normal_tagging)
 
 
 class Primitive(Asn1Value):
@@ -687,13 +710,16 @@ class Primitive(Asn1Value):
         if self.trailer != b'':
             self.trailer = b''
 
-    def dump(self, force=False):
+    def dump(self, force=False, normal_tagging=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
+
+        :param normal_tagging:
+            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -704,7 +730,7 @@ class Primitive(Asn1Value):
             self.contents = None
             self.set(native)
 
-        return Asn1Value.dump(self)
+        return Asn1Value.dump(self, normal_tagging=normal_tagging)
 
 
 class AbstractString(Primitive):
@@ -1085,13 +1111,16 @@ class OctetBitString(Primitive):
 
         return self._parsed[0]
 
-    def dump(self, force=False):
+    def dump(self, force=False, normal_tagging=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
+
+        :param normal_tagging:
+            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -1105,7 +1134,7 @@ class OctetBitString(Primitive):
             self.contents = None
             self.set(native)
 
-        return Asn1Value.dump(self)
+        return Asn1Value.dump(self, normal_tagging=normal_tagging)
 
 
 class IntegerBitString(Primitive):
@@ -1231,13 +1260,16 @@ class OctetString(Primitive):
 
         return self._parsed[0]
 
-    def dump(self, force=False):
+    def dump(self, force=False, normal_tagging=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
+
+        :param normal_tagging:
+            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -1251,7 +1283,7 @@ class OctetString(Primitive):
             self.contents = None
             self.set(native)
 
-        return Asn1Value.dump(self)
+        return Asn1Value.dump(self, normal_tagging=normal_tagging)
 
 
 class IntegerOctetString(OctetString):
@@ -1896,13 +1928,16 @@ class Sequence(Asn1Value):
                 self._native[self._fields[index][0]] = child.native
         return self._native
 
-    def dump(self, force=False):
+    def dump(self, force=False, normal_tagging=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
+
+        :param normal_tagging:
+            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -1911,7 +1946,7 @@ class Sequence(Asn1Value):
         if force:
             self._set_contents(force=force)
 
-        return Asn1Value.dump(self)
+        return Asn1Value.dump(self, normal_tagging=normal_tagging)
 
 
 class SequenceOf(Asn1Value):
@@ -2138,13 +2173,16 @@ class SequenceOf(Asn1Value):
             self._native = [child.native for child in self]
         return self._native
 
-    def dump(self, force=False):
+    def dump(self, force=False, normal_tagging=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
+
+        :param normal_tagging:
+            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -2153,7 +2191,7 @@ class SequenceOf(Asn1Value):
         if force:
             self._set_contents(force=force)
 
-        return Asn1Value.dump(self)
+        return Asn1Value.dump(self, normal_tagging=normal_tagging)
 
 
 class Set(Sequence):
