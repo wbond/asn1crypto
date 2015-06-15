@@ -5,6 +5,7 @@ addition to an ASN.1 BER/DER decoder and DER serializer, the project includes
 a bunch of ASN.1 structures for use with various common cryptography standards:
 
 | Standard               | Module              | Source                                                                                                                 |
+| ---------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | X509                   | `asn1crypto.x509`   | [RFC5280](https://tools.ietf.org/html/rfc5280)                                                                         |
 | CRL                    | `asn1crypto.crl`    | [RFC5280](https://tools.ietf.org/html/rfc5280)                                                                         |
 | OCSP                   | `asn1crypto.ocsp`   | [RFC6960](https://tools.ietf.org/html/rfc6960)                                                                         |
