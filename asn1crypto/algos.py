@@ -150,3 +150,132 @@ class EncryptionAlgorithm(Sequence):
         'aes192': OctetString,
         'aes256': OctetString,
     }
+
+    @property
+    def key_length(self):
+        """
+        Returns the key length to pass to the cipher. The PKCS#5 spec does
+        not specify a way to store the RC5 key length, however this tends not
+        to be a problem since OpenSSL does not support RC5 in PKCS#8 and OS X
+        does not provide an RC5 cipher for use in the Security Transforms
+        library.
+
+        :raises:
+            ValueError - when the key length can not be determined
+
+        :return:
+            An integer representing the length in bytes
+        """
+
+        cipher = self['algorithm'].native
+
+        cipher_lengths = {
+            'des': 8,
+            'tripledes_3key': 24,
+            'aes128': 16,
+            'aes192': 24,
+            'aes256': 32,
+        }
+
+        if cipher in cipher_lengths:
+            return cipher_lengths[cipher]
+
+        if cipher == 'rc2':
+            rc2_params = self['parameters'].parsed['encryption_scheme']['parameters'].parsed
+            rc2_parameter_version = rc2_params['rc2_parameter_version'].native
+
+            # See page 24 of http://www.emc.com/collateral/white-papers/h11302-pkcs5v2-1-password-based-cryptography-standard-wp.pdf
+            encoded_key_bits_map = {
+                160: 5,   # 40-bit
+                120: 8,   # 64-bit
+                58:  16,  # 128-bit
+            }
+
+            if rc2_parameter_version in encoded_key_bits_map:
+                return encoded_key_bits_map[rc2_parameter_version]
+
+            if rc2_parameter_version >= 256:
+                return rc2_parameter_version
+
+            if rc2_parameter_version is None:
+                return 4  # 32-bit default
+
+            raise ValueError('Invalid RC2 parameter version found in EncryptionAlgorithm parameters')
+
+        raise ValueError('Unable to determine the key length for the encryption scheme "%s"' % cipher)
+
+    @property
+    def encryption_cipher(self):
+        """
+        Returns the name of the symmetric encryption cipher to use. The key
+        length can be retrieved via the .key_length property to disabiguate
+        between different variations of TripleDES, AES, and the RC* ciphers.
+
+        :return:
+            A unicode string from one of the following: "rc2", "rc5", "des", "tripledes", "aes"
+        """
+
+        cipher = self['algorithm'].native
+
+        cipher_map = {
+            'des': 'des',
+            'tripledes_3key': 'tripledes',
+            'aes128': 'aes',
+            'aes192': 'aes',
+            'aes256': 'aes',
+            'rc2': 'rc2',
+            'rc5': 'rc5',
+        }
+        if cipher in cipher_map:
+            return cipher_map[cipher]
+
+        raise ValueError('Unrecognized encryption cipher "%s"' % cipher)
+
+    @property
+    def encryption_block_size(self):
+        """
+        Returns the block size of the encryption cipher, in bytes.
+
+        :return:
+            An integer that is the block size in bytes
+        """
+
+        cipher = self['algorithm'].native
+
+        cipher_map = {
+            'des': 8,
+            'tripledes_3key': 8,
+            'aes128': 16,
+            'aes192': 16,
+            'aes256': 16,
+            'rc2': 8,
+        }
+        if cipher in cipher_map:
+            return cipher_map[cipher]
+
+        if cipher == 'rc5':
+            return self['parameters'].parsed['block_size_in_bits'].native / 8
+
+        raise ValueError('Unrecognized encryption cipher "%s", can not determine block size' % cipher)
+
+    @property
+    def encryption_iv(self):
+        """
+        Returns the byte string of the initialization vector for the encryption
+        scheme. Only the PBES2 stores the IV in the params. For PBES1, the IV
+        is derived from the KDF and this property will return None.
+
+        :return:
+            A byte string or None
+        """
+
+        cipher = self['algorithm'].native
+
+        if cipher == 'rc2' or cipher == 'rc5':
+            return self['parameters'].parsed['iv'].native
+
+        # For DES/Triple DES and AES the IV is the entirety of the parameters
+        if cipher.find('.') == -1:
+            return self['parameters'].native
+
+        raise ValueError('Unrecognized encryption cipher "%s", can not determine initialization vector' % cipher)

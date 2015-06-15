@@ -9,7 +9,6 @@ except (ImportError):
 
 from .algos import (
     DigestAlgorithm,
-    EncryptionAlgorithm,
     SignedDigestAlgorithm,
     HmacAlgorithm,
 )
@@ -30,7 +29,7 @@ from .core import (
 from .crl import CertificateList
 from .keys import PublicKeyInfo
 from .ocsp import OCSPResponse
-from .pkcs5 import KdfAlgorithm
+from .pkcs5 import KdfAlgorithm, Pkcs5EncryptionAlgorithm
 from .x509 import Attributes, Certificate, Extensions, GeneralNames, Name
 
 
@@ -522,7 +521,7 @@ class RecipientInfos(SetOf):
 class EncryptedContentInfo(Sequence):
     _fields = [
         ('content_type', ContentType),
-        ('content_encryption_algorithm', EncryptionAlgorithm),
+        ('content_encryption_algorithm', Pkcs5EncryptionAlgorithm),
         ('encrypted_content', OctetString, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
     ]
 

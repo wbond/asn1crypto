@@ -114,7 +114,7 @@ class Pkcs5EncryptionAlgorithm(Sequence):
             return self['parameters'].parsed['key_derivation_func']['algorithm'].native
 
         if encryption_algo.find('.') == -1:
-            encryption_algo, _ = self['algorithm'].native.split('_', 2)
+            encryption_algo, _ = self['algorithm'].native.split('_', 1)
 
             if encryption_algo == 'pbes1':
                 return 'pbkdf1'
@@ -139,7 +139,7 @@ class Pkcs5EncryptionAlgorithm(Sequence):
             return self['parameters'].parsed['key_derivation_func']['parameters']['prf']['algorithm'].native
 
         if encryption_algo.find('.') == -1:
-            _, hmac_algo, _ = self['algorithm'].native.split('_', 3)
+            _, hmac_algo, _ = self['algorithm'].native.split('_', 2)
             return hmac_algo
 
         raise ValueError('Unrecognized encryption algorithm "%s", can not determine key derivation hmac algorithm' % encryption_algo)
@@ -164,7 +164,7 @@ class Pkcs5EncryptionAlgorithm(Sequence):
             return salt.native
 
         if encryption_algo.find('.') == -1:
-            return self['parameters'].parsed['salt'].native
+            return self['parameters']['salt'].native
 
         raise ValueError('Unrecognized encryption algorithm "%s", can not determine key derivation salt' % encryption_algo)
 
@@ -180,10 +180,10 @@ class Pkcs5EncryptionAlgorithm(Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
-            return self['parameters'].parsed['key_derivation_func']['algorithm']['iteration_count'].native
+            return self['parameters']['key_derivation_func']['algorithm']['iteration_count'].native
 
         if encryption_algo.find('.') == -1:
-            return self['parameters'].parsed['iterations'].native
+            return self['parameters']['iterations'].native
 
         raise ValueError('Unrecognized encryption algorithm "%s", can not determine key derivation iterations' % encryption_algo)
 
@@ -206,7 +206,7 @@ class Pkcs5EncryptionAlgorithm(Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
-            key_length = self['parameters'].parsed['key_derivation_func']['algorithm']['key_length'].native
+            key_length = self['parameters']['key_derivation_func']['algorithm']['key_length'].native
             if key_length is not None:
                 return key_length
 
@@ -215,43 +215,7 @@ class Pkcs5EncryptionAlgorithm(Sequence):
             # practical terms, neither OpenSSL or OS X support RC5 for PKCS#8
             # so it is unlikely to be an issue that is run into.
 
-            cipher = self['parameters'].parsed['encryption_scheme']['algorithm'].native
-
-            cipher_lengths = {
-                'des': 8,
-                'tripledes_3key': 24,
-                'aes128': 16,
-                'aes192': 24,
-                'aes256': 32,
-            }
-
-            if cipher in cipher_lengths:
-                return cipher_lengths[cipher]
-
-            if cipher == 'rc2':
-                rc2_params = self['parameters'].parsed['encryption_scheme']['parameters'].parsed
-                rc2_parameter_version = rc2_params['rc2_parameter_version'].native
-
-                # See page 24 of http://www.emc.com/collateral/white-papers/h11302-pkcs5v2-1-password-based-cryptography-standard-wp.pdf
-                encoded_key_bits_map = {
-                    160: 5,   # 40-bit
-                    120: 8,   # 64-bit
-                    58:  16,  # 128-bit
-                }
-
-                if rc2_parameter_version in encoded_key_bits_map:
-                    return encoded_key_bits_map[rc2_parameter_version]
-
-                if rc2_parameter_version >= 256:
-                    return rc2_parameter_version
-
-                if rc2_parameter_version is None:
-                    return 4  # 32-bit default
-
-                raise ValueError('Invalid RC2 parameter version found in PBES2 encryption scheme parameters')
-
-            # There
-            raise ValueError('Unable to determine the key length for the encryption scheme "%s"' % cipher)
+            return self['parameters']['encryption_scheme'].key_length
 
         if encryption_algo.find('.') == -1:
             return {
@@ -285,20 +249,7 @@ class Pkcs5EncryptionAlgorithm(Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
-            cipher = self['parameters'].parsed['encryption_scheme']['algorithm'].native
-            cipher_map = {
-                'des': 'des',
-                'tripledes_3key': 'tripledes',
-                'aes128': 'aes',
-                'aes192': 'aes',
-                'aes256': 'aes',
-                'rc2': 'rc2',
-                'rc5': 'rc5',
-            }
-            if cipher in cipher_map:
-                return cipher_map[cipher]
-
-            raise ValueError('Unrecognized encryption cipher "%s"' % cipher)
+            return self['parameters']['encryption_scheme'].encryption_cipher
 
         if encryption_algo.find('.') == -1:
             return {
@@ -331,23 +282,7 @@ class Pkcs5EncryptionAlgorithm(Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
-            scheme = self['parameters'].parsed['encryption_scheme']
-            cipher = scheme['algorithm'].native
-            cipher_map = {
-                'des': 8,
-                'tripledes_3key': 8,
-                'aes128': 16,
-                'aes192': 16,
-                'aes256': 16,
-                'rc2': 8,
-            }
-            if cipher in cipher_map:
-                return cipher_map[cipher]
-
-            if cipher == 'rc5':
-                return scheme['parameters'].parsed['block_size_in_bits'].native / 8
-
-            raise ValueError('Unrecognized encryption cipher "%s", can not determine block size' % cipher)
+            return self['parameters']['encryption_scheme'].encryption_block_size
 
         if encryption_algo.find('.') == -1:
             return {
@@ -381,17 +316,7 @@ class Pkcs5EncryptionAlgorithm(Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
-            scheme = self['parameters'].parsed['encryption_scheme']
-            cipher = scheme['algorithm'].native
-
-            if cipher == 'rc2' or cipher == 'rc5':
-                return scheme['parameters'].parsed['iv'].native
-
-            # For DES/Triple DES and AES the IV is the entirety of the parameters
-            if cipher.find('.') == -1:
-                return scheme['parameters'].native
-
-            raise ValueError('Unrecognized encryption cipher "%s", can not determine initialization vector' % cipher)
+            return self['parameters']['encryption_scheme'].encryption_iv
 
         # All of the PBES1 algos use their KDF to create the IV. For the pbkdf1,
         # the KDF is told to generate a key that is an extra 8 bytes long, and
