@@ -205,18 +205,18 @@ class Asn1Value():
 
         if tag_type is not None:
             if tag_type not in ('implicit', 'explicit'):
-                raise ValueError('tag_type is not one of "implicit", "explicit"')
+                raise ValueError('tag_type must be one of "implicit", "explicit" - is %s' % repr(tag_type))
             self.tag_type = tag_type
 
             if class_ is None:
                 class_ = 'context'
             if class_ not in CLASS_NAME_TO_NUM_MAP:
-                raise ValueError('class_ is not one of "universal", "application", "context", "private"')
+                raise ValueError('class_ must be one of "universal", "application", "context", "private" - is %s' % repr(class_))
             class_ = CLASS_NAME_TO_NUM_MAP[class_]
 
             if tag is not None:
                 if not isinstance(tag, int):
-                    raise ValueError('tag is not an integer')
+                    raise ValueError('tag must be an integer, not %s' % tag.__class__.__name__)
 
             if tag_type == 'implicit':
                 self.class_ = class_
@@ -227,7 +227,7 @@ class Asn1Value():
         else:
             if class_ is not None:
                 if class_ not in CLASS_NUM_TO_NAME_MAP:
-                    raise ValueError('class_ is not one of "universal", "application", "context", "private"')
+                    raise ValueError('class_ must be one of "universal", "application", "context", "private" - is %s' % repr(class_))
                 self.class_ = CLASS_NAME_TO_NUM_MAP[class_]
 
             if tag is not None:
@@ -663,7 +663,7 @@ class Primitive(Asn1Value):
         """
 
         if not isinstance(value, byte_cls):
-            raise ValueError('%s value must be a byte string' % self.__class__.__name__)
+            raise ValueError('%s value must be a byte string, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = value
         self.contents = value
@@ -691,7 +691,7 @@ class AbstractString(Primitive):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string' % self.__class__.__name__)
+            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = value
         self.contents = value.encode(self._encoding)
@@ -858,7 +858,7 @@ class BitString(Primitive, ValueMap, object):
         """
 
         if not isinstance(value, int) and not isinstance(value, tuple):
-            raise ValueError('%s value must be an integer or a tuple of ones and zeros' % self.__class__.__name__)
+            raise ValueError('%s value must be an integer or a tuple of ones and zeros, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         if isinstance(value, tuple):
             self._native = value
@@ -973,7 +973,7 @@ class OctetBitString(Primitive):
         """
 
         if not isinstance(value, byte_cls):
-            raise ValueError('%s value must be a byte string' % self.__class__.__name__)
+            raise ValueError('%s value must be a byte string, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = value
         # Set the unused bits to 0
@@ -1070,7 +1070,7 @@ class IntegerBitString(Primitive):
         """
 
         if not isinstance(value, int):
-            raise ValueError('%s value must be an integer' % self.__class__.__name__)
+            raise ValueError('%s value must be an integer, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = value
         # Set the unused bits to 0
@@ -1192,7 +1192,7 @@ class IntegerOctetString(OctetString):
         """
 
         if not isinstance(value, int):
-            raise ValueError('%s value must be an integer' % self.__class__.__name__)
+            raise ValueError('%s value must be an integer, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = value
         # Set the unused bits to 0
@@ -1270,7 +1270,7 @@ class ObjectIdentifier(Primitive, ValueMap):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string' % self.__class__.__name__)
+            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = value
 
@@ -1390,7 +1390,7 @@ class Enumerated(Integer):
         """
 
         if not isinstance(value, int) and not isinstance(value, str_cls):
-            raise ValueError('%s value must be an integer or a unicode string' % self.__class__.__name__)
+            raise ValueError('%s value must be an integer or a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         if isinstance(value, str_cls):
             if value not in self._reverse_map:
