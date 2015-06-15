@@ -1272,15 +1272,25 @@ class ObjectIdentifier(Primitive, ValueMap):
         self._native = value
 
         if self._map is not None:
-            if value is self._reverse_map:
+            if value in self._reverse_map:
                 value = self._reverse_map[value]
 
         self.contents = b''
-        for part in value.split('.'):
-            encoded_part = byte_cls(0x7F & part)
+        first = None
+        for index, part in enumerate(value.split('.')):
+            part = int(part)
+
+            # The first two parts are merged into a single byte
+            if index == 0:
+                first = part
+                continue
+            elif index == 1:
+                part = (first * 40) + part
+
+            encoded_part = chr_cls(0x7F & part)
             part = part >> 7
             while part > 0:
-                encoded_part = byte_cls(0x80 | (0x7F & part)) + encoded_part
+                encoded_part = chr_cls(0x80 | (0x7F & part)) + encoded_part
                 part = part >> 7
             self.contents += encoded_part
 
