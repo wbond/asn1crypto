@@ -257,9 +257,13 @@ class Asn1Value():
         """
         return '<%s %s>' % (self.__class__.__name__, repr(self.contents))
 
-    def dump(self):
+    def dump(self, force=False):
         """
         Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
 
         :return:
             A byte string of the DER-encoded value
@@ -354,9 +358,13 @@ class NoValue(Asn1Value):
 
         return None
 
-    def dump(self):
+    def dump(self, force=False):
         """
         Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
 
         :return:
             A byte string of the DER-encoded value
@@ -428,9 +436,13 @@ class Any(Asn1Value):
             self._parsed = (parsed_value, spec, spec_params)
         return self._parsed[0]
 
-    def dump(self):
+    def dump(self, force=False):
         """
         Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
 
         :return:
             A byte string of the DER-encoded value
@@ -439,7 +451,7 @@ class Any(Asn1Value):
         if self._parsed is None:
             self.parse()
 
-        return self._parsed[0].dump()
+        return self._parsed[0].dump(force=force)
 
 
 class Choice(Asn1Value):
@@ -615,15 +627,19 @@ class Choice(Asn1Value):
 
         return '[%s %s]' % (CLASS_NUM_TO_NAME_MAP[class_].upper(), tag)
 
-    def dump(self):
+    def dump(self, force=False):
         """
         Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
 
         :return:
             A byte string of the DER-encoded value
         """
 
-        return self.chosen.dump()
+        return self.chosen.dump(force=force)
 
 
 class Primitive(Asn1Value):
@@ -670,6 +686,25 @@ class Primitive(Asn1Value):
         self.header = None
         if self.trailer != b'':
             self.trailer = b''
+
+    def dump(self, force=False):
+        """
+        Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
+
+        :return:
+            A byte string of the DER-encoded value
+        """
+
+        if force:
+            native = self.native
+            self.contents = None
+            self.set(native)
+
+        return Asn1Value.dump(self)
 
 
 class AbstractString(Primitive):
@@ -1050,6 +1085,28 @@ class OctetBitString(Primitive):
 
         return self._parsed[0]
 
+    def dump(self, force=False):
+        """
+        Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
+
+        :return:
+            A byte string of the DER-encoded value
+        """
+
+        if force:
+            if self._parsed is not None:
+                native = self.parsed.dump(force=force)
+            else:
+                native = self.native
+            self.contents = None
+            self.set(native)
+
+        return Asn1Value.dump(self)
+
 
 class IntegerBitString(Primitive):
     """
@@ -1174,6 +1231,28 @@ class OctetString(Primitive):
 
         return self._parsed[0]
 
+    def dump(self, force=False):
+        """
+        Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
+
+        :return:
+            A byte string of the DER-encoded value
+        """
+
+        if force:
+            if self._parsed is not None:
+                native = self.parsed.dump(force=force)
+            else:
+                native = self.native
+            self.contents = None
+            self.set(native)
+
+        return Asn1Value.dump(self)
+
 
 class IntegerOctetString(OctetString):
     """
@@ -1235,7 +1314,7 @@ class Null(Primitive):
             None
         """
 
-        pass
+        self.contents = b''
 
     @property
     def native(self):
@@ -1651,19 +1730,29 @@ class Sequence(Asn1Value):
         for info in self._fields:
             yield info[0]
 
-    def _set_contents(self):
+    def _set_contents(self, force=False):
         """
         Updates the .contents attribute of the value with the encoded value of
         all of the child objects
+
+        :param force:
+            Ensure all contents are in DER format instead of possibly using
+            cached BER-encoded data
         """
+
+        if self.children is None:
+            self._parse_children()
 
         self.contents = b''
         for index, info in enumerate(self._fields):
             child = self.children[index]
             if isinstance(child, tuple):
-                child_dump = child[3] + child[4] + child[5]
+                if force:
+                    child_dump = self._lazy_child(index).dump(force=force)
+                else:
+                    child_dump = child[3] + child[4] + child[5]
             else:
-                child_dump = child.dump()
+                child_dump = child.dump(force=force)
             # Skip values that are the same as the default
             if len(info) > 2 and 'default' in info[2]:
                 default_value = info[1](**info[2])
@@ -1703,6 +1792,10 @@ class Sequence(Asn1Value):
         :raises:
             ValueError - when an error occurs parsing child objects
         """
+
+        if self.contents is None:
+            self.children = [None] * len(self._fields)
+            return
 
         try:
             self.children = []
@@ -1802,6 +1895,23 @@ class Sequence(Asn1Value):
                     self.children[index] = child
                 self._native[self._fields[index][0]] = child.native
         return self._native
+
+    def dump(self, force=False):
+        """
+        Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
+
+        :return:
+            A byte string of the DER-encoded value
+        """
+
+        if force:
+            self._set_contents(force=force)
+
+        return Asn1Value.dump(self)
 
 
 class SequenceOf(Asn1Value):
@@ -1943,14 +2053,34 @@ class SequenceOf(Asn1Value):
         for index in range(0, len(self.children)):
             yield self._lazy_child(index)
 
-    def _set_contents(self):
+    def _set_contents(self, force=False):
         """
         Encodes all child objects into the contents for this object
+
+        :param force:
+            Ensure all contents are in DER format instead of possibly using
+            cached BER-encoded data
         """
 
+        if self.children is None:
+            self._parse_children()
+
         self.contents = b''
-        for child in self:
-            self.contents += child.dump()
+        for index, info in enumerate(self._fields):
+            child = self.children[index]
+            if isinstance(child, tuple):
+                if force:
+                    child_dump = self._lazy_child(index).dump(force=force)
+                else:
+                    child_dump = child[3] + child[4] + child[5]
+            else:
+                child_dump = child.dump(force=force)
+            # Skip values that are the same as the default
+            if len(info) > 2 and 'default' in info[2]:
+                default_value = info[1](**info[2])
+                if default_value.dump() == child_dump:
+                    continue
+            self.contents += child_dump
         self.header = None
         if self.trailer != b'':
             self.trailer = b''
@@ -2007,6 +2137,23 @@ class SequenceOf(Asn1Value):
                 self._parse_children(recurse=True)
             self._native = [child.native for child in self]
         return self._native
+
+    def dump(self, force=False):
+        """
+        Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
+
+        :return:
+            A byte string of the DER-encoded value
+        """
+
+        if force:
+            self._set_contents(force=force)
+
+        return Asn1Value.dump(self)
 
 
 class Set(Sequence):
