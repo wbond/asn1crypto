@@ -65,7 +65,10 @@ else:
         return bytes([num])
 
     def int_to_bytes(value, signed=False):
-        return value.to_bytes((value.bit_length() // 8) + 1, byteorder='big', signed=signed)
+        result = value.to_bytes((value.bit_length() // 8) + 1, byteorder='big', signed=signed)
+        if not signed:
+            return result.lstrip(b'\x00')
+        return result
 
     def int_from_bytes(value, signed=False):
         return int.from_bytes(value, 'big', signed=signed)
