@@ -1721,19 +1721,22 @@ class Sequence(Asn1Value):
             else:
                 new_value = value
 
-        elif isinstance(value, value_spec):
+        elif isinstance(value, field_spec):
             new_value = value
 
         else:
-            new_value = value_spec(value, **(field_info[2] if len(field_info) > 2 else {}))
+            if isinstance(value, value_spec):
+                new_value = value
+            else:
+                new_value = value_spec(value, **(field_info[2] if len(field_info) > 2 else {}))
 
-        # For when the field is OctetString or OctetBitString with embedded
-        # values we need to wrap the value in the field spec to get the
-        # appropriate encoded value.
-        if field_spec != value_spec and not issubclass(field_spec, Any):
-            wrapper = field_spec(value=new_value.dump())
-            wrapper._parsed = new_value  #pylint: disable=W0212
-            new_value = wrapper
+            # For when the field is OctetString or OctetBitString with embedded
+            # values we need to wrap the value in the field spec to get the
+            # appropriate encoded value.
+            if field_spec != value_spec and not issubclass(field_spec, Any):
+                wrapper = field_spec(value=new_value.dump())
+                wrapper._parsed = new_value  #pylint: disable=W0212
+                new_value = wrapper
 
         if new_value.contents is None:
             raise ValueError('Value for field "%s" of %s is not set' % (field_info[0], self.__class__.__name__))
