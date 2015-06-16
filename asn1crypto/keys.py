@@ -8,6 +8,7 @@ from decimal import localcontext
 from .algos import DigestAlgorithm, EncryptionAlgorithm
 from .core import (
     Any,
+    Asn1Value,
     Choice,
     Integer,
     IntegerBitString,
@@ -420,6 +421,53 @@ class PrivateKeyInfo(Sequence):
 
     _fingerprint = None
 
+    @classmethod
+    def wrap(cls, private_key, algorithm):
+        """
+        Wraps a private key in a PrivateKeyInfo structure
+
+        :param private_key:
+            A byte string or Asn1Value object of the private key
+
+        :param algorithm:
+            A unicode string of "rsa", "dsa" or "ecdsa"
+
+        :return:
+            A PrivateKeyInfo object
+        """
+
+        if not isinstance(private_key, byte_cls) and not isinstance(private_key, Asn1Value):
+            raise ValueError('private_key must be a byte string or Asn1Value, not %s' % private_key.__class__.__name__)
+
+        if algorithm == 'rsa':
+            if not isinstance(private_key, RSAPrivateKey):
+                private_key = RSAPrivateKey.load(private_key)
+            params = Null()
+        elif algorithm == 'dsa':
+            if not isinstance(private_key, DSAPrivateKey):
+                private_key = DSAPrivateKey.load(private_key)
+            params = DSAParams()
+            params['p'] = private_key['p']
+            params['q'] = private_key['q']
+            params['g'] = private_key['g']
+        elif algorithm == 'ecdsa':
+            if not isinstance(private_key, ECPrivateKey):
+                private_key = ECPrivateKey.load(private_key)
+            params = private_key['parameters']
+        else:
+            raise ValueError('algorithm must be one of "rsa", "dsa", "ecdsa" - is %s' % repr(algorithm))
+
+        private_key_algo = PrivateKeyAlgorithm()
+        private_key_algo['algorithm'] = PrivateKeyAlgorithmId(algorithm)
+        private_key_algo['parameters'] = params
+
+        container = cls()
+        container['version'] = Integer(0)
+        container['private_key_algorithm'] = private_key_algo
+        container['private_key'] = OctetString(private_key.dump(normal_tagging=True))
+
+        return container
+
     @property
     def fingerprint(self):
         """
@@ -564,6 +612,39 @@ class PublicKeyInfo(Sequence):
     }
 
     _fingerprint = None
+
+    @classmethod
+    def wrap(cls, public_key, algorithm):
+        """
+        Wraps a public key in a PublicKeyInfo structure
+
+        :param public_key:
+            A byte string or Asn1Value object of the public key
+
+        :param algorithm:
+            A unicode string of "rsa"
+
+        :return:
+            A PublicKeyInfo object
+        """
+
+        if not isinstance(public_key, byte_cls) and not isinstance(public_key, Asn1Value):
+            raise ValueError('public_key must be a byte string or Asn1Value, not %s' % public_key.__class__.__name__)
+
+        if algorithm != 'rsa':
+            raise ValueError('algorithm must be one of "rsa" - is %s' % repr(algorithm))
+
+        algo = PublicKeyAlgorithm()
+        algo['algorithm'] = PublicKeyAlgorithmId(algorithm)
+        algo['parameters'] = Null()
+
+        container = cls()
+        container['algorithm'] = algo
+        if isinstance(public_key, Asn1Value):
+            public_key = public_key.dump(normal_tagging=True)
+        container['public_key'] = OctetBitString(public_key)
+
+        return container
 
     @property
     def fingerprint(self):
