@@ -1924,8 +1924,16 @@ class Sequence(Asn1Value):
                 field += 1
 
             total_fields = len(self._fields)
-            while len(self.children) < total_fields:
-                self.children.append(NoValue())
+            index = len(self.children)
+            while index < total_fields:
+                field_info = self._fields[index]
+                field_spec = field_info[1]
+                field_params = field_info[2] if len(field_info) > 2 else {}
+                if 'default' in field_params:
+                    self.children.append(field_spec(**field_params))
+                else:
+                    self.children.append(NoValue())
+                index += 1
 
         except (ValueError) as e:
             args = e.args[1:]
