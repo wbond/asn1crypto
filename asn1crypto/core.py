@@ -2081,6 +2081,10 @@ class SequenceOf(Asn1Value):
         if self.children is None:
             self._parse_children()
 
+        # If adding at the end, create a space for the new value
+        if key == len(self.children):
+            self.children.append(None)
+
         if issubclass(self._child_spec, Any):
             if isinstance(value, Asn1Value):
                 self.chilren[key] = value
