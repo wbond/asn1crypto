@@ -32,7 +32,7 @@ class HmacAlgorithmId(ObjectIdentifier):
 
 class HmacAlgorithm(Sequence):
     _fields = [
-        ('algorithm', HmacAlgorithmId, {'default': 'sha1'}),
+        ('algorithm', HmacAlgorithmId),
         ('parameters', Any, {'optional': True}),
     ]
 
@@ -103,7 +103,7 @@ class SignedDigestAlgorithm(Sequence):
 
 
 class Pbkdf2Salt(Choice):
-    _fields = [
+    _alternatives = [
         ('specified', OctetString),
         ('other_source', AlgorithmIdentifier),
     ]
@@ -114,7 +114,7 @@ class Pbkdf2Params(Sequence):
         ('salt', Pbkdf2Salt),
         ('iteration_count', Integer),
         ('key_length', Integer, {'optional': True}),
-        ('prf', HmacAlgorithm, {'optional': True}),
+        ('prf', HmacAlgorithm, {'default': {'algorithm': 'sha1'}}),
     ]
 
 
@@ -234,7 +234,7 @@ class EncryptionAlgorithm(Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
-            return self['parameters'].parsed['key_derivation_func']['algorithm'].native
+            return self['parameters']['key_derivation_func']['algorithm'].native
 
         if encryption_algo.find('.') == -1:
             if encryption_algo.find('_') != -1:
@@ -262,7 +262,7 @@ class EncryptionAlgorithm(Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
-            return self['parameters'].parsed['key_derivation_func']['parameters']['prf']['algorithm'].native
+            return self['parameters']['key_derivation_func']['parameters']['prf']['algorithm'].native
 
         if encryption_algo.find('.') == -1:
             if encryption_algo.find('_') != -1:
@@ -285,7 +285,7 @@ class EncryptionAlgorithm(Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
-            salt = self['parameters'].parsed['key_derivation_func']['algorithm']['salt']
+            salt = self['parameters']['key_derivation_func']['parameters']['salt']
 
             if salt.name == 'other_source':
                 raise ValueError('Can not determine key derivation salt - the reversed-for-future-use other source salt choice was specified in the PBKDF2 params structure')
@@ -312,7 +312,7 @@ class EncryptionAlgorithm(Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
-            return self['parameters']['key_derivation_func']['algorithm']['iteration_count'].native
+            return self['parameters']['key_derivation_func']['parameters']['iteration_count'].native
 
         if encryption_algo.find('.') == -1:
             if encryption_algo.find('_') != -1:
@@ -374,7 +374,7 @@ class EncryptionAlgorithm(Sequence):
             raise ValueError('Invalid RC2 parameter version found in EncryptionAlgorithm parameters')
 
         if encryption_algo == 'pbes2':
-            key_length = self['parameters']['key_derivation_func']['algorithm']['key_length'].native
+            key_length = self['parameters']['key_derivation_func']['parameters']['key_length'].native
             if key_length is not None:
                 return key_length
 
