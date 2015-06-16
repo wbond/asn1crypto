@@ -1745,6 +1745,7 @@ class Sequence(Asn1Value):
 
         if self._native is not None:
             self._native[self._fields[key][0]] = self.children[key].native
+        self._set_contents()
 
     def __delitem__(self, key):
         """
@@ -1776,6 +1777,7 @@ class Sequence(Asn1Value):
                 self._native[info[0]] = None
         else:
             self.__setitem__(key, None)
+        self._set_contents()
 
     def __iter__(self):  #pylint: disable=W0234
         """
@@ -1802,7 +1804,9 @@ class Sequence(Asn1Value):
         self.contents = b''
         for index, info in enumerate(self._fields):
             child = self.children[index]
-            if isinstance(child, tuple):
+            if child is None:
+                child_dump = b''
+            elif isinstance(child, tuple):
                 if force:
                     child_dump = self._lazy_child(index).dump(force=force)
                 else:
@@ -2140,7 +2144,9 @@ class SequenceOf(Asn1Value):
         self.contents = b''
         for index, info in enumerate(self._fields):
             child = self.children[index]
-            if isinstance(child, tuple):
+            if child is None:
+                child_dump = b''
+            elif isinstance(child, tuple):
                 if force:
                     child_dump = self._lazy_child(index).dump(force=force)
                 else:
