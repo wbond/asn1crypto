@@ -1596,6 +1596,27 @@ class Sequence(Asn1Value):
     # A 2-element tuple of the indexes in _fields of the OID and value fields
     _oid_nums = None
 
+    def __init__(self, value=None, default=None, **kwargs):
+        """
+        Allows setting field values before passing everything else along to
+        Asn1Value.__init__()
+
+        :param value:
+            A native Python datatype to initialize the object value with
+
+        :param default:
+            The default value if no value is specified
+        """
+
+        Asn1Value.__init__(self, **kwargs)
+
+        if value is None and default is not None:
+            value = default
+
+        if value is not None:
+            for key, child in value.items():
+                self.__setitem__(key, child)
+
     def _lazy_child(self, index):
         """
         Builds a child object if the child has only been parsed into a tuple so far
@@ -1966,10 +1987,16 @@ class SequenceOf(Asn1Value):
     # An Asn1Value class to use when parsing children
     _child_spec = None
 
-    def __init__(self, spec=None, **kwargs):
+    def __init__(self, value=None, default=None, spec=None, **kwargs):
         """
-        Allows setting the _child_spec via the spec parameter before
-        passing everything else along to Asn1Value.__init__()
+        Allows setting child objects and the _child_spec via the spec parameter
+        before passing everything else along to Asn1Value.__init__()
+
+        :param value:
+            A native Python datatype to initialize the object value with
+
+        :param default:
+            The default value if no value is specified
 
         :param spec:
             A class derived from Asn1Value to use to parse children
@@ -1979,6 +2006,13 @@ class SequenceOf(Asn1Value):
             self._child_spec = spec
 
         Asn1Value.__init__(self, **kwargs)
+
+        if value is None and default is not None:
+            value = default
+
+        if value is not None:
+            for index, child in enumerate(value):
+                self.__setitem__(index, child)
 
     def _lazy_child(self, index):
         """
