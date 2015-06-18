@@ -424,7 +424,7 @@ class PrivateKeyInfo(Sequence):
         'private_key': _private_key_spec
     }
 
-    _computed_public_key = None
+    _public_key = None
     _fingerprint = None
 
     @classmethod
@@ -456,6 +456,7 @@ class PrivateKeyInfo(Sequence):
             params['p'] = private_key['p']
             params['q'] = private_key['q']
             params['g'] = private_key['g']
+            public_key = private_key['public_key']
             private_key = private_key['private_key']
         elif algorithm == 'ecdsa':
             if not isinstance(private_key, ECPrivateKey):
@@ -474,9 +475,14 @@ class PrivateKeyInfo(Sequence):
         container['private_key_algorithm'] = private_key_algo
         container['private_key'] = OctetString(private_key.dump(normal_tagging=True))
 
+        # Here we save the DSA public key if possible since it is not contained
+        # within the PKCS#8 structure for a DSA key
+        if algorithm == 'dsa':
+            container._public_key = public_key  #pylint: disable=W0212
+
         return container
 
-    def compute_public_key(self):
+    def _compute_public_key(self):
         """
         Computes the public key corresponding to the current private key.
 
@@ -485,58 +491,100 @@ class PrivateKeyInfo(Sequence):
             object. For ECDSA keys, an OctetString.
         """
 
-        if self._computed_public_key is None:
-            algo = self['private_key_algorithm']['algorithm'].native
+        algo = self['private_key_algorithm']['algorithm'].native
 
-            if algo == 'dsa':
-                params = self['private_key_algorithm']['parameters']
-                self._computed_public_key = Integer(pow(
-                    params['g'].native,
-                    self['private_key'].native,
-                    params['p'].native
-                ))
+        if algo == 'dsa':
+            params = self['private_key_algorithm']['parameters']
+            return Integer(pow(
+                params['g'].native,
+                self['private_key'].native,
+                params['p'].native
+            ))
 
-            elif algo == 'rsa':
+        if algo == 'rsa':
+            key = self['private_key'].parsed
+            return RSAPublicKey({
+                'modulus': key['modulus'],
+                'public_exponent': key['public_exponent'],
+            })
+
+        if algo == 'ecdsa':
+            params = self['private_key_algorithm']['parameters']
+            chosen = params.chosen
+
+            if params.name == 'implicit_ca':
+                raise ValueError('Unable to compute public key for ECDSA key using Implicit CA parameters')
+
+            if params.name == 'specified':
+                if chosen['field_id']['field_type'] == 'characteristic_two_field':
+                    raise ValueError('Unable to compute public key for ECDSA key over a characteristic two field')
+
+                curve = PrimeCurve(
+                    chosen['field_id']['parameters'].native,
+                    int_from_bytes(chosen['curve']['a'].native),
+                    int_from_bytes(chosen['curve']['b'].native)
+                )
+                base_point = PrimePoint.load(curve, chosen['base'].native)
+
+            elif params.name == 'named':
+                if chosen.native not in ('prime192v1', 'secp224r1', 'prime256v1', 'secp384r1', 'secp521r1'):
+                    raise ValueError('Unable to compute public key for ECDSA named curve %s, parameters not currently included' % chosen.native)
+
+                base_point = {
+                    'prime192v1': NIST_P192_BASE_POINT,
+                    'secp224r1': NIST_P224_BASE_POINT,
+                    'prime256v1': NIST_P256_BASE_POINT,
+                    'secp384r1': NIST_P384_BASE_POINT,
+                    'secp521r1': NIST_P521_BASE_POINT,
+                }[chosen.native]
+
+            public_point = base_point * self['private_key'].parsed['private_key'].native
+            return OctetString(public_point.dump())
+
+    def unwrap(self):
+        """
+        Unwraps the private key into an RSAPrivateKey, DSAPrivateKey or
+        ECPrivateKey object
+
+        :return:
+            An RSAPrivateKey, DSAPrivateKey or ECPrivateKey object
+        """
+
+        algo = self['private_key_algorithm']['algorithm'].native
+
+        if algo == 'rsa':
+            return self['private_key']
+
+        if algo == 'dsa':
+            params = self['private_key_algorithm']['parameters']
+            return DSAPrivateKey({
+                'version': 0,
+                'p': params['p'],
+                'q': params['q'],
+                'g': params['g'],
+                'public_key': self.public_key,
+                'private_key': self['private_key'],
+            })
+
+        if algo == 'ecdsa':
+            output = self['private_key']
+            output['parameters'] = self['private_key_algorithm']['parameters']
+            output['public_key'] = OctetBitString(self.public_key.native)
+            return output
+
+    @property
+    def public_key(self):
+        if self._public_key is None:
+            if self['private_key_algorithm']['algorithm'].native == 'ecdsa':
                 key = self['private_key'].parsed
-                self._computed_public_key = RSAPublicKey({
-                    'modulus': key['modulus'],
-                    'public_exponent': key['public_exponent'],
-                })
+                if key['public_key']:
+                    self._public_key = OctetString(key['public_key'].native)
+                else:
+                    self._public_key = self._compute_public_key()
+            else:
+                self._public_key = self._compute_public_key()
 
-            elif algo == 'ecdsa':
-                params = self['private_key_algorithm']['parameters']
-                chosen = params.chosen
-
-                if params.name == 'implicit_ca':
-                    raise ValueError('Unable to compute public key for ECDSA key using Implicit CA parameters')
-
-                if params.name == 'specified':
-                    if chosen['field_id']['field_type'] == 'characteristic_two_field':
-                        raise ValueError('Unable to compute public key for ECDSA key over a characteristic two field')
-
-                    curve = PrimeCurve(
-                        chosen['field_id']['parameters'].native,
-                        int_from_bytes(chosen['curve']['a'].native),
-                        int_from_bytes(chosen['curve']['b'].native)
-                    )
-                    base_point = PrimePoint.load(curve, chosen['base'].native)
-
-                elif params.name == 'named':
-                    if chosen.native not in ('prime192v1', 'secp224r1', 'prime256v1', 'secp384r1', 'secp521r1'):
-                        raise ValueError('Unable to compute public key for ECDSA named curve %s, parameters not currently included' % chosen.native)
-
-                    base_point = {
-                        'prime192v1': NIST_P192_BASE_POINT,
-                        'secp224r1': NIST_P224_BASE_POINT,
-                        'prime256v1': NIST_P256_BASE_POINT,
-                        'secp384r1': NIST_P384_BASE_POINT,
-                        'secp521r1': NIST_P521_BASE_POINT,
-                    }[chosen.native]
-
-                public_point = base_point * self['private_key'].parsed['private_key'].native
-                self._computed_public_key = OctetString(public_point.dump())
-
-        return self._computed_public_key
+        return self._public_key
 
     @property
     def fingerprint(self):
@@ -567,7 +615,7 @@ class PrivateKeyInfo(Sequence):
                 )
 
             elif key_type == 'dsa':
-                public_key = self.compute_public_key()
+                public_key = self.public_key
                 to_hash = '%d:%d:%d:%d' % (
                     params['p'].native,
                     params['q'].native,
@@ -578,7 +626,7 @@ class PrivateKeyInfo(Sequence):
             elif key_type == 'ecdsa':
                 public_key = key['public_key'].native
                 if public_key is None:
-                    public_key = self.compute_public_key().native
+                    public_key = self.public_key.native
 
                 if params.name == 'named':
                     to_hash = '%s:' % params.chosen.native

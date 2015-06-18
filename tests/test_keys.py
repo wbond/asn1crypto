@@ -310,4 +310,13 @@ class KeysTests(unittest.TestCase):
         with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
             public_key = keys.PublicKeyInfo.load(f.read())
 
-        self.assertEqual(public_key['public_key'].native, private_key.compute_public_key().native)
+        self.assertEqual(public_key['public_key'].native, private_key._compute_public_key().native)  #pylint: disable=W0212
+
+    @data('key_pairs', True)
+    def public_key_property(self, private_key_file, public_key_file):
+        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(public_key['public_key'].native, private_key.public_key.native)
