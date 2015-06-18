@@ -34,13 +34,11 @@ try:
     # Python 2
     str_cls = unicode  #pylint: disable=E0602
     byte_cls = str
-    import cPickle as pickle  #pylint: disable=F0401
 
 except NameError:
     # Python 3
     str_cls = str
     byte_cls = bytes
-    import pickle
 
 
 
@@ -559,7 +557,7 @@ class PrivateKeyInfo(Sequence):
 
         if self._fingerprint is None:
             key_type = self['private_key_algorithm']['algorithm'].native
-            params = self['private_key_algorithm']['parameters'].native
+            params = self['private_key_algorithm']['parameters']
             key = self['private_key'].parsed
 
             if key_type == 'rsa':
@@ -569,38 +567,33 @@ class PrivateKeyInfo(Sequence):
                 )
 
             elif key_type == 'dsa':
-                # The private key structure for PKCS#8 does not include the
-                # public key, so we must calculate it here
-                with localcontext() as ctx:
-                    ctx.prec = 200
-                    public_key = ctx.power(params['g'].native, key.native, params['p'].native)
-
+                public_key = self.compute_public_key()
                 to_hash = '%d:%d:%d:%d' % (
                     params['p'].native,
                     params['q'].native,
                     params['g'].native,
-                    int(public_key),
+                    public_key.native,
                 )
 
             elif key_type == 'ecdsa':
                 public_key = key['public_key'].native
                 if public_key is None:
-                    raise ValueError('Unable to compute fingerprint of ecdsa private key since the public_key field is empty')
+                    public_key = self.compute_public_key().native
 
                 if params.name == 'named':
-                    to_hash = '%s:%d' % (
-                        params.chosen.native,
-                        public_key,
-                    )
+                    to_hash = '%s:' % params.chosen.native
+                    to_hash = to_hash.encode('utf-8')
+                    to_hash += public_key
 
-                elif params.named == 'implicit_ca':
-                    to_hash = str_cls(public_key)
+                elif params.name == 'implicit_ca':
+                    to_hash = public_key
 
-                elif params.named == 'specified':
-                    to_hash = b'%s:%s' % (
-                        pickle.dumps(params.native),
-                        str_cls(public_key).encode('utf-8'),
-                    )
+                elif params.name == 'specified':
+                    to_hash = '%s:' % params.chosen['field_id']['parameters'].native
+                    to_hash = to_hash.encode('utf-8')
+                    to_hash += b':' + params.chosen['curve']['a'].native
+                    to_hash += b':' + params.chosen['curve']['b'].native
+                    to_hash += public_key
 
             if isinstance(to_hash, str_cls):
                 to_hash = to_hash.encode('utf-8')
@@ -734,16 +727,17 @@ class PublicKeyInfo(Sequence):
 
         if self._fingerprint is None:
             key_type = self['algorithm']['algorithm'].native
-            params = self['algorithm']['parameters'].native
-            key = self['public_key'].parsed
+            params = self['algorithm']['parameters']
 
             if key_type == 'rsa':
+                key = self['public_key'].parsed
                 to_hash = '%d:%d' % (
                     key['modulus'].native,
                     key['public_exponent'].native,
                 )
 
             elif key_type == 'dsa':
+                key = self['public_key'].parsed
                 to_hash = '%d:%d:%d:%d' % (
                     params['p'].native,
                     params['q'].native,
@@ -752,20 +746,22 @@ class PublicKeyInfo(Sequence):
                 )
 
             elif key_type == 'ecdsa':
+                key = self['public_key']
+
                 if params.name == 'named':
-                    to_hash = '%s:%d' % (
-                        params.chosen.native,
-                        key.native,
-                    )
+                    to_hash = '%s:' % params.chosen.native
+                    to_hash = to_hash.encode('utf-8')
+                    to_hash += key.native
 
-                elif params.named == 'implicit_ca':
-                    to_hash = str_cls(key.native)
+                elif params.name == 'implicit_ca':
+                    to_hash = key.native
 
-                elif params.named == 'specified':
-                    to_hash = b'%s:%s' % (
-                        pickle.dumps(params.native),
-                        str_cls(key.native).encode('utf-8'),
-                    )
+                elif params.name == 'specified':
+                    to_hash = '%s:' % params.chosen['field_id']['parameters'].native
+                    to_hash = to_hash.encode('utf-8')
+                    to_hash += b':' + params.chosen['curve']['a'].native
+                    to_hash += b':' + params.chosen['curve']['b'].native
+                    to_hash += key.native
 
             if isinstance(to_hash, str_cls):
                 to_hash = to_hash.encode('utf-8')

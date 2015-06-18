@@ -295,6 +295,15 @@ class KeysTests(unittest.TestCase):
         )
 
     @data('key_pairs', True)
+    def compare_fingerprints(self, private_key_file, public_key_file):
+        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(private_key.fingerprint, public_key.fingerprint)
+
+    @data('key_pairs', True)
     def compute_public_key(self, private_key_file, public_key_file):
         with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
             private_key = keys.PrivateKeyInfo.load(f.read())
