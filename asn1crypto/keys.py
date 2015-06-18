@@ -11,7 +11,6 @@ from .core import (
     Asn1Value,
     Choice,
     Integer,
-    IntegerBitString,
     IntegerOctetString,
     Null,
     ObjectIdentifier,
@@ -318,9 +317,8 @@ class ECPrivateKey(Sequence):
         ('version', ECPrivateKeyVersion),
         ('private_key', IntegerOctetString),
         ('parameters', ECDomainParameters, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('public_key', IntegerBitString, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
+        ('public_key', OctetBitString, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
     ]
-
 
 
 class DSAParams(Sequence):
