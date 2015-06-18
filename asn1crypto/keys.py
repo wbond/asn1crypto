@@ -458,10 +458,12 @@ class PrivateKeyInfo(Sequence):
             params['p'] = private_key['p']
             params['q'] = private_key['q']
             params['g'] = private_key['g']
+            private_key = private_key['private_key']
         elif algorithm == 'ecdsa':
             if not isinstance(private_key, ECPrivateKey):
                 private_key = ECPrivateKey.load(private_key)
             params = private_key['parameters']
+            del private_key['parameters']
         else:
             raise ValueError('algorithm must be one of "rsa", "dsa", "ecdsa" - is %s' % repr(algorithm))
 
