@@ -15,6 +15,7 @@ from ._int_conversion import int_to_bytes, int_from_bytes
 if sys.version_info <= (3,):
     str_cls = unicode  #pylint: disable=E0602
     byte_cls = str
+    int_types = (int, long)
     py2 = True
     chr_cls = chr
     range = xrange  #pylint: disable=E0602,W0622
@@ -38,6 +39,7 @@ if sys.version_info <= (3,):
 else:
     str_cls = str
     byte_cls = bytes
+    int_types = int
     py2 = False
 
     def chr_cls(num):
@@ -185,7 +187,7 @@ class Asn1Value():
             class_ = CLASS_NAME_TO_NUM_MAP[class_]
 
             if tag is not None:
-                if not isinstance(tag, int):
+                if not isinstance(tag, int_types):
                     raise ValueError('tag must be an integer, not %s' % tag.__class__.__name__)
 
             if tag_type == 'implicit':
@@ -841,7 +843,7 @@ class Integer(Primitive, ValueMap):
 
             value = self._reverse_map[value]
 
-        elif not isinstance(value, int):
+        elif not isinstance(value, int_types):
             raise ValueError('%s value must be an integer or unicode string when a name_map is provided' % self.__class__.__name__)
 
         self._native = self._map[value] if self._map and value in self._map else value
@@ -895,14 +897,14 @@ class BitString(Primitive, ValueMap, object):
             ValueError - when an invalid value is passed
         """
 
-        if not isinstance(value, int) and not isinstance(value, tuple):
+        if not isinstance(value, int_types) and not isinstance(value, tuple):
             raise ValueError('%s value must be an integer or a tuple of ones and zeros, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         if isinstance(value, tuple):
             self._native = value
             value = ''.join(map(str_cls, value))
 
-        elif isinstance(value, int):
+        elif isinstance(value, int_types):
             value = '{0:b}'.format(value)
             self._native = tuple(map(int, tuple(value)))
 
@@ -1132,7 +1134,7 @@ class IntegerBitString(Primitive):
             ValueError - when an invalid value is passed
         """
 
-        if not isinstance(value, int):
+        if not isinstance(value, int_types):
             raise ValueError('%s value must be an integer, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = value
@@ -1279,7 +1281,7 @@ class IntegerOctetString(OctetString):
             ValueError - when an invalid value is passed
         """
 
-        if not isinstance(value, int):
+        if not isinstance(value, int_types):
             raise ValueError('%s value must be an integer, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = value
@@ -1477,7 +1479,7 @@ class Enumerated(Integer):
             ValueError - when an invalid value is passed
         """
 
-        if not isinstance(value, int) and not isinstance(value, str_cls):
+        if not isinstance(value, int_types) and not isinstance(value, str_cls):
             raise ValueError('%s value must be an integer or a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         if isinstance(value, str_cls):
@@ -1634,7 +1636,7 @@ class Sequence(Asn1Value):
         if self.children is None:
             self._parse_children()
 
-        if not isinstance(key, int):
+        if not isinstance(key, int_types):
             if key not in self._field_map:
                 raise KeyError('No field named "%s" defined for %s' % (key, self.__class__.__name__))
             key = self._field_map[key]
@@ -1663,7 +1665,7 @@ class Sequence(Asn1Value):
         if self.children is None:
             self._parse_children()
 
-        if not isinstance(key, int):
+        if not isinstance(key, int_types):
             if key not in self._field_map:
                 raise KeyError('No field named "%s" defined for %s' % (key, self.__class__.__name__))
             key = self._field_map[key]
@@ -1739,7 +1741,7 @@ class Sequence(Asn1Value):
         if self.children is None:
             self._parse_children()
 
-        if not isinstance(key, int):
+        if not isinstance(key, int_types):
             if key not in self._field_map:
                 raise KeyError('No field named "%s" defined for %s' % (key, self.__class__.__name__))
             key = self._field_map[key]
