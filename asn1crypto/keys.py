@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 
 import hashlib
-from decimal import localcontext
 
 from .algos import DigestAlgorithm, EncryptionAlgorithm
 from .core import (
@@ -20,6 +19,16 @@ from .core import (
     SequenceOf,
     SetOf,
 )
+from ._elliptic_curve import (
+    NIST_P192_BASE_POINT,
+    NIST_P224_BASE_POINT,
+    NIST_P256_BASE_POINT,
+    NIST_P384_BASE_POINT,
+    NIST_P521_BASE_POINT,
+    PrimeCurve,
+    PrimePoint,
+)
+from ._int_conversion import int_from_bytes
 
 try:
     # Python 2
@@ -417,6 +426,7 @@ class PrivateKeyInfo(Sequence):
         'private_key': _private_key_spec
     }
 
+    _computed_public_key = None
     _fingerprint = None
 
     @classmethod
@@ -465,6 +475,68 @@ class PrivateKeyInfo(Sequence):
         container['private_key'] = OctetString(private_key.dump(normal_tagging=True))
 
         return container
+
+    def compute_public_key(self):
+        """
+        Computes the public key corresponding to the current private key.
+
+        :return:
+            For RSA keys, an RSAPublicKey object. For DSA keys, an Integer
+            object. For ECDSA keys, an OctetString.
+        """
+
+        if self._computed_public_key is None:
+            algo = self['private_key_algorithm']['algorithm'].native
+
+            if algo == 'dsa':
+                params = self['private_key_algorithm']['parameters']
+                self._computed_public_key = Integer(pow(
+                    params['g'].native,
+                    self['private_key'].native,
+                    params['p'].native
+                ))
+
+            elif algo == 'rsa':
+                key = self['private_key'].parsed
+                self._computed_public_key = RSAPublicKey({
+                    'modulus': key['modulus'],
+                    'public_exponent': key['public_exponent'],
+                })
+
+            elif algo == 'ecdsa':
+                params = self['private_key_algorithm']['parameters']
+                chosen = params.chosen
+
+                if params.name == 'implicit_ca':
+                    raise ValueError('Unable to compute public key for ECDSA key using Implicit CA parameters')
+
+                if params.name == 'specified':
+                    if chosen['field_id']['field_type'] == 'characteristic_two_field':
+                        raise ValueError('Unable to compute public key for ECDSA key over a characteristic two field')
+
+                    curve = PrimeCurve(
+                        chosen['field_id']['parameters'].native,
+                        int_from_bytes(chosen['curve']['a'].native),
+                        int_from_bytes(chosen['curve']['b'].native)
+                    )
+                    base_point = PrimePoint.load(curve, chosen['base'].native)
+
+                elif params.name == 'named':
+                    if chosen.native not in ('prime192v1', 'secp224r1', 'prime256v1', 'secp384r1', 'secp521r1'):
+                        raise ValueError('Unable to compute public key for ECDSA named curve %s, parameters not currently included' % chosen.native)
+
+                    base_point = {
+                        'prime192v1': NIST_P192_BASE_POINT,
+                        'secp224r1': NIST_P224_BASE_POINT,
+                        'prime256v1': NIST_P256_BASE_POINT,
+                        'secp384r1': NIST_P384_BASE_POINT,
+                        'secp521r1': NIST_P521_BASE_POINT,
+                    }[chosen.native]
+
+                public_point = base_point * self['private_key'].parsed['private_key'].native
+                self._computed_public_key = OctetString(public_point.dump())
+
+        return self._computed_public_key
 
     @property
     def fingerprint(self):
@@ -602,7 +674,7 @@ class PublicKeyInfo(Sequence):
             'dsa': Integer,
             # ECSDA's public key is an ECPoint, which is an OctetString. Since
             # we are using OctetBitString here, we don't need further parsing.
-            'ecdsa': OctetString,
+            'ecdsa': None,
         }[algorithm]
 
     _spec_callbacks = {

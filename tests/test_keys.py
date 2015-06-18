@@ -7,12 +7,14 @@ from collections import OrderedDict
 
 from asn1crypto import keys, core
 
+from .unittest_data import DataDecorator, data
+
 
 tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 
-
+@DataDecorator
 class KeysTests(unittest.TestCase):
 
     def test_parse_rsa_private_key(self):
@@ -281,3 +283,22 @@ class KeysTests(unittest.TestCase):
             None,
             key_info['attributes'].native
         )
+
+    #pylint: disable=C0326
+    @staticmethod
+    def key_pairs():
+        return (
+            ('dsa',         'keys/test-pkcs8-dsa-der.key',         'keys/test-public-dsa-der.key'),
+            ('ecdsa_named', 'keys/test-pkcs8-ec-named-der.key',    'keys/test-public-ec-named-der.key'),
+            ('ecdsa',       'keys/test-pkcs8-ec-der.key',          'keys/test-public-ec-der.key'),
+            ('rsa',         'keys/test-pkcs8-der.key',             'keys/test-public-der.key'),
+        )
+
+    @data('key_pairs', True)
+    def compute_public_key(self, private_key_file, public_key_file):
+        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(public_key['public_key'].native, private_key.compute_public_key().native)
