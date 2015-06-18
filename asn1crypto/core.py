@@ -8,7 +8,7 @@ from collections import OrderedDict
 from datetime import datetime, timedelta, tzinfo
 from pprint import pprint
 
-from . import teletex_codec
+from . import _teletex_codec
 
 # Python 2
 if sys.version_info <= (3,):
@@ -78,7 +78,7 @@ else:
 
 
 
-teletex_codec.register()
+_teletex_codec.register()
 
 
 CLASS_NUM_TO_NAME_MAP = {
