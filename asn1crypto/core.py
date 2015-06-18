@@ -15,7 +15,7 @@ from ._int_conversion import int_to_bytes, int_from_bytes
 if sys.version_info <= (3,):
     str_cls = unicode  #pylint: disable=E0602
     byte_cls = str
-    int_types = (int, long)
+    int_types = (int, long)  #pylint: disable=E0602
     py2 = True
     chr_cls = chr
     range = xrange  #pylint: disable=E0602,W0622
