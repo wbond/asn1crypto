@@ -1939,8 +1939,10 @@ class Sequence(Asn1Value):
                 field_params = field_info[2] if len(field_info) > 2 else {}
                 if 'default' in field_params:
                     self.children.append(field_spec(**field_params))
-                else:
+                elif 'optional' in field_params:
                     self.children.append(NoValue())
+                else:
+                    raise ValueError('Field "%s" is missing from structure' % field_info[0])
                 index += 1
 
         except (ValueError) as e:
@@ -2875,12 +2877,17 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         value.explicit_class = original_value.explicit_class
         value.explicit_tag = original_value.explicit_tag
 
-    # Force parsing the Choice now
-    if isinstance(value, Choice):
-        value.parse()
+    try:
+        # Force parsing the Choice now
+        if isinstance(value, Choice):
+            value.parse()
 
-    if nested_spec:
-        value.parse(nested_spec)
+        if nested_spec:
+            value.parse(nested_spec)
+    except (ValueError) as e:
+        args = e.args[1:]
+        e.args = (e.args[0] + '\n    while parsing %s' % value.__class__.__name__,) + args
+        raise e
 
     return value
 
