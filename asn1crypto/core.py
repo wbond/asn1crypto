@@ -6,6 +6,7 @@ import sys
 import re
 from collections import OrderedDict
 from datetime import datetime, timedelta, tzinfo
+from pprint import pprint
 
 from . import teletex_codec
 
@@ -322,6 +323,13 @@ class Asn1Value():
             trailer = self.trailer
 
         return header + self.contents + trailer
+
+    def pprint(self):
+        """
+        Pretty prints the native representation of the value
+        """
+
+        pprint(self.native)
 
 
 class ValueMap():
