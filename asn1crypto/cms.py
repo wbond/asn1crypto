@@ -621,7 +621,7 @@ class CompressionAlgorithmId(ObjectIdentifier):
 class CompressionAlgorithm(Sequence):
     _fields = [
         ('algorithm', CompressionAlgorithmId),
-        ('parameters', Any),
+        ('parameters', Any, {'optional': True}),
     ]
 
 
