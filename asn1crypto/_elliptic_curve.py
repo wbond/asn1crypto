@@ -52,9 +52,8 @@ from __future__ import division
 
 import sys
 import math
-from ctypes.util import find_library
-from ctypes import CDLL, c_int, c_char_p, c_void_p, create_string_buffer
 
+from ._inverse_mod import inverse_mod
 from ._int_conversion import int_to_bytes, int_from_bytes
 
 if sys.version_info < (3,):
@@ -379,112 +378,3 @@ SECP521R1_BASE_POINT = PrimePoint(
     0x11839296a789a3bc0045c8a5fb42c7d1bd998f54449579b446817afbd17273e662c97ee72995ef42640c550b9013fad0761353c7086a272c24088be94769fd16650,
     6864797660130609714981900799081393217269435300143305409394463459185543183397655394245057746333217197532963996371363321113864768612440380340372808892707005449
 )
-
-
-
-use_python_inverse_mod = True
-
-libcrypto_path = find_library('libcrypto')
-if libcrypto_path:
-    try:
-        libcrypto = CDLL(libcrypto_path)
-
-        BN_new = libcrypto.BN_new
-        BN_new.argtypes = []
-        BN_new.restype = c_void_p
-
-        BN_bin2bn = libcrypto.BN_bin2bn
-        BN_bin2bn.argtypes = [c_char_p, c_int, c_void_p]
-        BN_bin2bn.restype = c_void_p
-
-        BN_bn2bin = libcrypto.BN_bn2bin
-        BN_bn2bin.argtypes = [c_void_p, c_char_p]
-        BN_bn2bin.restype = c_int
-
-        BN_set_negative = libcrypto.BN_set_negative
-        BN_set_negative.argtypes = [c_void_p, c_int]
-        BN_set_negative.restype = None
-
-        BN_num_bits = libcrypto.BN_num_bits
-        BN_num_bits.argtypes = [c_void_p]
-        BN_num_bits.restype = c_int
-
-        BN_free = libcrypto.BN_free
-        BN_free.argtypes = [c_void_p]
-        BN_free.restype = None
-
-        BN_CTX_new = libcrypto.BN_CTX_new
-        BN_CTX_new.argtypes = []
-        BN_CTX_new.restype = c_void_p
-
-        BN_CTX_free = libcrypto.BN_CTX_free
-        BN_CTX_free.argtypes = [c_void_p]
-        BN_CTX_free.restype = None
-
-        BN_mod_inverse = libcrypto.BN_mod_inverse
-        BN_mod_inverse.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
-        BN_mod_inverse.restype = c_void_p
-
-        use_python_inverse_mod = False
-
-    except (AttributeError):  #pylint: disable=W0704
-        pass
-
-if not use_python_inverse_mod:
-
-    def inverse_mod(a, p):
-        """
-        Compute the inverse modul
-        """
-
-        ctx = BN_CTX_new()
-
-        a_bytes = int_to_bytes(abs(a))
-        p_bytes = int_to_bytes(abs(p))
-
-        a_buf = create_string_buffer(a_bytes)
-        a_bn = BN_bin2bn(a_buf, len(a_bytes), None)
-        if a < 0:
-            BN_set_negative(a_bn, 1)
-
-        p_buf = create_string_buffer(p_bytes)
-        p_bn = BN_bin2bn(p_buf, len(p_bytes), None)
-        if p < 0:
-            BN_set_negative(p_bn, 1)
-
-        r_bn = BN_mod_inverse(None, a_bn, p_bn, ctx)
-        r_len_bits = BN_num_bits(r_bn)
-        r_len = math.ceil(r_len_bits / 8)
-        r_buf = create_string_buffer(r_len)
-        BN_bn2bin(r_bn, r_buf)
-        result = int_from_bytes(r_buf.raw)
-
-        BN_free(a_bn)
-        BN_free(p_bn)
-        BN_free(r_bn)
-        BN_CTX_free(ctx)
-
-        return result
-
-else:
-
-    def inverse_mod(a, m):
-        if a < 0 or m <= a:
-            a = a % m
-
-        # From Ferguson and Schneier, roughly:
-
-        c, d = a, m
-        uc, vc, ud, vd = 1, 0, 0, 1
-        while c != 0:
-            q, c, d = divmod(d, c) + (c,)
-            uc, vc, ud, vd = ud - q*uc, vd - q*vc, uc, vc
-
-        # At this point, d is the GCD, and ud*a+vd*m = d.
-        # If d == 1, this means that ud is a inverse.
-
-        assert d == 1
-        if ud > 0:
-            return ud
-        else:
-            return ud + m
