@@ -229,7 +229,54 @@ class Asn1Value():
         """
         return '<%s %s>' % (self.__class__.__name__, repr(self.contents))
 
-    def dump(self, force=False, normal_tagging=False):
+    def retag(self, tag_type, tag):
+        """
+        Copies the object, applying a new tagging to it
+
+        :param tag_type:
+            A unicode string of "implicit" or "explicit"
+
+        :param tag:
+            A integer tag number
+
+        :return:
+            An Asn1Value object
+        """
+
+        new_obj = self.__class__(tag_type=tag_type, tag=tag)
+        new_obj._copy(self)  #pylint: disable=W0212
+        return new_obj
+
+    def untag(self):
+        """
+        Copies the object, removing any special tagging from it
+
+        :return:
+            An Asn1Value object
+        """
+
+        new_obj = self.__class__()
+        new_obj._copy(self)  #pylint: disable=W0212
+        return new_obj
+
+    #pylint: disable=W0212
+    def _copy(self, other):
+        """
+        Copies the contents of another Asn1Value object to itself
+
+        :param object:
+            Another instance of the same class
+        """
+
+        if self.__class__ != other.__class__:
+            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+
+        self.contents = other.contents
+        self._native = other._native
+        if hasattr(other, '_parsed'):
+            self._parsed = other._parsed
+
+    def dump(self, force=False):
         """
         Encodes the value using DER
 
@@ -237,44 +284,15 @@ class Asn1Value():
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
 
-        :param normal_tagging:
-            Ignore implicit or explicit tagging when serializing
-
         :return:
             A byte string of the DER-encoded value
         """
 
-        if (self.header is None) or normal_tagging:
-            header = b''
+        if self.header is None:
+            header = _dump_header(self.class_, self.method, self.tag, self.contents)
             trailer = b''
 
-            id_num = 0
-            id_num |= self.class_ << 6
-            id_num |= self.method << 5
-
-            if normal_tagging:
-                tag = self.__class__.tag
-            else:
-                tag = self.tag
-
-            if tag >= 31:
-                header += chr_cls(id_num | 31)
-                while tag > 0:
-                    continuation_bit = 0x80 if tag > 0x7F else 0
-                    header += chr_cls(continuation_bit | (tag & 0x7F))
-                    tag = tag >> 7
-            else:
-                header += chr_cls(id_num | tag)
-
-            length = len(self.contents)
-            if length <= 127:
-                header += chr_cls(length)
-            else:
-                length_bytes = int_to_bytes(length)
-                header += chr_cls(0x80 | len(length_bytes))
-                header += length_bytes
-
-            if self.tag_type == 'explicit' and not normal_tagging:
+            if self.tag_type == 'explicit':
                 container = Asn1Value()
                 container.method = 1
                 container.class_ = self.explicit_class
@@ -285,15 +303,10 @@ class Asn1Value():
                 header = container.header + header
                 trailer += container.trailer
 
-            if not normal_tagging:
-                self.header = header
-                self.trailer = trailer
+            self.header = header
+            self.trailer = trailer
 
-        else:
-            header = self.header
-            trailer = self.trailer
-
-        return header + self.contents + trailer
+        return self.header + self.contents + self.trailer
 
     def pprint(self):
         """
@@ -351,16 +364,13 @@ class NoValue(Asn1Value):
 
         return None
 
-    def dump(self, force=False, normal_tagging=False):
+    def dump(self, force=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
-
-        :param normal_tagging:
-            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -432,16 +442,13 @@ class Any(Asn1Value):
             self._parsed = (parsed_value, spec, spec_params)
         return self._parsed[0]
 
-    def dump(self, force=False, normal_tagging=False):
+    def dump(self, force=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
-
-        :param normal_tagging:
-            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -450,7 +457,7 @@ class Any(Asn1Value):
         if self._parsed is None:
             self.parse()
 
-        return self._parsed[0].dump(force=force, normal_tagging=normal_tagging)
+        return self._parsed[0].dump(force=force)
 
 
 class Choice(Asn1Value):
@@ -559,7 +566,7 @@ class Choice(Asn1Value):
         try:
             info = self._alternatives[self._choice]
             params = info[2] if len(info) > 2 else {}
-            self._parsed, _ = _parse_build(self.header + self.contents + self.trailer, spec=info[1], spec_params=params)
+            self._parsed, _ = _parse_build(self.contents, spec=info[1], spec_params=params)
         except (ValueError) as e:
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
@@ -626,7 +633,25 @@ class Choice(Asn1Value):
 
         return '[%s %s]' % (CLASS_NUM_TO_NAME_MAP[class_].upper(), tag)
 
-    def dump(self, force=False, normal_tagging=False):
+    #pylint: disable=W0212
+    def _copy(self, other):
+        """
+        Copies the contents of another Asn1Value object to itself
+
+        :param object:
+            Another instance of the same class
+        """
+
+        if self.__class__ != other.__class__:
+            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+
+        self.contents = other.contents
+        self._native = other._native
+        self._choice = other._choice
+        self._name = other._name
+        self._parsed = other._parsed
+
+    def dump(self, force=False):
         """
         Encodes the value using DER
 
@@ -634,14 +659,17 @@ class Choice(Asn1Value):
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
 
-        :param normal_tagging:
-            Ignore implicit or explicit tagging when serializing
-
         :return:
             A byte string of the DER-encoded value
         """
 
-        return self.chosen.dump(force=force, normal_tagging=normal_tagging)
+        self.contents = self.chosen.dump(force=force)
+        if self.header is None:
+            if self.tag_type == 'explicit':
+                self.header = _dump_header(self.explicit_class, 1, self.explicit_tag, self.contents)
+            else:
+                self.header = b''
+        return self.header + self.contents
 
 
 class Primitive(Asn1Value):
@@ -689,16 +717,13 @@ class Primitive(Asn1Value):
         if self.trailer != b'':
             self.trailer = b''
 
-    def dump(self, force=False, normal_tagging=False):
+    def dump(self, force=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
-
-        :param normal_tagging:
-            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -709,7 +734,7 @@ class Primitive(Asn1Value):
             self.contents = None
             self.set(native)
 
-        return Asn1Value.dump(self, normal_tagging=normal_tagging)
+        return Asn1Value.dump(self)
 
 
 class AbstractString(Primitive):
@@ -844,7 +869,7 @@ class Integer(Primitive, ValueMap):
             value = self._reverse_map[value]
 
         elif not isinstance(value, int_types):
-            raise ValueError('%s value must be an integer or unicode string when a name_map is provided' % self.__class__.__name__)
+            raise ValueError('%s value must be an integer or unicode string when a name_map is provided, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = self._map[value] if self._map and value in self._map else value
 
@@ -1090,16 +1115,13 @@ class OctetBitString(Primitive):
 
         return self._parsed[0]
 
-    def dump(self, force=False, normal_tagging=False):
+    def dump(self, force=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
-
-        :param normal_tagging:
-            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -1113,7 +1135,7 @@ class OctetBitString(Primitive):
             self.contents = None
             self.set(native)
 
-        return Asn1Value.dump(self, normal_tagging=normal_tagging)
+        return Asn1Value.dump(self)
 
 
 class IntegerBitString(Primitive):
@@ -1239,16 +1261,13 @@ class OctetString(Primitive):
 
         return self._parsed[0]
 
-    def dump(self, force=False, normal_tagging=False):
+    def dump(self, force=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
-
-        :param normal_tagging:
-            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -1262,7 +1281,7 @@ class OctetString(Primitive):
             self.contents = None
             self.set(native)
 
-        return Asn1Value.dump(self, normal_tagging=normal_tagging)
+        return Asn1Value.dump(self)
 
 
 class IntegerOctetString(OctetString):
@@ -1672,6 +1691,7 @@ class Sequence(Asn1Value):
 
         field_info = self._fields[key]
         field_spec = field_info[1]
+        field_params = field_info[2] if len(field_info) > 2 else {}
         value_spec = field_spec
 
         if self._spec_callbacks is not None and field_info[0] in self._spec_callbacks:
@@ -1702,12 +1722,14 @@ class Sequence(Asn1Value):
 
         elif isinstance(value, field_spec):
             new_value = value
+            if value_spec != field_spec:
+                new_value.parse(value_spec)
 
         else:
             if isinstance(value, value_spec):
                 new_value = value
             else:
-                new_value = value_spec(value, **(field_info[2] if len(field_info) > 2 else {}))
+                new_value = value_spec(value)
 
             # For when the field is OctetString or OctetBitString with embedded
             # values we need to wrap the value in the field spec to get the
@@ -1716,6 +1738,10 @@ class Sequence(Asn1Value):
                 wrapper = field_spec(value=new_value.dump())
                 wrapper._parsed = new_value  #pylint: disable=W0212
                 new_value = wrapper
+
+        if field_params and 'tag_type' in field_params and 'tag' in field_params:
+            if field_params['tag_type'] != new_value.tag_type or field_params['tag'] != new_value.tag:
+                new_value = new_value.retag(tag_type=field_params['tag_type'], tag=field_params['tag'])
 
         if new_value.contents is None:
             raise ValueError('Value for field "%s" of %s is not set' % (field_info[0], self.__class__.__name__))
@@ -1833,7 +1859,7 @@ class Sequence(Asn1Value):
         """
 
         if self.contents is None:
-            self.children = [None] * len(self._fields)
+            self.children = [NoValue()] * len(self._fields)
             return
 
         try:
@@ -1945,16 +1971,29 @@ class Sequence(Asn1Value):
                 self._native[self._fields[index][0]] = child.native
         return self._native
 
-    def dump(self, force=False, normal_tagging=False):
+    #pylint: disable=W0212
+    def _copy(self, other):
+        """
+        Copies the contents of another Asn1Value object to itself
+
+        :param object:
+            Another instance of the same class
+        """
+
+        if self.__class__ != other.__class__:
+            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+
+        self.contents = other.contents
+        self._native = other._native
+        self.children = other.children
+
+    def dump(self, force=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
-
-        :param normal_tagging:
-            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -1963,7 +2002,7 @@ class Sequence(Asn1Value):
         if force:
             self._set_contents(force=force)
 
-        return Asn1Value.dump(self, normal_tagging=normal_tagging)
+        return Asn1Value.dump(self)
 
 
 class SequenceOf(Asn1Value):
@@ -2209,16 +2248,29 @@ class SequenceOf(Asn1Value):
             self._native = [child.native for child in self]
         return self._native
 
-    def dump(self, force=False, normal_tagging=False):
+    #pylint: disable=W0212
+    def _copy(self, other):
+        """
+        Copies the contents of another Asn1Value object to itself
+
+        :param object:
+            Another instance of the same class
+        """
+
+        if self.__class__ != other.__class__:
+            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+
+        self.contents = other.contents
+        self._native = other._native
+        self.children = other.children
+
+    def dump(self, force=False):
         """
         Encodes the value using DER
 
         :param force:
             If the encoded contents already exist, clear them and regenerate
             to ensure they are in DER format instead of BER format
-
-        :param normal_tagging:
-            Ignore implicit or explicit tagging when serializing
 
         :return:
             A byte string of the DER-encoded value
@@ -2227,7 +2279,7 @@ class SequenceOf(Asn1Value):
         if force:
             self._set_contents(force=force)
 
-        return Asn1Value.dump(self, normal_tagging=normal_tagging)
+        return Asn1Value.dump(self)
 
 
 class Set(Sequence):
@@ -2607,6 +2659,35 @@ class BMPString(AbstractString):
     _encoding = 'utf-16-be'
 
 
+def _dump_header(class_, method, tag, contents):
+    header = b''
+
+    id_num = 0
+    id_num |= class_ << 6
+    id_num |= method << 5
+
+    tag = tag
+
+    if tag >= 31:
+        header += chr_cls(id_num | 31)
+        while tag > 0:
+            continuation_bit = 0x80 if tag > 0x7F else 0
+            header += chr_cls(continuation_bit | (tag & 0x7F))
+            tag = tag >> 7
+    else:
+        header += chr_cls(id_num | tag)
+
+    length = len(contents)
+    if length <= 127:
+        header += chr_cls(length)
+    else:
+        length_bytes = int_to_bytes(length)
+        header += chr_cls(0x80 | len(length_bytes))
+        header += length_bytes
+
+    return header
+
+
 def _build_id_tuple(params, spec):
     """
     Builds a 2-element tuple used to identify fields by grabbing the class_
@@ -2847,6 +2928,9 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         value.tag_type = 'explicit'
         value.explicit_class = original_value.explicit_class
         value.explicit_tag = original_value.explicit_tag
+    elif isinstance(value, Choice):
+        value.contents = value.header + value.contents
+        value.header = b''
 
     try:
         # Force parsing the Choice now

@@ -473,7 +473,7 @@ class PrivateKeyInfo(Sequence):
         container = cls()
         container['version'] = Integer(0)
         container['private_key_algorithm'] = private_key_algo
-        container['private_key'] = OctetString(private_key.dump(normal_tagging=True))
+        container['private_key'] = OctetString(private_key.untag().dump())
 
         # Here we save the DSA public key if possible since it is not contained
         # within the PKCS#8 structure for a DSA key
@@ -754,7 +754,7 @@ class PublicKeyInfo(Sequence):
         container = cls()
         container['algorithm'] = algo
         if isinstance(public_key, Asn1Value):
-            public_key = public_key.dump(normal_tagging=True)
+            public_key = public_key.untag().dump()
         container['public_key'] = OctetBitString(public_key)
 
         return container
