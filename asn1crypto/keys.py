@@ -21,11 +21,11 @@ from .core import (
     SetOf,
 )
 from ._elliptic_curve import (
-    NIST_P192_BASE_POINT,
-    NIST_P224_BASE_POINT,
-    NIST_P256_BASE_POINT,
-    NIST_P384_BASE_POINT,
-    NIST_P521_BASE_POINT,
+    SECP192R1_BASE_POINT,
+    SECP224R1_BASE_POINT,
+    SECP256R1_BASE_POINT,
+    SECP384R1_BASE_POINT,
+    SECP521R1_BASE_POINT,
     PrimeCurve,
     PrimePoint,
 )
@@ -532,11 +532,11 @@ class PrivateKeyInfo(Sequence):
                     raise ValueError('Unable to compute public key for ECDSA named curve %s, parameters not currently included' % details)
 
                 base_point = {
-                    'secp192r1': NIST_P192_BASE_POINT,
-                    'secp224r1': NIST_P224_BASE_POINT,
-                    'secp256r1': NIST_P256_BASE_POINT,
-                    'secp384r1': NIST_P384_BASE_POINT,
-                    'secp521r1': NIST_P521_BASE_POINT,
+                    'secp192r1': SECP192R1_BASE_POINT,
+                    'secp224r1': SECP224R1_BASE_POINT,
+                    'secp256r1': SECP256R1_BASE_POINT,
+                    'secp384r1': SECP384R1_BASE_POINT,
+                    'secp521r1': SECP521R1_BASE_POINT,
                 }[details]
 
             public_point = base_point * self['private_key'].parsed['private_key'].native
