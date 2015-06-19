@@ -1,4 +1,23 @@
 # coding: utf-8
+
+"""
+ASN.1 type classes for X509 certificates. Exports the following items:
+
+ - Attributes()
+ - Certificate()
+ - Extensions()
+ - GeneralName()
+ - GeneralNames()
+ - Name()
+
+Also adds TimeStampedData() support to asn1crypto.cms.ContentInfo(),
+TimeStampedData() and TSTInfo() support to
+asn1crypto.cms.EncapsulatedContentInfo() and some oids and value parsers to
+asn1crypto.cms.CMSAttribute().
+
+Other type classes are defined that help compose the types listed above.
+"""
+
 from __future__ import unicode_literals
 
 from collections import OrderedDict

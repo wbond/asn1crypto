@@ -1,4 +1,19 @@
 # coding: utf-8
+
+"""
+ASN.1 type classes for public and private keys. Exports the following items:
+
+ - DSAPrivateKey()
+ - ECPrivateKey()
+ - EncryptedPrivateKeyInfo()
+ - PrivateKeyInfo()
+ - PublicKeyInfo()
+ - RSAPrivateKey()
+ - RSAPublicKey()
+
+Other type classes are defined that help compose the types listed above.
+"""
+
 from __future__ import unicode_literals
 
 import hashlib

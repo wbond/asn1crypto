@@ -1,4 +1,17 @@
 # coding: utf-8
+
+"""
+ASN.1 type classes for PKCS#12 files. Exports the following items:
+
+ - CertBag()
+ - CrlBag()
+ - Pfx()
+ - SafeBag()
+ - SecretBag()
+
+Other type classes are defined that help compose the types listed above.
+"""
+
 from __future__ import unicode_literals
 
 from .algos import DigestInfo

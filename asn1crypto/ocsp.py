@@ -1,4 +1,15 @@
 # coding: utf-8
+
+"""
+ASN.1 type classes for the online certificate status protocol (OCSP). Exports
+the following items:
+
+ - OCSPRequest()
+ - OCSPResponse()
+
+Other type classes are defined that help compose the types listed above.
+"""
+
 from __future__ import unicode_literals
 
 from .algos import DigestAlgorithm, SignedDigestAlgorithm

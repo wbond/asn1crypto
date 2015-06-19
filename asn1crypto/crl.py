@@ -1,4 +1,14 @@
 # coding: utf-8
+
+"""
+ASN.1 type classes for certificate revocation lists (CRL). Exports the
+following items:
+
+ - CertificateList()
+
+Other type classes are defined that help compose the types listed above.
+"""
+
 from __future__ import unicode_literals
 
 from .algos import SignedDigestAlgorithm

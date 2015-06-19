@@ -1,4 +1,49 @@
 # coding: utf-8
+
+"""
+ASN.1 type classes for universal types. Exports the following items:
+
+ - Any()
+ - Asn1Value()
+ - BitString()
+ - BMPString()
+ - Boolean()
+ - CharacterString()
+ - Choice()
+ - EmbeddedPdv()
+ - Enumerated()
+ - GeneralizedTime()
+ - GeneralString()
+ - GraphicString()
+ - IA5String()
+ - InstanceOf()
+ - Integer()
+ - IntegerBitString()
+ - IntegerOctetString()
+ - NoValue()
+ - Null()
+ - NumericString()
+ - ObjectDescriptor()
+ - ObjectIdentifier()
+ - OctetBitString()
+ - OctetString()
+ - PrintableString()
+ - Real()
+ - RelativeOid()
+ - Sequence()
+ - SequenceOf()
+ - Set()
+ - SetOf()
+ - TeletexString()
+ - UniversalString()
+ - UTCTime()
+ - UTF8String()
+ - VideotexString()
+ - VisibleString()
+
+Other type classes are defined that help compose the types listed above.
+"""
+
 from __future__ import unicode_literals
 
 import sys

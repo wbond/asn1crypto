@@ -1,4 +1,22 @@
 # coding: utf-8
+
+"""
+ASN.1 type classes for cryptographic message syntax (CMS). Structures are also
+compatible with PKCS#7. Exports the following items:
+
+ - AuthenticatedData()
+ - AuthEnvelopedData()
+ - CompressedData()
+ - ContentInfo()
+ - EncryptedData()
+ - EnvelopedData()
+ - EnvelopedData()
+ - SignedAndEnvelopedData()
+ - SignedData()
+
+Other type classes are defined that help compose the types listed above.
+"""
+
 from __future__ import unicode_literals
 
 try:

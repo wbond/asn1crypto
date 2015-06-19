@@ -1,4 +1,10 @@
 # coding: utf-8
+
+"""
+ASN.1 type classes for PDF signature structures. Adds extra oid mapping and
+value parsing to asn1crypto.x509.Extension() and asn1crypto.xms.CMSAttribute().
+"""
+
 from __future__ import unicode_literals
 
 from .cms import CMSAttributeType, CMSAttribute

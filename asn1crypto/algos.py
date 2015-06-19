@@ -1,4 +1,21 @@
 # coding: utf-8
+
+"""
+ASN.1 type classes for various algorithms using in various aspects of public
+key cryptography. Exports the following items:
+
+ - AlgorithmIdentifier()
+ - DigestAlgorithm()
+ - DigestInfo()
+ - EncryptionAlgorithm()
+ - HmacAlgorithm()
+ - KdfAlgorithm()
+ - Pkcs5MacAlgorithm()
+ - SignedDigestAlgorithm()
+
+Other type classes are defined that help compose the types listed above.
+"""
+
 from __future__ import unicode_literals
 
 from .core import Any, Choice, Integer, ObjectIdentifier, OctetString, Sequence

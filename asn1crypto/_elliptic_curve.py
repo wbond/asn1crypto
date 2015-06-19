@@ -1,7 +1,26 @@
 # coding: utf-8
 
 """
-The following source code is derived from
+Classes and objects to represent prime-field elliptic curves and points on them.
+Exports the following items:
+
+ - PrimeCurve()
+ - PrimePoint()
+ - SECP192R1_CURVE
+ - SECP192R1_BASE_POINT
+ - SECP224R1_CURVE
+ - SECP224R1_BASE_POINT
+ - SECP256R1_CURVE
+ - SECP256R1_BASE_POINT
+ - SECP384R1_CURVE
+ - SECP384R1_BASE_POINT
+ - SECP521R1_CURVE
+ - SECP521R1_BASE_POINT
+
+The curve constants are all PrimeCurve() objects and the base point constants
+are all PrimePoint() objects.
+
+Some of the following source code is derived from
 http://webpages.charter.net/curryfans/peter/downloads.html, but has been heavily
 modified to fit into this projects lint settings, and to support loading and
 serializing to/from ECPrimePoint format. The original project license is listed

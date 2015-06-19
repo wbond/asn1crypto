@@ -1,4 +1,11 @@
 # coding: utf-8
+
+"""
+Implementation of the teletex T.61 codec. Exports the following items:
+
+ - register()
+"""
+
 from __future__ import unicode_literals
 
 import codecs
@@ -36,6 +43,10 @@ class TeletexStreamReader(TeletexCodec, codecs.StreamReader):
 
 
 def teletex_search_function(name):
+    """
+    Search function for teletex codec that is passed to codecs.register()
+    """
+
     if name != 'teletex':
         return None
 
@@ -51,6 +62,10 @@ def teletex_search_function(name):
 
 
 def register():
+    """
+    Registers the teletex codec
+    """
+
     codecs.register(teletex_search_function)
 
 
