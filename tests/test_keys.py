@@ -288,14 +288,14 @@ class KeysTests(unittest.TestCase):
     @staticmethod
     def key_pairs():
         return (
-            ('dsa',         'keys/test-pkcs8-dsa-der.key',         'keys/test-public-dsa-der.key'),
-            ('ecdsa_named', 'keys/test-pkcs8-ec-named-der.key',    'keys/test-public-ec-named-der.key'),
-            ('ecdsa',       'keys/test-pkcs8-ec-der.key',          'keys/test-public-ec-der.key'),
-            ('rsa',         'keys/test-pkcs8-der.key',             'keys/test-public-der.key'),
+            ('dsa',         'keys/test-pkcs8-dsa-der.key',         'keys/test-public-dsa-der.key',      'dsa',   3072),
+            ('ecdsa_named', 'keys/test-pkcs8-ec-named-der.key',    'keys/test-public-ec-named-der.key', 'ecdsa', 256),
+            ('ecdsa',       'keys/test-pkcs8-ec-der.key',          'keys/test-public-ec-der.key',       'ecdsa', 256),
+            ('rsa',         'keys/test-pkcs8-der.key',             'keys/test-public-der.key',          'rsa',   2048),
         )
 
     @data('key_pairs', True)
-    def compare_fingerprints(self, private_key_file, public_key_file):
+    def compare_fingerprints(self, private_key_file, public_key_file, *_):
         with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
             private_key = keys.PrivateKeyInfo.load(f.read())
         with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
@@ -304,7 +304,7 @@ class KeysTests(unittest.TestCase):
         self.assertEqual(private_key.fingerprint, public_key.fingerprint)
 
     @data('key_pairs', True)
-    def compute_public_key(self, private_key_file, public_key_file):
+    def compute_public_key(self, private_key_file, public_key_file, *_):
         with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
             private_key = keys.PrivateKeyInfo.load(f.read())
         with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
@@ -313,10 +313,118 @@ class KeysTests(unittest.TestCase):
         self.assertEqual(public_key['public_key'].native, private_key._compute_public_key().native)  #pylint: disable=W0212
 
     @data('key_pairs', True)
-    def public_key_property(self, private_key_file, public_key_file):
+    def public_key_property(self, private_key_file, public_key_file, *_):
         with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
             private_key = keys.PrivateKeyInfo.load(f.read())
         with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
             public_key = keys.PublicKeyInfo.load(f.read())
 
         self.assertEqual(public_key['public_key'].native, private_key.public_key.native)
+
+    @data('key_pairs', True)
+    def algorithm_name(self, private_key_file, public_key_file, algorithm, _):
+        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(algorithm, private_key.algorithm)
+        self.assertEqual(algorithm, public_key.algorithm)
+
+    @data('key_pairs', True)
+    def bit_size(self, private_key_file, public_key_file, _, bit_size):
+        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(bit_size, private_key.bit_size)
+        self.assertEqual(bit_size, public_key.bit_size)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def key_variations():
+        return (
+            ('dsa',         'keys/test-pkcs8-dsa-der.key',         'keys/test-dsa-der.key',),
+            ('ecdsa_named', 'keys/test-pkcs8-ec-named-der.key',    'keys/test-ec-named-der.key',),
+            ('ecdsa',       'keys/test-pkcs8-ec-der.key',          'keys/test-ec-der.key',),
+            ('rsa',         'keys/test-pkcs8-der.key',             'keys/test-der.key',),
+        )
+
+    @data('key_variations', True)
+    def unwrap(self, wrapped_private_key_file, unwrapped_private_key_file):
+        with open(os.path.join(fixtures_dir, wrapped_private_key_file), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+        with open(os.path.join(fixtures_dir, unwrapped_private_key_file), 'rb') as f:
+            unwrapped_bytes = f.read()
+
+        self.assertEqual(unwrapped_bytes, private_key.unwrap().dump())
+
+    def test_curve_invalid(self):
+        with open(os.path.join(fixtures_dir, 'keys/test-pkcs8-der.key'), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+
+        with self.assertRaises(ValueError) as _:
+            _ = private_key.curve
+
+        with open(os.path.join(fixtures_dir, 'keys/test-public-rsa-der.key'), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        with self.assertRaises(ValueError) as _:
+            _ = public_key.curve
+
+    def test_curve_info_name(self):
+        with open(os.path.join(fixtures_dir, 'keys/test-pkcs8-ec-named-der.key'), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+
+        curve = ('named', 'secp256r1')
+
+        self.assertEqual(curve, private_key.curve)
+
+        with open(os.path.join(fixtures_dir, 'keys/test-public-ec-named-der.key'), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(curve, public_key.curve)
+
+    def test_curve_info_specified(self):
+        with open(os.path.join(fixtures_dir, 'keys/test-pkcs8-ec-der.key'), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+
+        curve = (
+            'specified',
+            OrderedDict([
+                ('version', 'ecdpVer1'),
+                (
+                    'field_id',
+                    OrderedDict([
+                        ('field_type', 'prime_field'),
+                        ('parameters', 115792089210356248762697446949407573530086143415290314195533631308867097853951)
+                    ])
+                ),
+                (
+                    'curve',
+                    OrderedDict([
+                        ('a', b'\xFF\xFF\xFF\xFF\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFC'),
+                        ('b', b'\x5A\xC6\x35\xD8\xAA\x3A\x93\xE7\xB3\xEB\xBD\x55\x76\x98\x86\xBC\x65\x1D\x06\xB0\xCC\x53\xB0\xF6\x3B\xCE\x3C\x3E\x27\xD2\x60\x4B'),
+                        ('seed', b'\xC4\x9D\x36\x08\x86\xE7\x04\x93\x6A\x66\x78\xE1\x13\x9D\x26\xB7\x81\x9F\x7E\x90'),
+                    ])
+                ),
+                (
+                    'base',
+                    b'\x04\x6B\x17\xD1\xF2\xE1\x2C\x42\x47\xF8\xBC\xE6\xE5\x63\xA4\x40\xF2\x77\x03\x7D\x81\x2D\xEB\x33\xA0\xF4\xA1\x39\x45\xD8\x98\xC2\x96\x4F\xE3\x42\xE2\xFE\x1A\x7F\x9B\x8E\xE7\xEB\x4A\x7C\x0F\x9E\x16\x2B\xCE\x33\x57\x6B\x31\x5E\xCE\xCB\xB6\x40\x68\x37\xBF\x51\xF5'
+                ),
+                (
+                    'order',
+                    115792089210356248762697446949407573529996955224135760342422259061068512044369
+                ),
+                ('cofactor', 1),
+                ('hash', None),
+            ])
+        )
+
+        self.assertEqual(curve, private_key.curve)
+
+        with open(os.path.join(fixtures_dir, 'keys/test-public-ec-der.key'), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(curve, public_key.curve)

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from __future__ import absolute_import
 
 import hashlib
+import math
 
 from .algos import DigestAlgorithm, EncryptionAlgorithm
 from .core import (
@@ -268,18 +269,18 @@ class NamedCurve(ObjectIdentifier):
         '1.2.840.10045.3.0.18': 'c2tnb359v1',
         '1.2.840.10045.3.0.19': 'c2pnb368w1',
         '1.2.840.10045.3.0.20': 'c2tnb431r1',
-        '1.2.840.10045.3.1.1': 'prime192v1',
         '1.2.840.10045.3.1.2': 'prime192v2',
         '1.2.840.10045.3.1.3': 'prime192v3',
         '1.2.840.10045.3.1.4': 'prime239v1',
         '1.2.840.10045.3.1.5': 'prime239v2',
         '1.2.840.10045.3.1.6': 'prime239v3',
-        '1.2.840.10045.3.1.7': 'prime256v1',
         # https://tools.ietf.org/html/rfc5480#page-5
         '1.3.132.0.1': 'sect163k1',
         '1.3.132.0.15': 'sect163r2',
+        '1.2.840.10045.3.1.1': 'secp192r1',
         '1.3.132.0.33': 'secp224r1',
         '1.3.132.0.26': 'sect233k1',
+        '1.2.840.10045.3.1.7': 'secp256r1',
         '1.3.132.0.27': 'sect233r1',
         '1.3.132.0.16': 'sect283k1',
         '1.3.132.0.17': 'sect283r1',
@@ -424,6 +425,8 @@ class PrivateKeyInfo(Sequence):
         'private_key': _private_key_spec
     }
 
+    _algorithm = None
+    _bit_size = None
     _public_key = None
     _fingerprint = None
 
@@ -471,6 +474,7 @@ class PrivateKeyInfo(Sequence):
         private_key_algo['parameters'] = params
 
         container = cls()
+        container._algorithm = algorithm  #pylint: disable=W0212
         container['version'] = Integer(0)
         container['private_key_algorithm'] = private_key_algo
         container['private_key'] = OctetString(private_key.untag().dump())
@@ -491,9 +495,7 @@ class PrivateKeyInfo(Sequence):
             object. For ECDSA keys, an OctetString.
         """
 
-        algo = self['private_key_algorithm']['algorithm'].native
-
-        if algo == 'dsa':
+        if self.algorithm == 'dsa':
             params = self['private_key_algorithm']['parameters']
             return Integer(pow(
                 params['g'].native,
@@ -501,42 +503,41 @@ class PrivateKeyInfo(Sequence):
                 params['p'].native
             ))
 
-        if algo == 'rsa':
+        if self.algorithm == 'rsa':
             key = self['private_key'].parsed
             return RSAPublicKey({
                 'modulus': key['modulus'],
                 'public_exponent': key['public_exponent'],
             })
 
-        if algo == 'ecdsa':
-            params = self['private_key_algorithm']['parameters']
-            chosen = params.chosen
+        if self.algorithm == 'ecdsa':
+            curve_type, details = self.curve
 
-            if params.name == 'implicit_ca':
+            if curve_type == 'implicit_ca':
                 raise ValueError('Unable to compute public key for ECDSA key using Implicit CA parameters')
 
-            if params.name == 'specified':
-                if chosen['field_id']['field_type'] == 'characteristic_two_field':
+            if curve_type == 'specified':
+                if details['field_id']['field_type'] == 'characteristic_two_field':
                     raise ValueError('Unable to compute public key for ECDSA key over a characteristic two field')
 
                 curve = PrimeCurve(
-                    chosen['field_id']['parameters'].native,
-                    int_from_bytes(chosen['curve']['a'].native),
-                    int_from_bytes(chosen['curve']['b'].native)
+                    details['field_id']['parameters'],
+                    int_from_bytes(details['curve']['a']),
+                    int_from_bytes(details['curve']['b'])
                 )
-                base_point = PrimePoint.load(curve, chosen['base'].native)
+                base_point = PrimePoint.load(curve, details['base'])
 
-            elif params.name == 'named':
-                if chosen.native not in ('prime192v1', 'secp224r1', 'prime256v1', 'secp384r1', 'secp521r1'):
-                    raise ValueError('Unable to compute public key for ECDSA named curve %s, parameters not currently included' % chosen.native)
+            elif curve_type == 'named':
+                if details not in ('secp192r1', 'secp224r1', 'secp256r1', 'secp384r1', 'secp521r1'):
+                    raise ValueError('Unable to compute public key for ECDSA named curve %s, parameters not currently included' % details)
 
                 base_point = {
-                    'prime192v1': NIST_P192_BASE_POINT,
+                    'secp192r1': NIST_P192_BASE_POINT,
                     'secp224r1': NIST_P224_BASE_POINT,
-                    'prime256v1': NIST_P256_BASE_POINT,
+                    'secp256r1': NIST_P256_BASE_POINT,
                     'secp384r1': NIST_P384_BASE_POINT,
                     'secp521r1': NIST_P521_BASE_POINT,
-                }[chosen.native]
+                }[details]
 
             public_point = base_point * self['private_key'].parsed['private_key'].native
             return OctetString(public_point.dump())
@@ -550,12 +551,10 @@ class PrivateKeyInfo(Sequence):
             An RSAPrivateKey, DSAPrivateKey or ECPrivateKey object
         """
 
-        algo = self['private_key_algorithm']['algorithm'].native
+        if self.algorithm == 'rsa':
+            return self['private_key'].parsed
 
-        if algo == 'rsa':
-            return self['private_key']
-
-        if algo == 'dsa':
+        if self.algorithm == 'dsa':
             params = self['private_key_algorithm']['parameters']
             return DSAPrivateKey({
                 'version': 0,
@@ -563,19 +562,82 @@ class PrivateKeyInfo(Sequence):
                 'q': params['q'],
                 'g': params['g'],
                 'public_key': self.public_key,
-                'private_key': self['private_key'],
+                'private_key': self['private_key'].parsed,
             })
 
-        if algo == 'ecdsa':
-            output = self['private_key']
+        if self.algorithm == 'ecdsa':
+            output = self['private_key'].parsed
             output['parameters'] = self['private_key_algorithm']['parameters']
             output['public_key'] = OctetBitString(self.public_key.native)
             return output
 
     @property
+    def curve(self):
+        """
+        Returns information about the curve used for an ECDSA key
+
+        :raises:
+            ValueError - when the key is no an ECDSA key
+
+        :return:
+            A two-element tuple, with the first element being a unicode string
+            of "implicit_ca", "specified" or "named". If the first element is
+            "implicit_ca", the second is None. If "specified", the second is
+            an OrderedDict that is the native version of SpecifiedECDomain. If
+            "named", the second is a unicode string of the curve name.
+        """
+
+        if self.algorithm != 'ecdsa':
+            raise ValueError('Only ECDSA keys have a curve, this key is %s' % self.algorithm.upper())
+
+        params = self['private_key_algorithm']['parameters']
+        chosen = params.chosen
+
+        if params.name == 'implicit_ca':
+            value = None
+        else:
+            value = chosen.native
+
+        return (params.name, value)
+
+    @property
+    def algorithm(self):
+        """
+        :return:
+            A unicode string of "rsa", "dsa" or "ecdsa"
+        """
+
+        if self._algorithm is None:
+            self._algorithm = self['private_key_algorithm']['algorithm'].native
+        return self._algorithm
+
+    @property
+    def bit_size(self):
+        """
+        :return:
+            The bit size of the private, as an integer
+        """
+
+        if self._bit_size is None:
+            if self.algorithm == 'rsa':
+                prime = self['private_key'].parsed['private_exponent'].native
+            elif self.algorithm == 'dsa':
+                prime = self['private_key_algorithm']['parameters']['p'].native
+            elif self.algorithm == 'ecdsa':
+                prime = self['private_key'].parsed['private_key'].native
+            self._bit_size = int(math.ceil(math.log(prime, 2) / 8) * 8)
+        return self._bit_size
+
+    @property
     def public_key(self):
+        """
+        :return:
+            If an RSA key, an RSAPublicKey object. If a DSA key, an Integer
+            object. If an ECDSA key, an OctetString object.
+        """
+
         if self._public_key is None:
-            if self['private_key_algorithm']['algorithm'].native == 'ecdsa':
+            if self.algorithm == 'ecdsa':
                 key = self['private_key'].parsed
                 if key['public_key']:
                     self._public_key = OctetString(key['public_key'].native)
@@ -604,17 +666,16 @@ class PrivateKeyInfo(Sequence):
         """
 
         if self._fingerprint is None:
-            key_type = self['private_key_algorithm']['algorithm'].native
             params = self['private_key_algorithm']['parameters']
             key = self['private_key'].parsed
 
-            if key_type == 'rsa':
+            if self.algorithm == 'rsa':
                 to_hash = '%d:%d' % (
                     key['modulus'].native,
                     key['public_exponent'].native,
                 )
 
-            elif key_type == 'dsa':
+            elif self.algorithm == 'dsa':
                 public_key = self.public_key
                 to_hash = '%d:%d:%d:%d' % (
                     params['p'].native,
@@ -623,7 +684,7 @@ class PrivateKeyInfo(Sequence):
                     public_key.native,
                 )
 
-            elif key_type == 'ecdsa':
+            elif self.algorithm == 'ecdsa':
                 public_key = key['public_key'].native
                 if public_key is None:
                     public_key = self.public_key.native
@@ -724,6 +785,8 @@ class PublicKeyInfo(Sequence):
         'public_key': _public_key_spec
     }
 
+    _algorithm = None
+    _bit_size = None
     _fingerprint = None
 
     @classmethod
@@ -758,6 +821,65 @@ class PublicKeyInfo(Sequence):
         container['public_key'] = OctetBitString(public_key)
 
         return container
+
+    @property
+    def curve(self):
+        """
+        Returns information about the curve used for an ECDSA key
+
+        :raises:
+            ValueError - when the key is no an ECDSA key
+
+        :return:
+            A two-element tuple, with the first element being a unicode string
+            of "implicit_ca", "specified" or "named". If the first element is
+            "implicit_ca", the second is None. If "specified", the second is
+            an OrderedDict that is the native version of SpecifiedECDomain. If
+            "named", the second is a unicode string of the curve name.
+        """
+
+        if self.algorithm != 'ecdsa':
+            raise ValueError('Only ECDSA keys have a curve, this key is %s' % self.algorithm.upper())
+
+        params = self['algorithm']['parameters']
+        chosen = params.chosen
+
+        if params.name == 'implicit_ca':
+            value = None
+        else:
+            value = chosen.native
+
+        return (params.name, value)
+
+    @property
+    def algorithm(self):
+        """
+        :return:
+            A unicode string of "rsa", "dsa" or "ecdsa"
+        """
+
+        if self._algorithm is None:
+            self._algorithm = self['algorithm']['algorithm'].native
+        return self._algorithm
+
+    @property
+    def bit_size(self):
+        """
+        :return:
+            The bit size of the private, as an integer
+        """
+
+        if self._bit_size is None:
+            if self.algorithm == 'ecdsa':
+                self._bit_size = ((len(self['public_key'].native) - 1) / 2) * 8
+            else:
+                if self.algorithm == 'rsa':
+                    prime = self['public_key'].parsed['modulus'].native
+                elif self.algorithm == 'dsa':
+                    prime = self['public_key'].parsed.native
+                self._bit_size = int(math.ceil(math.log(prime, 2) / 8) * 8)
+
+        return self._bit_size
 
     @property
     def fingerprint(self):
