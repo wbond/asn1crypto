@@ -1,8 +1,8 @@
 # coding: utf-8
 
 """
-ctypes interface for BN_mod_inverse() function from OpenSSL. Provides the
-following items to be imported:
+ctypes interface for BN_mod_inverse() function from OpenSSL. Exports the
+following items:
 
  - buffer_from_bytes()
  - bytes_from_buffer()
