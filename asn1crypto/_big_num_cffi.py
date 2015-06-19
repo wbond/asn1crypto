@@ -38,21 +38,24 @@ except (ImportError):
 try:
     ffi = FFI()
     ffi.cdef("""
-        void *BN_new(void);
+        typedef void BIGNUM;
+        typedef void BN_CTX;
 
-        int BN_bn2bin(const void *a, unsigned char *to);
-        void *BN_bin2bn(const unsigned char *s, int len, void *ret);
+        BIGNUM *BN_new(void);
 
-        void BN_set_negative(void *a, int n);
+        int BN_bn2bin(const BIGNUM *a, unsigned char *to);
+        BIGNUM *BN_bin2bn(const unsigned char *s, int len, BIGNUM *ret);
 
-        int BN_num_bits(const void *a);
+        void BN_set_negative(BIGNUM *a, int n);
 
-        void BN_free(void *a);
+        int BN_num_bits(const BIGNUM *a);
 
-        void *BN_CTX_new(void);
-        void BN_CTX_free(void *c);
+        void BN_free(BIGNUM *a);
 
-        void *BN_mod_inverse(void *r, void *a, const void *n, void *ctx);
+        BN_CTX *BN_CTX_new(void);
+        void BN_CTX_free(BN_CTX *c);
+
+        BIGNUM *BN_mod_inverse(BIGNUM *r, BIGNUM *a, const BIGNUM *n, BN_CTX *ctx);
     """)
 
     libcrypto_path = find_library('libcrypto')
