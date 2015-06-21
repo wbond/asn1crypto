@@ -38,8 +38,8 @@ except (ImportError):
 try:
     ffi = FFI()
     ffi.cdef("""
-        typedef void BIGNUM;
-        typedef void BN_CTX;
+        typedef ... BIGNUM;
+        typedef ... BN_CTX;
 
         BIGNUM *BN_new(void);
 
