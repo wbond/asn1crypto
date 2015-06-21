@@ -8,7 +8,7 @@ Exports the following items:
  - int_to_bytes()
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, division, absolute_import, print_function
 
 import sys
 

@@ -22,7 +22,7 @@ found. Will raise asn1crypto._ffi.FFIEngineError() if cffi is not instaled
 or there is an error interfacing with libcrypto.
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, division, absolute_import, print_function
 
 from ctypes.util import find_library
 

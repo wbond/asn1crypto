@@ -17,7 +17,7 @@ compatible with PKCS#7. Exports the following items:
 Other type classes are defined that help compose the types listed above.
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, division, absolute_import, print_function
 
 try:
     import zlib

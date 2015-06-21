@@ -9,7 +9,7 @@ following items:
 Other type classes are defined that help compose the types listed above.
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, division, absolute_import, print_function
 
 from .algos import SignedDigestAlgorithm
 from .core import (

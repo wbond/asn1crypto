@@ -6,7 +6,7 @@ Implementation of the teletex T.61 codec. Exports the following items:
  - register()
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, division, absolute_import, print_function
 
 import codecs
 

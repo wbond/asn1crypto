@@ -32,8 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from __future__ import unicode_literals
-from __future__ import division
+from __future__ import unicode_literals, division, absolute_import, print_function
 
 import math
 
