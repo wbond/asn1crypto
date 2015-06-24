@@ -31,7 +31,7 @@ from ._ffi import LibraryNotFoundError, FFIEngineError
 
 
 try:
-    libcrypto_path = find_library('libcrypto')
+    libcrypto_path = find_library('crypto')
     if not libcrypto_path:
         raise LibraryNotFoundError('The library libcrypto could not be found')
 

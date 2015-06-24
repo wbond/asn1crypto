@@ -58,7 +58,7 @@ try:
         BIGNUM *BN_mod_inverse(BIGNUM *r, BIGNUM *a, const BIGNUM *n, BN_CTX *ctx);
     """)
 
-    libcrypto_path = find_library('libcrypto')
+    libcrypto_path = find_library('crypto')
     if not libcrypto_path:
         raise LibraryNotFoundError('The library libcrypto could not be found')
 
