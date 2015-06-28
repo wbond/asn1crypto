@@ -591,7 +591,7 @@ class PrivateKeyInfo(Sequence):
         Returns information about the curve used for an ECDSA key
 
         :raises:
-            ValueError - when the key is no an ECDSA key
+            ValueError - when the key is not an ECDSA key
 
         :return:
             A two-element tuple, with the first element being a unicode string
@@ -862,7 +862,7 @@ class PublicKeyInfo(Sequence):
         Returns information about the curve used for an ECDSA key
 
         :raises:
-            ValueError - when the key is no an ECDSA key
+            ValueError - when the key is not an ECDSA key
 
         :return:
             A two-element tuple, with the first element being a unicode string
