@@ -615,6 +615,26 @@ class PrivateKeyInfo(Sequence):
         return (params.name, value)
 
     @property
+    def hash_algo(self):
+        """
+        Returns the name of the family of hash algorithms used to generate a
+        DSA key
+
+        :raises:
+            ValueError - when the key is not a DSA key
+
+        :return:
+            A unicode string of "sha1" or "sha2"
+        """
+
+        if self.algorithm != 'dsa':
+            raise ValueError('Only DSA keys are generated using a hash algorithm, this key is %s' % self.algorithm.upper())
+
+        byte_len = math.log(self['private_key_algorithm']['parameters']['q'].native, 2) / 8
+
+        return 'sha1' if byte_len <= 20 else 'sha2'
+
+    @property
     def algorithm(self):
         """
         :return:
@@ -864,6 +884,26 @@ class PublicKeyInfo(Sequence):
             value = chosen.native
 
         return (params.name, value)
+
+    @property
+    def hash_algo(self):
+        """
+        Returns the name of the family of hash algorithms used to generate a
+        DSA key
+
+        :raises:
+            ValueError - when the key is not a DSA key
+
+        :return:
+            A unicode string of "sha1" or "sha2"
+        """
+
+        if self.algorithm != 'dsa':
+            raise ValueError('Only DSA keys are generated using a hash algorithm, this key is %s' % self.algorithm.upper())
+
+        byte_len = math.log(self['algorithm']['parameters']['q'].native, 2) / 8
+
+        return 'sha1' if byte_len <= 20 else 'sha2'
 
     @property
     def algorithm(self):
