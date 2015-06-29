@@ -37,7 +37,10 @@ if sys.version_info <= (3,):
         hex_str = '%x' % value
         if len(hex_str) & 1:
             hex_str = '0' + hex_str
-        return hex_str.decode('hex')
+        output = hex_str.decode('hex')
+        if signed and ord(output[0:1]) & 0x80:
+            output = b'\x00' + output
+        return output
 
     def int_from_bytes(value, signed=False):
         """
