@@ -138,7 +138,7 @@ class PrimePoint():
         if first_byte not in (b'\x02', b'\x03'):
             raise ValueError('Invalid ECPoint representation of a point - first byte is incorrect')
 
-        raise ValueError('Compressed ECPoint representations are not supported')
+        raise ValueError('Compressed ECPoint representations are not supported due to patent US6252960')
 
     def __init__(self, curve, x, y, order=None):
         """
