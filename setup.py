@@ -30,5 +30,5 @@ setup(
 
     keywords='asn1 crypto',
 
-    packages=find_packages(exclude=['tests*'])
+    packages=find_packages(exclude=['tests*', 'dev*'])
 )

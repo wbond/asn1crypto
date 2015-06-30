@@ -59,6 +59,21 @@ pre-defined data types.
  - [Time stamp protocol (TSP)](asn1crypto/tsp.py), `asn1crypto.tsp`
  - [PDF signatures](asn1crypto/pdf.py), `asn1crypto.pdf`
 
+## Development
+
+The following commands will run the test suite, linter and test coverage:
+
+```bash
+python run.py tests
+python run.py lint
+python run.py coverage
+```
+
+To run only some tests, pass a regular expression as a parameter to `tests`.
+
+```bash
+python run.py tests ocsp
+```
 
 ## Why Another Python ASN.1 Library?
 
