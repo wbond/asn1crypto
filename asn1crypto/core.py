@@ -1948,13 +1948,25 @@ class Sequence(Asn1Value):
                     if 'optional' in field_params or 'default' in field_params:
                         id_ = (parts[0], parts[2])
 
-                        if self._field_ids[field] != id_ and field_spec != Any:
-                            if 'optional' in field_params:
-                                self.children.append(NoValue())
-                            else:
-                                self.children.append(field_spec(**field_params))
-                            field += 1
-                            continue
+                        no_id_match = self._field_ids[field] != id_
+                        not_any = field_spec != Any
+                        if no_id_match and not_any:
+                            choice_match = False
+                            if issubclass(field_spec, Choice):
+                                try:
+                                    tester = field_spec(**field_params)
+                                    tester.validate(*id_)
+                                    choice_match = True
+                                except (ValueError):  #pylint: disable=W0704
+                                    pass
+
+                            if not choice_match:
+                                if 'optional' in field_params:
+                                    self.children.append(NoValue())
+                                else:
+                                    self.children.append(field_spec(**field_params))
+                                field += 1
+                                continue
 
                     if field_spec is None or (issubclass(field_spec, Any) and spec_override):
                         field_spec = value_spec
