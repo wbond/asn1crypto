@@ -482,13 +482,18 @@ class Any(Asn1Value):
         """
 
         if self._parsed is None or self._parsed[1:3] != (spec, spec_params):
-            passed_params = spec_params
-            if self.tag_type == 'explicit':
-                passed_params = {} if not spec_params else spec_params.copy()
-                passed_params['tag_type'] = self.tag_type
-                passed_params['tag'] = self.tag
-            parsed_value, _ = _parse_build(self.header + self.contents + self.trailer, spec=spec, spec_params=passed_params)
-            self._parsed = (parsed_value, spec, spec_params)
+            try:
+                passed_params = spec_params
+                if self.tag_type == 'explicit':
+                    passed_params = {} if not spec_params else spec_params.copy()
+                    passed_params['tag_type'] = self.tag_type
+                    passed_params['tag'] = self.tag
+                parsed_value, _ = _parse_build(self.header + self.contents + self.trailer, spec=spec, spec_params=passed_params)
+                self._parsed = (parsed_value, spec, spec_params)
+            except (ValueError) as e:
+                args = e.args[1:]
+                e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
+                raise e
         return self._parsed[0]
 
     def dump(self, force=False):
@@ -1916,6 +1921,7 @@ class Sequence(Asn1Value):
             contents_length = len(self.contents)
             child_pointer = 0
             field = 0
+            seen_field = 1
             while child_pointer < contents_length:
                 parts, num_bytes = _parse(self.contents, pointer=child_pointer)
 
@@ -1977,6 +1983,31 @@ class Sequence(Asn1Value):
                     else:
                         child = parts + (field_spec, field_params)
 
+                # Handle situations where an optional or defaulted field definition is incorrect
+                elif len(self._fields) > 0 and seen_field <= len(self._fields):
+                    missed_fields = []
+                    prev_field = field - 1
+                    while prev_field >= 0:
+                        prev_field_info = self._fields[prev_field]
+                        if len(prev_field_info) < 3:
+                            break
+                        if 'optional' in prev_field_info[2] or 'default' in prev_field_info[2]:
+                            missed_fields.append(prev_field_info[0])
+                        prev_field -= 1
+                    plural = 's' if len(missed_fields) > 1 else ''
+                    missed_field_names = ', '.join(missed_fields)
+                    raise ValueError(
+                        'Data for field %s (%s class, %s method, tag %s) does not match the field definition%s of %s' %
+                        (
+                            seen_field,
+                            CLASS_NUM_TO_NAME_MAP.get(parts[0]),
+                            METHOD_NUM_TO_NAME_MAP.get(parts[1]),
+                            parts[2],
+                            plural,
+                            missed_field_names
+                        )
+                    )
+
                 else:
                     child = parts
 
@@ -1988,6 +2019,7 @@ class Sequence(Asn1Value):
                 self.children.append(child)
                 child_pointer += num_bytes
                 field += 1
+                seen_field += 1
 
             total_fields = len(self._fields)
             index = len(self.children)
@@ -2022,14 +2054,19 @@ class Sequence(Asn1Value):
             return None
 
         if self._native is None:
-            if self.children is None:
-                self._parse_children(recurse=True)
-            self._native = OrderedDict()
-            for index, child in enumerate(self.children):
-                if isinstance(child, tuple):
-                    child = _build(*child)
-                    self.children[index] = child
-                self._native[self._fields[index][0]] = child.native
+            try:
+                if self.children is None:
+                    self._parse_children(recurse=True)
+                self._native = OrderedDict()
+                for index, child in enumerate(self.children):
+                    if isinstance(child, tuple):
+                        child = _build(*child)
+                        self.children[index] = child
+                    self._native[self._fields[index][0]] = child.native
+            except (ValueError) as e:
+                args = e.args[1:]
+                e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
+                raise e
         return self._native
 
     #pylint: disable=W0212
@@ -2944,7 +2981,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     # If no spec was specified, allow anything and just process what
     # is in the input data
     else:
-        spec = {
+        universal_specs = {
             1: Boolean,
             2: Integer,
             3: BitString,
@@ -2973,7 +3010,18 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
             28: UniversalString,
             29: CharacterString,
             30: BMPString
-        }[tag]
+        }
+        if tag not in universal_specs:
+            raise ValueError(
+                'Unknown element - %s class, %s method, tag %s' %
+                (
+                    CLASS_NUM_TO_NAME_MAP.get(class_),
+                    METHOD_NUM_TO_NAME_MAP.get(method),
+                    tag,
+                )
+            )
+
+        spec = universal_specs[tag]
 
         value = spec(class_=class_)
 
