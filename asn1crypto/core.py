@@ -482,7 +482,12 @@ class Any(Asn1Value):
         """
 
         if self._parsed is None or self._parsed[1:3] != (spec, spec_params):
-            parsed_value, _ = _parse_build(self.header + self.contents + self.trailer, spec=spec, spec_params=spec_params)
+            passed_params = spec_params
+            if self.tag_type == 'explicit':
+                passed_params = {} if not spec_params else spec_params.copy()
+                passed_params['tag_type'] = self.tag_type
+                passed_params['tag'] = self.tag
+            parsed_value, _ = _parse_build(self.header + self.contents + self.trailer, spec=spec, spec_params=passed_params)
             self._parsed = (parsed_value, spec, spec_params)
         return self._parsed[0]
 
@@ -2917,6 +2922,12 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                         tag
                     )
                 )
+
+    # For explicitly tagged, un-speced parsings, we use a generic container
+    # since we will be parsing the contents and discarding the outer object
+    # anyway a little further on
+    elif spec_params and 'tag_type' in spec_params and spec_params['tag_type'] == 'explicit':
+        value = Asn1Value(**spec_params)
 
     # If no spec was specified, allow anything and just process what
     # is in the input data
