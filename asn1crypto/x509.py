@@ -133,8 +133,8 @@ class NameTypeAndValue(Sequence):
     _oid_specs = {
         'common_name': DirectoryString,
         'surname': DirectoryString,
-        'serial_number': PrintableString,
-        'country_name': PrintableString,
+        'serial_number': DirectoryString,
+        'country_name': DirectoryString,
         'locality_name': DirectoryString,
         'state_or_province_name': DirectoryString,
         'organization_name': DirectoryString,
@@ -144,13 +144,13 @@ class NameTypeAndValue(Sequence):
         'given_name': DirectoryString,
         'initials': DirectoryString,
         'generation_qualifier': DirectoryString,
-        'dn_qualifier': PrintableString,
+        'dn_qualifier': DirectoryString,
         # https://tools.ietf.org/html/rfc2985#page-26
         'email_address': IA5String,
         # Page 10 of https://cabforum.org/wp-content/uploads/EV-V1_5_5.pdf
         'incorporation_locality': DirectoryString,
         'incorporation_state_or_province': DirectoryString,
-        'incorporation_country': PrintableString,
+        'incorporation_country': DirectoryString,
     }
 
 
