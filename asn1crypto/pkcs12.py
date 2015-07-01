@@ -79,7 +79,7 @@ class Attribute(Sequence):
     }
 
 
-class Attributes(SequenceOf):
+class Attributes(SetOf):
     _child_spec = Attribute
 
 
