@@ -371,7 +371,7 @@ class X509Tests(unittest.TestCase):
             subject.native
         )
         self.assertEqual(
-            'ecdsa',
+            'ec',
             subject_public_key_algorithm['algorithm'].native
         )
         self.assertEqual(

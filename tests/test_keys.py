@@ -289,8 +289,8 @@ class KeysTests(unittest.TestCase):
     def key_pairs():
         return (
             ('dsa',         'keys/test-pkcs8-dsa-der.key',         'keys/test-public-dsa-der.key',      'dsa',   3072),
-            ('ecdsa_named', 'keys/test-pkcs8-ec-named-der.key',    'keys/test-public-ec-named-der.key', 'ecdsa', 256),
-            ('ecdsa',       'keys/test-pkcs8-ec-der.key',          'keys/test-public-ec-der.key',       'ecdsa', 256),
+            ('ec_named',    'keys/test-pkcs8-ec-named-der.key',    'keys/test-public-ec-named-der.key', 'ec',    256),
+            ('ec',          'keys/test-pkcs8-ec-der.key',          'keys/test-public-ec-der.key',       'ec',    256),
             ('rsa',         'keys/test-pkcs8-der.key',             'keys/test-public-der.key',          'rsa',   2048),
         )
 
@@ -346,8 +346,8 @@ class KeysTests(unittest.TestCase):
     def key_variations():
         return (
             ('dsa',         'keys/test-pkcs8-dsa-der.key',         'keys/test-dsa-der.key',),
-            ('ecdsa_named', 'keys/test-pkcs8-ec-named-der.key',    'keys/test-ec-named-der.key',),
-            ('ecdsa',       'keys/test-pkcs8-ec-der.key',          'keys/test-ec-der.key',),
+            ('ec_named',    'keys/test-pkcs8-ec-named-der.key',    'keys/test-ec-named-der.key',),
+            ('ec',          'keys/test-pkcs8-ec-der.key',          'keys/test-ec-der.key',),
             ('rsa',         'keys/test-pkcs8-der.key',             'keys/test-der.key',),
         )
 
