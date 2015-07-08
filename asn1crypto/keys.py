@@ -862,6 +862,22 @@ class PublicKeyInfo(Sequence):
 
         return container
 
+    def unwrap(self):
+        """
+        Unwraps an RSA public key into an RSAPublicKey object. Does not support
+        DSA or EC public keys since they do not have an unwrapped form.
+
+        :return:
+            An RSAPublicKey object
+        """
+
+        if self.algorithm == 'rsa':
+            return self['public_key'].parsed
+
+        key_type = self.algorithm.upper()
+        a_an = 'an' if key_type == 'EC' else 'a'
+        raise ValueError('Only RSA public keys may be unwrapped - this key is %s %s public key' % (a_an, key_type))
+
     @property
     def curve(self):
         """
