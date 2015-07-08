@@ -82,6 +82,74 @@ class DigestInfo(Sequence):
     ]
 
 
+class MaskGenAlgorithmId(ObjectIdentifier):
+    _map = {
+        '1.2.840.113549.1.1.8': 'mgf1',
+    }
+
+
+class MaskGenAlgorithm(Sequence):
+    _fields = [
+        ('algorithm', MaskGenAlgorithmId),
+        ('parameters', Any, {'optional': True}),
+    ]
+
+    _oid_pair = ('algorithm', 'parameters')
+    _oid_specs = {
+        'mgf1': DigestAlgorithm
+    }
+
+
+class TrailerField(Integer):
+    _map = {
+        1: 'trailer_field_bc',
+    }
+
+
+class RSASSAPSSParams(Sequence):
+    _fields = [
+        (
+            'hash_algorithm',
+            DigestAlgorithm,
+            {
+                'tag_type': 'explicit',
+                'tag': 0,
+                'default': {'algorithm': 'sha1'},
+            }
+        ),
+        (
+            'mask_gen_algorithm',
+            MaskGenAlgorithm,
+            {
+                'tag_type': 'explicit',
+                'tag': 1,
+                'default': {
+                    'algorithm': 'mgf1',
+                    'parameters': {'algorithm': 'sha1'},
+                },
+            }
+        ),
+        (
+            'salt_length',
+            Integer,
+            {
+                'tag_type': 'explicit',
+                'tag': 2,
+                'default': 20,
+            }
+        ),
+        (
+            'trailer_field',
+            TrailerField,
+            {
+                'tag_type': 'explicit',
+                'tag': 3,
+                'default': 'trailer_field_bc',
+            }
+        ),
+    ]
+
+
 class SignedDigestAlgorithmId(ObjectIdentifier):
     _map = {
         '1.3.14.3.2.3': 'md5_rsa',
@@ -94,6 +162,7 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         '1.2.840.113549.1.1.11': 'sha256_rsa',
         '1.2.840.113549.1.1.12': 'sha384_rsa',
         '1.2.840.113549.1.1.13': 'sha512_rsa',
+        '1.2.840.113549.1.1.10': 'rsassa_pss',
         '1.2.840.10040.4.3': 'sha1_dsa',
         '1.3.14.3.2.13': 'sha1_dsa',
         '1.3.14.3.2.27': 'sha1_dsa',
@@ -105,7 +174,7 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         '1.2.840.10045.4.3.3': 'sha384_ecdsa',
         '1.2.840.10045.4.3.4': 'sha512_ecdsa',
         # For when the digest is specified elsewhere in a Sequence
-        '1.2.840.113549.1.1.1': 'rsa',
+        '1.2.840.113549.1.1.1': 'rsassa_pkcs1v15',
         '1.2.840.10040.4.1': 'dsa',
         '1.2.840.10045.4': 'ecdsa',
     }
@@ -116,6 +185,11 @@ class SignedDigestAlgorithm(Sequence):
         ('algorithm', SignedDigestAlgorithmId),
         ('parameters', Any, {'optional': True}),
     ]
+
+    _oid_pair = ('algorithm', 'parameters')
+    _oid_specs = {
+        'rsa_pss': RSASSAPSSParams,
+    }
 
 
 class Pbkdf2Salt(Choice):
@@ -180,6 +254,62 @@ class Pbes1Params(Sequence):
     ]
 
 
+class PSourceAlgorithmId(ObjectIdentifier):
+    _map = {
+        '1.2.840.113549.1.1.9': 'p_specified',
+    }
+
+
+class PSourceAlgorithm(Sequence):
+    _fields = [
+        ('algorithm', PSourceAlgorithmId),
+        ('parameters', Any, {'optional': True}),
+    ]
+
+    _oid_pair = ('algorithm', 'parameters')
+    _oid_specs = {
+        'p_specified': OctetString
+    }
+
+
+class RSAESOAEPParams(Sequence):
+    _fields = [
+        (
+            'hash_algorithm',
+            DigestAlgorithm,
+            {
+                'tag_type': 'explicit',
+                'tag': 0,
+                'default': {'algorithm': 'sha1'}
+            }
+        ),
+        (
+            'mask_gen_algorithm',
+            MaskGenAlgorithm,
+            {
+                'tag_type': 'explicit',
+                'tag': 1,
+                'default': {
+                    'algorithm': 'mgf1',
+                    'parameters': {'algorithm': 'sha1'}
+                }
+            }
+        ),
+        (
+            'p_source_algorithm',
+            PSourceAlgorithm,
+            {
+                'tag_type': 'explicit',
+                'tag': 2,
+                'default': {
+                    'algorithm': 'p_specified',
+                    'parameters': b''
+                }
+            }
+        ),
+    ]
+
+
 class EncryptionAlgorithmId(ObjectIdentifier):
     _map = {
         '1.3.14.3.2.7': 'des',
@@ -204,6 +334,9 @@ class EncryptionAlgorithmId(ObjectIdentifier):
         '1.2.840.113549.1.12.1.4': 'pkcs12_sha1_tripledes_2key',
         '1.2.840.113549.1.12.1.5': 'pkcs12_sha1_rc2_128',
         '1.2.840.113549.1.12.1.6': 'pkcs12_sha1_rc2_40',
+        # PKCS#1 v2.2
+        '1.2.840.113549.1.1.1': 'rsaes_pkcs1v15',
+        '1.2.840.113549.1.1.7': 'rsaes_oaep',
     }
 
 
@@ -236,6 +369,8 @@ class EncryptionAlgorithm(Sequence):
         'pkcs12_sha1_tripledes_2key': Pbes1Params,
         'pkcs12_sha1_rc2_128': Pbes1Params,
         'pkcs12_sha1_rc2_40': Pbes1Params,
+        # PKCS#1 v2.2
+        'rsaes_oaep': RSAESOAEPParams,
     }
 
     @property
