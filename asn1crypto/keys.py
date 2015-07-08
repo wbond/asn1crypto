@@ -649,18 +649,27 @@ class PrivateKeyInfo(Sequence):
     def bit_size(self):
         """
         :return:
-            The bit size of the private, as an integer
+            The bit size of the private key, as an integer
         """
 
         if self._bit_size is None:
             if self.algorithm == 'rsa':
-                prime = self['private_key'].parsed['private_exponent'].native
+                prime = self['private_key'].parsed['modulus'].native
             elif self.algorithm == 'dsa':
                 prime = self['private_key_algorithm']['parameters']['p'].native
             elif self.algorithm == 'ec':
                 prime = self['private_key'].parsed['private_key'].native
-            self._bit_size = int(math.ceil(math.log(prime, 2) / 8) * 8)
+            self._bit_size = int(math.ceil(math.log(prime, 2)))
         return self._bit_size
+
+    @property
+    def byte_size(self):
+        """
+        :return:
+            The byte size of the private key, as an integer
+        """
+
+        return int(math.ceil(self.bit_size / 8))
 
     @property
     def public_key(self):
@@ -917,7 +926,7 @@ class PublicKeyInfo(Sequence):
     def bit_size(self):
         """
         :return:
-            The bit size of the private, as an integer
+            The bit size of the public key, as an integer
         """
 
         if self._bit_size is None:
@@ -928,9 +937,18 @@ class PublicKeyInfo(Sequence):
                     prime = self['public_key'].parsed['modulus'].native
                 elif self.algorithm == 'dsa':
                     prime = self['public_key'].parsed.native
-                self._bit_size = int(math.ceil(math.log(prime, 2) / 8) * 8)
+                self._bit_size = int(math.ceil(math.log(prime, 2)))
 
         return self._bit_size
+
+    @property
+    def byte_size(self):
+        """
+        :return:
+            The byte size of the public key, as an integer
+        """
+
+        return int(math.ceil(self.bit_size / 8))
 
     @property
     def fingerprint(self):
