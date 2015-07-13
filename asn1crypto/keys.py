@@ -43,7 +43,7 @@ from ._elliptic_curve import (
     PrimeCurve,
     PrimePoint,
 )
-from ._int_conversion import int_from_bytes
+from ._int import int_from_bytes
 
 try:
     # Python 2

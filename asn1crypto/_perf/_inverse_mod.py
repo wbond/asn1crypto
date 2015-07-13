@@ -37,7 +37,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import math
 
 from ._ffi import LibraryNotFoundError, FFIEngineError
-from ._int_conversion import int_to_bytes, int_from_bytes
+from .._int import int_to_bytes, int_from_bytes
 
 
 try:

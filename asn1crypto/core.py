@@ -53,7 +53,7 @@ from datetime import datetime, timedelta, tzinfo
 from pprint import pprint
 
 from . import _teletex_codec
-from ._int_conversion import int_to_bytes, int_from_bytes
+from ._int import int_to_bytes, int_from_bytes
 
 # Python 2
 if sys.version_info <= (3,):

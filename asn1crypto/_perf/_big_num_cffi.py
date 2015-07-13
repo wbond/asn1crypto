@@ -7,14 +7,14 @@ following items:
  - buffer_from_bytes()
  - bytes_from_buffer()
  - libcrypto
-    - BN_new()
     - BN_bin2bin()
-    - BN_set_negative()
-    - BN_num_bits()
-    - BN_free()
-    - BN_CTX_new()
     - BN_CTX_free()
+    - BN_CTX_new()
+    - BN_free()
     - BN_mod_inverse()
+    - BN_new()
+    - BN_num_bits()
+    - BN_set_negative()
  - null()
 
 Will raise asn1crypto._ffi.LibraryNotFoundError() if libcrypto can not be
