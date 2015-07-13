@@ -2062,7 +2062,11 @@ class Sequence(Asn1Value):
                     if isinstance(child, tuple):
                         child = _build(*child)
                         self.children[index] = child
-                    self._native[self._fields[index][0]] = child.native
+                    try:
+                        name = self._fields[index][0]
+                    except (IndexError):
+                        name = str_cls(index)
+                    self._native[name] = child.native
             except (ValueError) as e:
                 args = e.args[1:]
                 e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
