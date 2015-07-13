@@ -8,6 +8,7 @@ a bunch of ASN.1 structures for use with various common cryptography standards:
 | ---------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | X509                   | [`asn1crypto.x509`](asn1crypto/x509.py)     | [RFC5280](https://tools.ietf.org/html/rfc5280)                                                                         |
 | CRL                    | [`asn1crypto.crl`](asn1crypto/crl.py)       | [RFC5280](https://tools.ietf.org/html/rfc5280)                                                                         |
+| CSR                    | [`asn1crypto.csr`](asn1crypto/csr.py)       | [RFC2986](https://tools.ietf.org/html/rfc2986), [RFC2985](https://tools.ietf.org/html/rfc2985)                         |
 | OCSP                   | [`asn1crypto.ocsp`](asn1crypto/ocsp.py)     | [RFC6960](https://tools.ietf.org/html/rfc6960)                                                                         |
 | PKCS#12                | [`asn1crypto.pkcs12`](asn1crypto/pkcs12.py) | [RFC7292](https://tools.ietf.org/html/rfc7292)                                                                         |
 | PKCS#8                 | [`asn1crypto.keys`](asn1crypto/keys.py)     | [RFC5208](https://tools.ietf.org/html/rfc5208)                                                                         |
@@ -54,6 +55,7 @@ pre-defined data types.
  - [X509 certificates](asn1crypto/x509.py), `asn1crypto.x509`
  - [Certificate revocation lists (CRLs)](asn1crypto/crl.py), `asn1crypto.crl`
  - [Online certificate status protocol (OCSP)](asn1crypto/ocsp.py), `asn1crypto.ocsp`
+ - [Certificate signing requests (CSRs)](asn1crypto/csr.py), `asn1crypto.csr`
  - [Private key/certificate containers (PKCS#12)](asn1crypto/pkcs12.py), `asn1crypto.pkcs12`
  - [Cryptographic message syntax (CMS, PKCS#7)](asn1crypto/cms.py), `asn1crypto.cms`
  - [Time stamp protocol (TSP)](asn1crypto/tsp.py), `asn1crypto.tsp`

@@ -6,6 +6,7 @@ import re
 
 from tests.test_cms import CMSTests
 from tests.test_crl import CRLTests
+from tests.test_csr import CSRTests
 from tests.test_keys import KeysTests
 from tests.test_ocsp import OCSPTests
 from tests.test_tsp import TSPTests
@@ -13,7 +14,7 @@ from tests.test_x509 import X509Tests
 from tests.test_core import CoreTests
 
 
-test_classes = [CMSTests, CRLTests, KeysTests, OCSPTests, TSPTests, X509Tests, CoreTests]
+test_classes = [CMSTests, CRLTests, CSRTests, KeysTests, OCSPTests, TSPTests, X509Tests, CoreTests]
 
 
 def run(matcher=None):
