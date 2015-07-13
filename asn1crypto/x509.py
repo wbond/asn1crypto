@@ -581,9 +581,15 @@ class PolicyQualifierInfos(SequenceOf):
     _child_spec = PolicyQualifierInfo
 
 
+class PolicyIdentifier(ObjectIdentifier):
+    _map = {
+        '2.5.29.32.0': 'any_policy',
+    }
+
+
 class PolicyInformation(Sequence):
     _fields = [
-        ('policy_identifier', ObjectIdentifier),
+        ('policy_identifier', PolicyIdentifier),
         ('policy_qualifiers', PolicyQualifierInfos, {'optional': True})
     ]
 
@@ -733,3 +739,184 @@ class Certificate(Sequence):
         ('signature_algorithm', SignedDigestAlgorithm),
         ('signature_value', OctetBitString),
     ]
+
+    _processed_extensions = False
+    _critical_extensions = None
+    _key_identifier_value = None
+    _key_usage_value = None
+    _subject_alt_name_value = None
+    _basic_constraints_value = None
+    _name_constraints_value = None
+    _crl_distribution_points_value = None
+    _certificate_policies_value = None
+    _policy_mappings_value = None
+    _authority_key_identifier_value = None
+    _policy_constraints_value = None
+    _extended_key_usage_value = None
+    _ocsp_no_check_value = None
+
+    def _set_extensions(self):
+        """
+        Sets common named extensions to private attributes and creates a list
+        of critical extensions
+        """
+
+        self._critical_extensions = []
+
+        for extension in self['tbs_certificate']['extensions']:
+            name = extension['extn_id'].native
+            attribute_name = '_%s_value' % name
+            if hasattr(self, attribute_name):
+                setattr(self, attribute_name, extension['extn_value'].parsed)
+            if extension['critical'].native:
+                self._critical_extensions.append(name)
+
+        self._processed_extensions = True
+
+    @property
+    def critical_extensions(self):
+        """
+        Returns a list of the names (or OID if not a known extension) of the
+        extensions marked as critical
+
+        :return:
+            A list of unicode strings
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._critical_extensions
+
+    @property
+    def key_identifier_value(self):
+        """
+        :return:
+            None or the parsed value of the key identifier extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._key_identifier_value
+
+    @property
+    def key_usage_value(self):
+        """
+        :return:
+            None or the parsed value of the key usage extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._key_usage_value
+
+    @property
+    def subject_alt_name_value(self):
+        """
+        :return:
+            None or the parsed value of the subject alt name extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._subject_alt_name_value
+
+    @property
+    def basic_constraints_value(self):
+        """
+        :return:
+            None or the parsed value of the basic constraints extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._basic_constraints_value
+
+    @property
+    def name_constraints_value(self):
+        """
+        :return:
+            None or the parsed value of the name constraints extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._name_constraints_value
+
+    @property
+    def crl_distribution_points_value(self):
+        """
+        :return:
+            None or the parsed value of the CRL distribution points
+            extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._crl_distribution_points_value
+
+    @property
+    def certificate_policies_value(self):
+        """
+        :return:
+            None or the parsed value of the certificate policies extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._certificate_policies_value
+
+    @property
+    def policy_mappings_value(self):
+        """
+        :return:
+            None or the parsed value of the policy mappings extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._policy_mappings_value
+
+    @property
+    def authority_key_identifier_value(self):
+        """
+        :return:
+            None or the parsed value of the authority key identifier
+            extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._authority_key_identifier_value
+
+    @property
+    def policy_constraints_value(self):
+        """
+        :return:
+            None or the parsed value of the policy constraints extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._policy_constraints_value
+
+    @property
+    def extended_key_usage_value(self):
+        """
+        :return:
+            None or the parsed value of the extended key usage extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._extended_key_usage_value
+
+    @property
+    def ocsp_no_check_value(self):
+        """
+        :return:
+            None or the parsed value of the OCSP no check extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._ocsp_no_check_value

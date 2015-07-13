@@ -22,6 +22,195 @@ fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 class X509Tests(unittest.TestCase):
 
+    def test_extensions(self):
+        with open(os.path.join(fixtures_dir, 'keys/test-der.crt'), 'rb') as f:
+            cert = x509.Certificate.load(f.read())
+
+        self.assertEqual([], cert.critical_extensions)
+        self.assertEqual(b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK', cert.key_identifier_value.native)
+        self.assertEqual(None, cert.key_usage_value)
+        self.assertEqual(None, cert.subject_alt_name_value)
+        self.assertEqual(True, cert.basic_constraints_value['ca'].native)
+        self.assertEqual(None, cert.basic_constraints_value['path_len_constraint'].native)
+        self.assertEqual(None, cert.name_constraints_value)
+        self.assertEqual(None, cert.crl_distribution_points_value)
+        self.assertEqual(None, cert.certificate_policies_value)
+        self.assertEqual(None, cert.policy_mappings_value)
+        self.assertEqual(b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK', cert.authority_key_identifier_value['key_identifier'].native)
+        self.assertEqual(None, cert.policy_constraints_value)
+        self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.ocsp_no_check_value)
+
+    def test_extensions2(self):
+        with open(os.path.join(fixtures_dir, 'keys/test-inter-der.crt'), 'rb') as f:
+            cert = x509.Certificate.load(f.read())
+
+        self.assertEqual([], cert.critical_extensions)
+        self.assertEqual(b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02', cert.key_identifier_value.native)
+        self.assertEqual(None, cert.key_usage_value)
+        self.assertEqual(None, cert.subject_alt_name_value)
+        self.assertEqual(True, cert.basic_constraints_value['ca'].native)
+        self.assertEqual(None, cert.basic_constraints_value['path_len_constraint'].native)
+        self.assertEqual(None, cert.name_constraints_value)
+        self.assertEqual(None, cert.crl_distribution_points_value)
+        self.assertEqual(None, cert.certificate_policies_value)
+        self.assertEqual(None, cert.policy_mappings_value)
+        self.assertEqual(b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK', cert.authority_key_identifier_value['key_identifier'].native)
+        self.assertEqual(None, cert.policy_constraints_value)
+        self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.ocsp_no_check_value)
+
+    def test_extensions3(self):
+        with open(os.path.join(fixtures_dir, 'keys/test-third-der.crt'), 'rb') as f:
+            cert = x509.Certificate.load(f.read())
+
+        self.assertEqual([], cert.critical_extensions)
+        self.assertEqual(b'D8\xe0\xe0&\x85\xbf\x98\x86\xdc\x1b\xe1\x1d\xf520\xbe\xab\xac\r', cert.key_identifier_value.native)
+        self.assertEqual(None, cert.key_usage_value)
+        self.assertEqual(None, cert.subject_alt_name_value)
+        self.assertEqual(None, cert.basic_constraints_value)
+        self.assertEqual(None, cert.name_constraints_value)
+        self.assertEqual(None, cert.crl_distribution_points_value)
+        self.assertEqual(None, cert.certificate_policies_value)
+        self.assertEqual(None, cert.policy_mappings_value)
+        self.assertEqual(b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02', cert.authority_key_identifier_value['key_identifier'].native)
+        self.assertEqual(None, cert.policy_constraints_value)
+        self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.ocsp_no_check_value)
+
+    def test_extensions4(self):
+        with open(os.path.join(fixtures_dir, 'geotrust_certs/GeoTrust_Universal_CA.crt'), 'rb') as f:
+            cert = x509.Certificate.load(f.read())
+
+        self.assertEqual(['basic_constraints', 'key_usage'], cert.critical_extensions)
+        self.assertEqual(b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6', cert.key_identifier_value.native)
+        self.assertEqual(
+            OrderedDict([
+                ('digital_signature', True),
+                ('non_repudiation', False),
+                ('key_encipherment', False),
+                ('data_encipherment', False),
+                ('key_agreement', False),
+                ('key_cert_sign', True),
+                ('crl_sign', True),
+                ('encipher_only', False),
+                ('decipher_only', False),
+            ]),
+            cert.key_usage_value.native
+        )
+        self.assertEqual(None, cert.subject_alt_name_value)
+        self.assertEqual(
+            OrderedDict([
+                ('ca', True),
+                ('path_len_constraint', None),
+            ]),
+            cert.basic_constraints_value.native
+        )
+        self.assertEqual(None, cert.name_constraints_value)
+        self.assertEqual(None, cert.crl_distribution_points_value)
+        self.assertEqual(None, cert.certificate_policies_value)
+        self.assertEqual(None, cert.policy_mappings_value)
+        self.assertEqual(b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6', cert.authority_key_identifier_value['key_identifier'].native)
+        self.assertEqual(None, cert.policy_constraints_value)
+        self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.ocsp_no_check_value)
+
+    def test_extensions5(self):
+        with open(os.path.join(fixtures_dir, 'geotrust_certs/GeoTrust_Primary_CA.crt'), 'rb') as f:
+            cert = x509.Certificate.load(f.read())
+
+        self.assertEqual(['basic_constraints', 'key_usage'], cert.critical_extensions)
+        self.assertEqual(b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92', cert.key_identifier_value.native)
+        self.assertEqual(
+            OrderedDict([
+                ('digital_signature', True),
+                ('non_repudiation', True),
+                ('key_encipherment', False),
+                ('data_encipherment', False),
+                ('key_agreement', False),
+                ('key_cert_sign', False),
+                ('crl_sign', False),
+                ('encipher_only', False),
+                ('decipher_only', False),
+            ]),
+            cert.key_usage_value.native
+        )
+        self.assertEqual(None, cert.subject_alt_name_value)
+        self.assertEqual(True, cert.basic_constraints_value['ca'].native)
+        self.assertEqual(None, cert.basic_constraints_value['path_len_constraint'].native)
+        self.assertEqual(None, cert.name_constraints_value)
+        self.assertEqual(None, cert.crl_distribution_points_value)
+        self.assertEqual(None, cert.certificate_policies_value)
+        self.assertEqual(None, cert.policy_mappings_value)
+        self.assertEqual(None, cert.authority_key_identifier_value)
+        self.assertEqual(None, cert.policy_constraints_value)
+        self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.ocsp_no_check_value)
+
+    def test_extensions6(self):
+        with open(os.path.join(fixtures_dir, 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt'), 'rb') as f:
+            cert = x509.Certificate.load(f.read())
+
+        self.assertEqual(['basic_constraints', 'key_usage'], cert.critical_extensions)
+        self.assertEqual(b'\xde\xcf\\P\xb7\xae\x02\x1f\x15\x17\xaa\x16\xe8\r\xb5(\x9djZ\xf3', cert.key_identifier_value.native)
+        self.assertEqual(
+            OrderedDict([
+                ('digital_signature', True),
+                ('non_repudiation', True),
+                ('key_encipherment', False),
+                ('data_encipherment', False),
+                ('key_agreement', False),
+                ('key_cert_sign', False),
+                ('crl_sign', False),
+                ('encipher_only', False),
+                ('decipher_only', False),
+            ]),
+            cert.key_usage_value.native
+        )
+        self.assertEqual(
+            [
+                OrderedDict([
+                    ('common_name', 'SymantecPKI-1-538')
+                ])
+            ],
+            cert.subject_alt_name_value.native
+        )
+        self.assertEqual(True, cert.basic_constraints_value['ca'].native)
+        self.assertEqual(0, cert.basic_constraints_value['path_len_constraint'].native)
+        self.assertEqual(None, cert.name_constraints_value)
+        self.assertEqual(
+            [
+                OrderedDict([
+                    ('distribution_point', ['http://g1.symcb.com/GeoTrustPCA.crl']),
+                    ('reasons', None),
+                    ('crl_issuer', None)
+                ])
+            ],
+            cert.crl_distribution_points_value.native
+        )
+        self.assertEqual(
+            [
+                OrderedDict([
+                    ('policy_identifier', 'any_policy'),
+                    (
+                        'policy_qualifiers',
+                        [
+                            OrderedDict([
+                                ('policy_qualifier_id', 'certification_practice_statement'),
+                                ('qualifier', 'https://www.geotrust.com/resources/cps')
+                            ])
+                        ]
+                    )
+                ])
+            ],
+            cert.certificate_policies_value.native
+        )
+        self.assertEqual(None, cert.policy_mappings_value)
+        self.assertEqual(b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92', cert.authority_key_identifier_value['key_identifier'].native)
+        self.assertEqual(None, cert.policy_constraints_value)
+        self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.ocsp_no_check_value)
+
     def test_parse_certificate(self):
         with open(os.path.join(fixtures_dir, 'keys/test-der.crt'), 'rb') as f:
             cert = x509.Certificate.load(f.read())
