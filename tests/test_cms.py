@@ -329,7 +329,7 @@ class CMSTests(unittest.TestCase):
 
         self.assertEqual(
             OrderedDict([
-                ('algorithm', 'rsa'),
+                ('algorithm', 'rsassa_pkcs1v15'),
                 ('parameters', None),
             ]),
             signer['signature_algorithm'].native
@@ -455,7 +455,7 @@ class CMSTests(unittest.TestCase):
 
         self.assertEqual(
             OrderedDict([
-                ('algorithm', 'rsa'),
+                ('algorithm', 'rsassa_pkcs1v15'),
                 ('parameters', None),
             ]),
             signer['signature_algorithm'].native
@@ -577,7 +577,7 @@ class CMSTests(unittest.TestCase):
 
         self.assertEqual(
             OrderedDict([
-                ('algorithm', 'rsa'),
+                ('algorithm', 'rsassa_pkcs1v15'),
                 ('parameters', None),
             ]),
             signer['signature_algorithm'].native
@@ -700,7 +700,7 @@ class CMSTests(unittest.TestCase):
 
         self.assertEqual(
             OrderedDict([
-                ('algorithm', 'rsa'),
+                ('algorithm', 'rsassa_pkcs1v15'),
                 ('parameters', None),
             ]),
             signer['signature_algorithm'].native
