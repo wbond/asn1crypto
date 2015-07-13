@@ -952,7 +952,7 @@ class PublicKeyInfo(Sequence):
                 if self.algorithm == 'rsa':
                     prime = self['public_key'].parsed['modulus'].native
                 elif self.algorithm == 'dsa':
-                    prime = self['public_key'].parsed.native
+                    prime = self['algorithm']['parameters']['p'].native
                 self._bit_size = int(math.ceil(math.log(prime, 2)))
 
         return self._bit_size
