@@ -1000,9 +1000,10 @@ class BitString(Primitive, ValueMap, object):
         if self.trailer != b'':
             self.trailer = b''
 
-    def __getattr__(self, key):
+    def __getitem__(self, key):
         """
-        Retrieves one of the bits based on a name from the _map
+        Retrieves a boolean version of one of the bits based on a name from the
+        _map
 
         :param key:
             The unicode string of one of the bit names
@@ -1011,7 +1012,7 @@ class BitString(Primitive, ValueMap, object):
             ValueError - when _map is not set or the key name is invalid
 
         :return:
-            A 1 or a 0
+            A boolean if the bit is set
         """
 
         if not isinstance(self._map, dict):
@@ -1023,9 +1024,9 @@ class BitString(Primitive, ValueMap, object):
         if self._native is None:
             _ = self.native
 
-        return self._native[self._reverse_map[key]]
+        return self._native[key]
 
-    def __setattr__(self, key, value):
+    def __setitem__(self, key, value):
         """
         Sets one of the bits based on a name from the _map
 
@@ -1033,7 +1034,7 @@ class BitString(Primitive, ValueMap, object):
             The unicode string of one of the bit names
 
         :param value:
-            A 1 or a 0
+            A boolean value
 
         :raises:
             ValueError - when _map is not set or the key name is invalid
@@ -1045,7 +1046,7 @@ class BitString(Primitive, ValueMap, object):
         if self._native is None:
             _ = self.native
 
-        self._native[self._reverse_map[key]] = 1 if value else 0
+        self._native[key] = bool(value)
         self.set(self._native)
 
     @property
@@ -1054,7 +1055,8 @@ class BitString(Primitive, ValueMap, object):
         The a native Python datatype representation of this value
 
         :return:
-            The tuple of integers 1 and 0, or None
+            If a _map is set, an OrdredDict of names as keys and boolean values
+            or if no _map is set, a tuple of integers 1 and 0. None if no value.
         """
 
         # For BitString we default the value to be all zeros
@@ -1067,7 +1069,16 @@ class BitString(Primitive, ValueMap, object):
             bit_string = '{0:b}'.format(int_from_bytes(self.contents[1:]))
             if extra_bits > 0:
                 bit_string = bit_string[0:0-extra_bits]
-            self._native = tuple(map(int, tuple(bit_string)))
+            bits = tuple(map(int, tuple(bit_string)))
+            if self._map:
+                self._native = OrderedDict()
+                for i, bit in enumerate(bits):
+                    self._native[self._map.get(i, i)] = bool(bit)
+                for i, name in self._map.items():
+                    if name not in self._native:
+                        self._native[name] = False
+            else:
+                self._native = bits
         return self._native
 
 

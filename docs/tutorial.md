@@ -13,38 +13,38 @@ For general purpose ASN.1 parsing, the `asn1crypto.core` module is used. It
 contains the following classes, that parse, represent and serialize all of the
 ASN.1 universal types:
 
-| Class              | Native Type         | Implementation Notes            |
-| ------------------ | ------------------- | ------------------------------- |
-| `Boolean`          | `bool`              |                                 |
-| `Integer`          | `int`               | may be `long` on Python 2       |
-| `BitString`        | `tuple` of `int`    |                                 |
-| `OctetString`      | `bytes` (`str`)     |                                 |
-| `Null`             | `None`              |                                 |
-| `ObjectIdentifier` | `str` (`unicode`)   | string is dotted integer format |
-| `ObjectDescriptor` |                     | no native conversion            |
-| `InstanceOf`       |                     | no native conversion            |
-| `Real`             |                     | no native conversion            |
-| `Enumerated`       | `str` (`unicode`)   | `_map` must be set              |
-| `UTF8String`       | `str` (`unicode`)   |                                 |
-| `RelativeOid`      | `str` (`unicode`)   | string is dotted integer format |
-| `Sequence`         | `OrderedDict`       |                                 |
-| `SequenceOf`       | `list`              |                                 |
-| `Set`              | `OrderedDict`       |                                 |
-| `SetOf`            | `list`              |                                 |
-| `EmbeddedPdv`      | `OrderedDict`       | no named field parsing          |
-| `NumericString`    | `str` (`unicode`)   | no charset limitations          |
-| `PrintableString`  | `str` (`unicode`)   | no charset limitations          |
-| `TeletexString`    | `str` (`unicode`)   |                                 |
-| `VideotexString`   | `bytes` (`str`)     | no unicode conversion           |
-| `IA5String`        | `str` (`unicode`)   |                                 |
-| `UTCTime`          | `datetime.datetime` |                                 |
-| `GeneralizedTime`  | `datetime.datetime` | treated as UTC when no timezone |
-| `GraphicString`    | `str` (`unicode`)   | unicode conversion as latin1    |
-| `VisibleString`    | `str` (`unicode`)   | no charset limitations          |
-| `GeneralString`    | `str` (`unicode`)   | unicode conversion as latin1    |
-| `UniversalString`  | `str` (`unicode`)   |                                 |
-| `CharacterString`  | `str` (`unicode`)   | unicode conversion as latin1    |
-| `BMPString`        | `str` (`unicode`)   |                                 |
+| Class              | Native Type                          | Implementation Notes                 |
+| ------------------ | ------------------------------------ | ------------------------------------ |
+| `Boolean`          | `bool`                               |                                      |
+| `Integer`          | `int`                                | may be `long` on Python 2            |
+| `BitString`        | `tuple` of `int` or `OrderedDict`    | `OrderedDict` used if `_map` present |
+| `OctetString`      | `bytes` (`str`)                      |                                      |
+| `Null`             | `None`                               |                                      |
+| `ObjectIdentifier` | `str` (`unicode`)                    | string is dotted integer format      |
+| `ObjectDescriptor` |                                      | no native conversion                 |
+| `InstanceOf`       |                                      | no native conversion                 |
+| `Real`             |                                      | no native conversion                 |
+| `Enumerated`       | `str` (`unicode`)                    | `_map` must be set                   |
+| `UTF8String`       | `str` (`unicode`)                    |                                      |
+| `RelativeOid`      | `str` (`unicode`)                    | string is dotted integer format      |
+| `Sequence`         | `OrderedDict`                        |                                      |
+| `SequenceOf`       | `list`                               |                                      |
+| `Set`              | `OrderedDict`                        |                                      |
+| `SetOf`            | `list`                               |                                      |
+| `EmbeddedPdv`      | `OrderedDict`                        | no named field parsing               |
+| `NumericString`    | `str` (`unicode`)                    | no charset limitations               |
+| `PrintableString`  | `str` (`unicode`)                    | no charset limitations               |
+| `TeletexString`    | `str` (`unicode`)                    |                                      |
+| `VideotexString`   | `bytes` (`str`)                      | no unicode conversion                |
+| `IA5String`        | `str` (`unicode`)                    |                                      |
+| `UTCTime`          | `datetime.datetime`                  |                                      |
+| `GeneralizedTime`  | `datetime.datetime`                  | treated as UTC when no timezone      |
+| `GraphicString`    | `str` (`unicode`)                    | unicode conversion as latin1         |
+| `VisibleString`    | `str` (`unicode`)                    | no charset limitations               |
+| `GeneralString`    | `str` (`unicode`)                    | unicode conversion as latin1         |
+| `UniversalString`  | `str` (`unicode`)                    |                                      |
+| `CharacterString`  | `str` (`unicode`)                    | unicode conversion as latin1         |
+| `BMPString`        | `str` (`unicode`)                    |                                      |
 
 For *Native Type*, the Python 3 type is listed first, with the Python 2 type
 in parentheses.
@@ -284,9 +284,9 @@ print(MyType('1.8.2.1.25').native)
 
 ## BitString
 
-The `BitString` class has a native representation as a `tuple` of `int`s (being
-either `1` or `0`). In addition, it is possible to set the value of a
-`BitString` by passing an integer.
+When no `_map` is set for a `BitString` class, the native representation is a
+`tuple` of `int`s (being either `1` or `0`). In addition, it is possible to set
+the value of a `BitString` by passing an integer.
 
 ```python
 from asn1crypto.core import BitString
@@ -298,7 +298,9 @@ b2 = BitString(5)
 
 Additionally, it is possible to set the `_map` property to a dict where the
 keys are bit indexes and the values are unicode string names. This allows
-checking the value of a given bit by a property of the name specified.
+checking the value of a given bit by item access, and the native representation
+becomes an `OrderedDict` where keys are the unicode strings and values are
+either `True` or `False`.
 
 ```python
 from asn1crypto.core import BitString
@@ -313,11 +315,11 @@ class MyFlags(BitString):
 permissions = MyFlags(3)
 
 # This will be printed
-if permissions.edit and permissions.delete:
+if permissions['edit'] and permissions['delete']:
     print('Can edit and delete')
 
 # This will not
-if permissions.manage_users:
+if permissions['manage_users']:
     print('Is admin')
 ```
 
