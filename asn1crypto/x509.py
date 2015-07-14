@@ -635,6 +635,24 @@ class ExtKeyUsageSyntax(SequenceOf):
     _child_spec = KeyPurposeId
 
 
+class AccessMethod(ObjectIdentifier):
+    _map = {
+        '1.3.6.1.5.5.7.48.1': 'ocsp',
+        '1.3.6.1.5.5.7.48.2': 'ca_issuers',
+    }
+
+
+class AccessDescription(Sequence):
+    _fields = [
+        ('access_method', AccessMethod),
+        ('access_location', GeneralName),
+    ]
+
+
+class AuthorityInfoAccessSyntax(SequenceOf):
+    _child_spec = AccessDescription
+
+
 class EntrustVersionInfo(Sequence):
     _fields = [
         ('entrust_vers', GeneralString),
@@ -672,6 +690,7 @@ class ExtensionId(ObjectIdentifier):
         '2.5.29.36': 'policy_constraints',
         '2.5.29.37': 'extended_key_usage',
         '2.5.29.54': 'inhibit_any_policy',
+        '1.3.6.1.5.5.7.1.1': 'authority_information_access',
         '1.3.6.1.5.5.7.48.1.5': 'ocsp_no_check',
         '1.2.840.113533.7.65.0': 'entrust_version_extension',
         '2.16.840.1.113730.1.1': 'netscape_certificate_type',
@@ -702,6 +721,7 @@ class Extension(Sequence):
         'policy_constraints': PolicyConstraints,
         'extended_key_usage': ExtKeyUsageSyntax,
         'inhibit_any_policy': Integer,
+        'authority_information_access': AuthorityInfoAccessSyntax,
         'ocsp_no_check': Null,
         'entrust_version_extension': EntrustVersionInfo,
         'netscape_certificate_type': NetscapeCertificateType,

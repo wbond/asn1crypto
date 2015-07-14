@@ -24,10 +24,10 @@ from .core import (
     SequenceOf,
 )
 from .x509 import (
+    AuthorityInfoAccessSyntax,
     AuthorityKeyIdentifier,
     CRLDistributionPoints,
     DistributionPointName,
-    GeneralName,
     GeneralNames,
     Name,
     ReasonFlags,
@@ -56,24 +56,6 @@ class IssuingDistributionPoint(Sequence):
         ('indirect_crl', Boolean, {'tag_type': 'implicit', 'tag': 4, 'default': False}),
         ('only_contains_attribute_certs', Boolean, {'tag_type': 'implicit', 'tag': 5, 'default': False}),
     ]
-
-
-class AccessMethod(ObjectIdentifier):
-    _map = {
-        '1.3.6.1.5.5.7.48.1': 'ocsp',
-        '1.3.6.1.5.5.7.48.2': 'ca_issuers',
-    }
-
-
-class AccessDescription(Sequence):
-    _fields = [
-        ('access_method', AccessMethod),
-        ('access_location', GeneralName),
-    ]
-
-
-class AuthorityInfoAccessSyntax(SequenceOf):
-    _child_spec = AccessDescription
 
 
 class TBSCertListExtensionId(ObjectIdentifier):
