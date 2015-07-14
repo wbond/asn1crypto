@@ -39,6 +39,7 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK', cert.authority_key_identifier_value['key_identifier'].native)
         self.assertEqual(None, cert.policy_constraints_value)
         self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.authority_information_access_value)
         self.assertEqual(None, cert.ocsp_no_check_value)
 
     def test_extensions2(self):
@@ -58,6 +59,7 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK', cert.authority_key_identifier_value['key_identifier'].native)
         self.assertEqual(None, cert.policy_constraints_value)
         self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.authority_information_access_value)
         self.assertEqual(None, cert.ocsp_no_check_value)
 
     def test_extensions3(self):
@@ -76,6 +78,7 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02', cert.authority_key_identifier_value['key_identifier'].native)
         self.assertEqual(None, cert.policy_constraints_value)
         self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.authority_information_access_value)
         self.assertEqual(None, cert.ocsp_no_check_value)
 
     def test_extensions4(self):
@@ -113,6 +116,7 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6', cert.authority_key_identifier_value['key_identifier'].native)
         self.assertEqual(None, cert.policy_constraints_value)
         self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.authority_information_access_value)
         self.assertEqual(None, cert.ocsp_no_check_value)
 
     def test_extensions5(self):
@@ -145,6 +149,7 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(None, cert.authority_key_identifier_value)
         self.assertEqual(None, cert.policy_constraints_value)
         self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(None, cert.authority_information_access_value)
         self.assertEqual(None, cert.ocsp_no_check_value)
 
     def test_extensions6(self):
@@ -209,6 +214,15 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92', cert.authority_key_identifier_value['key_identifier'].native)
         self.assertEqual(None, cert.policy_constraints_value)
         self.assertEqual(None, cert.extended_key_usage_value)
+        self.assertEqual(
+            [
+                OrderedDict([
+                    ('access_method', 'ocsp'),
+                    ('access_location', 'http://g2.symcb.com')
+                ])
+            ],
+            cert.authority_information_access_value.native
+        )
         self.assertEqual(None, cert.ocsp_no_check_value)
 
     def test_parse_certificate(self):

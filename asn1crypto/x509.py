@@ -775,6 +775,7 @@ class Certificate(Sequence):
     _authority_key_identifier_value = None
     _policy_constraints_value = None
     _extended_key_usage_value = None
+    _authority_information_access_value = None
     _ocsp_no_check_value = None
 
     def _set_extensions(self):
@@ -931,6 +932,17 @@ class Certificate(Sequence):
         if not self._processed_extensions:
             self._set_extensions()
         return self._extended_key_usage_value
+
+    @property
+    def authority_information_access_value(self):
+        """
+        :return:
+            None or the parsed value of the authority information access extension
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._authority_information_access_value
 
     @property
     def ocsp_no_check_value(self):
