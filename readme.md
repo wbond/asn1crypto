@@ -27,7 +27,7 @@ a bunch of ASN.1 structures for use with various common cryptography standards:
 
 ## Dependencies
 
-Python 2.7, 3.3, 3.4 or pypy. *No third-party packages required.*
+Python 2.7, 3.3, 3.4, pypy or pypy3. *No third-party packages required.*
 
 ## Version
 
