@@ -1,8 +1,9 @@
-# asn1crypto Tutorial
+# Universal Types with BER/DER Decoder and DER Encoder
 
-The *asn1crypto* library is a combination of a general-purpose BER/DER parser
-and DER serializer, along with a number of pre-built cryptographic types
-definitions.
+The *asn1crypto* library is a combination of universal type classes that
+implement BER/DER decoding and DER encoding, a PEM encoder and decoder, and a
+number of pre-built cryptographic type classes. This document covers the
+universal type classes.
 
 For a general overview of ASN.1 as used in cryptography, please see
 [A Layman's Guide to a Subset of ASN.1, BER, and DER](http://luca.ntop.org/Teaching/Appunti/asn1.html).
