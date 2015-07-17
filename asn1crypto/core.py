@@ -1757,62 +1757,12 @@ class Sequence(Asn1Value):
                 raise KeyError('No field named "%s" defined for %s' % (key, self.__class__.__name__))
             key = self._field_map[key]
 
-        field_info = self._fields[key]
-        field_spec = field_info[1]
-        field_params = field_info[2] if len(field_info) > 2 else {}
-        value_spec = field_spec
+        field_name, field_spec, value_spec, field_params, _ = self._determine_spec(key)
 
-        if self._spec_callbacks is not None and field_info[0] in self._spec_callbacks:
-            callback = self._spec_callbacks[field_info[0]]
-            spec_override = callback(self)
-            # Allow a spec callback to specify both the base spec and
-            # the override, for situations such as OctetString and parse_as
-            if isinstance(spec_override, tuple) and len(spec_override) == 2:
-                field_spec, value_spec = spec_override
-            else:
-                value_spec = spec_override
-
-        elif self._oid_nums is not None and key == self._oid_nums[1]:
-            oid = self._lazy_child(self._oid_nums[0]).native
-            if oid in self._oid_specs:
-                value_spec = self._oid_specs[oid]
-
-        if issubclass(value_spec, Choice):
-            if not isinstance(value, Asn1Value):
-                raise ValueError('Can not set a native python value to %s, which has the choice type of %s – value must be an instance of Asn1Value' % (field_info[0], value_spec.__name__))
-            if not isinstance(value, value_spec):
-                wrapper = value_spec()
-                wrapper.validate(value.class_, value.tag)
-                wrapper._parsed = value  #pylint: disable=W0212
-                new_value = wrapper
-            else:
-                new_value = value
-
-        elif isinstance(value, field_spec):
-            new_value = value
-            if value_spec != field_spec:
-                new_value.parse(value_spec)
-
-        else:
-            if isinstance(value, value_spec):
-                new_value = value
-            else:
-                new_value = value_spec(value)
-
-            # For when the field is OctetString or OctetBitString with embedded
-            # values we need to wrap the value in the field spec to get the
-            # appropriate encoded value.
-            if field_spec != value_spec and not issubclass(field_spec, Any):
-                wrapper = field_spec(value=new_value.dump())
-                wrapper._parsed = new_value  #pylint: disable=W0212
-                new_value = wrapper
-
-        if field_params and 'tag_type' in field_params and 'tag' in field_params:
-            if field_params['tag_type'] != new_value.tag_type or field_params['tag'] != new_value.tag:
-                new_value = new_value.retag(tag_type=field_params['tag_type'], tag=field_params['tag'])
+        new_value = self._make_value(field_name, field_spec, value_spec, field_params, value)
 
         if new_value.contents is None:
-            raise ValueError('Value for field "%s" of %s is not set' % (field_info[0], self.__class__.__name__))
+            raise ValueError('Value for field "%s" of %s is not set' % (field_name, self.__class__.__name__))
 
         self.children[key] = new_value
 
@@ -1913,6 +1863,113 @@ class Sequence(Asn1Value):
         if cls._oid_pair is not None:
             cls._oid_nums = (cls._field_map[cls._oid_pair[0]], cls._field_map[cls._oid_pair[1]])
 
+    def _determine_spec(self, index):
+        """
+        Determine how a value for a field should be constructed
+
+        :param index:
+            The field number
+
+        :return:
+            A tuple containing the following elements:
+             - unicode string of the field name
+             - Ans1Value class of the field spec
+             - Asn1Value class of the value spec
+             - None or dict of params to pass to the field spec
+             - None or Asn1Value class indicating the value spec was derived fomr an OID or a spec callback
+        """
+
+        info = self._fields[index]
+        field_params = info[2] if len(info) > 2 else {}
+
+        field_spec = info[1]
+        value_spec = field_spec
+        spec_override = None
+
+        if self._spec_callbacks is not None and info[0] in self._spec_callbacks:
+            callback = self._spec_callbacks[info[0]]
+            spec_override = callback(self)
+            if spec_override:
+                # Allow a spec callback to specify both the base spec and
+                # the override, for situations such as OctetString and parse_as
+                if isinstance(spec_override, tuple) and len(spec_override) == 2:
+                    field_spec, value_spec = spec_override  #pylint: disable=W0633
+                else:
+                    value_spec = spec_override
+
+        elif self._oid_nums is not None and self._oid_nums[1] == index:
+            oid = self._lazy_child(self._oid_nums[0]).native
+            if oid in self._oid_specs:
+                spec_override = self._oid_specs[oid]
+                value_spec = spec_override
+
+        return (info[0], field_spec, value_spec, field_params, spec_override)
+
+    def _make_value(self, field_name, field_spec, value_spec, field_params, value):
+        """
+        Contructs an appropriate Asn1Value object for a field
+
+        :param field_name:
+            A unicode string of the field name
+
+        :param field_spec:
+            An Asn1Value class that is the field spec
+
+        :param value_spec:
+            An Asn1Value class that is the vaue spec
+
+        :param field_params:
+            None or a dict of params for the field spec
+
+        :param value:
+            The value to construct an Asn1Value object from
+
+        :return:
+            An instance of a child class of Asn1Value
+        """
+
+        specs_different = field_spec != value_spec
+        is_any = issubclass(field_spec, Any)
+
+        if issubclass(value_spec, Choice):
+            if not isinstance(value, Asn1Value):
+                raise ValueError('Can not set a native python value to %s, which has the choice type of %s – value must be an instance of Asn1Value' % (field_name, value_spec.__name__))
+            if not isinstance(value, value_spec):
+                wrapper = value_spec()
+                wrapper.validate(value.class_, value.tag)
+                wrapper._parsed = value  #pylint: disable=W0212
+                new_value = wrapper
+            else:
+                new_value = value
+
+        elif isinstance(value, field_spec):
+            new_value = value
+            if specs_different:
+                new_value.parse(value_spec)
+
+        elif (not specs_different or is_any) and not isinstance(value, value_spec):
+            new_value = value_spec(value, **field_params)
+
+        else:
+            if isinstance(value, value_spec):
+                new_value = value
+            else:
+                new_value = value_spec(value)
+
+            # For when the field is OctetString or OctetBitString with embedded
+            # values we need to wrap the value in the field spec to get the
+            # appropriate encoded value.
+            if specs_different and not is_any:
+                wrapper = field_spec(value=new_value.dump(), **field_params)
+                wrapper._parsed = new_value  #pylint: disable=W0212
+                new_value = wrapper
+
+        if field_params and 'tag_type' in field_params and 'tag' in field_params:
+            if field_params['tag_type'] != new_value.tag_type or field_params['tag'] != new_value.tag:
+                new_value = new_value.retag(tag_type=field_params['tag_type'], tag=field_params['tag'])
+
+        return new_value
+
     def _parse_children(self, recurse=False):
         """
         Parses the contents and generates Asn1Value objects based on the
@@ -1940,37 +1997,18 @@ class Sequence(Asn1Value):
                 parts, num_bytes = _parse(self.contents, pointer=child_pointer)
 
                 if field < len(self._fields):
-                    field_info = self._fields[field]
-                    field_params = field_info[2] if len(field_info) > 2 else {}
+                    _, field_spec, value_spec, field_params, spec_override = self._determine_spec(field)
 
-                    field_spec = field_info[1]
-                    value_spec = field_spec
-                    spec_override = None
-
-                    if self._spec_callbacks is not None and field_info[0] in self._spec_callbacks:
-                        callback = self._spec_callbacks[field_info[0]]
-                        spec_override = callback(self)
-                        if spec_override:
-                            # Allow a spec callback to specify both the base spec and
-                            # the override, for situations such as OctetString and parse_as
-                            if isinstance(spec_override, tuple) and len(spec_override) == 2:
-                                field_spec, value_spec = spec_override  #pylint: disable=W0633
-                            else:
-                                value_spec = spec_override
-
-                    elif self._oid_nums is not None and self._oid_nums[1] == field:
-                        oid = self._lazy_child(self._oid_nums[0]).native
-                        if oid in self._oid_specs:
-                            spec_override = self._oid_specs[oid]
-                            value_spec = spec_override
-
-                    # If the next value is optional or default, allow it to not be present
+                    # If the next value is optional or default, allow it to be absent
                     if 'optional' in field_params or 'default' in field_params:
                         id_ = (parts[0], parts[2])
 
                         no_id_match = self._field_ids[field] != id_
                         not_any = field_spec != Any
                         if no_id_match and not_any:
+
+                            # See if the value is a valid choice before assuming
+                            # that we have a missing optional or default value
                             choice_match = False
                             if issubclass(field_spec, Choice):
                                 try:
