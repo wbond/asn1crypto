@@ -180,12 +180,12 @@ class Name(Choice):
             self._native = OrderedDict()
             for rdn in self.chosen.native:
                 for type_val in rdn:
-                    type_val_type = type_val['type']
-                    if type_val_type in self._native:
-                        self._native[type_val_type] = [self._native[type_val_type]]
-                        self._native[type_val_type].append(type_val['value'])
+                    field_name = type_val['type']
+                    if field_name in self._native:
+                        self._native[field_name] = [self._native[field_name]]
+                        self._native[field_name].append(type_val['value'])
                     else:
-                        self._native[type_val_type] = type_val['value']
+                        self._native[field_name] = type_val['value']
         return self._native
 
     @property
