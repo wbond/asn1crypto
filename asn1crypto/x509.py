@@ -20,6 +20,7 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import hashlib
 from collections import OrderedDict
 
 from .core import (
@@ -168,6 +169,9 @@ class Name(Choice):
         ('', RDNSequence),
     ]
 
+    _sha1 = None
+    _sha256 = None
+
     @property
     def native(self):
         if self.contents is None:
@@ -183,6 +187,28 @@ class Name(Choice):
                     else:
                         self._native[type_val_type] = type_val['value']
         return self._native
+
+    @property
+    def sha1(self):
+        """
+        :return:
+            The SHA1 hash of the DER-encoded bytes of this name
+        """
+
+        if self._sha1 is None:
+            self._sha1 = hashlib.sha1(self.dump()).digest()
+        return self._sha1
+
+    @property
+    def sha256(self):
+        """
+        :return:
+            The SHA-256 hash of the DER-encoded bytes of this name
+        """
+
+        if self._sha256 is None:
+            self._sha256 = hashlib.sha256(self.dump()).digest()
+        return self._sha256
 
 
 class AnotherName(Sequence):
