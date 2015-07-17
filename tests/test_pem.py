@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import unittest
 import sys
 import os
+from collections import OrderedDict
 
 from asn1crypto import pem
 
@@ -51,7 +52,7 @@ class PEMTests(unittest.TestCase):
             ('keys/test-third.crt',  'keys/test-third-der.crt',   'CERTIFICATE',          {}),
             ('keys/test-pkcs8.key',  'keys/test-pkcs8-der.key',   'PRIVATE KEY',          {}),
             ('test-third.csr',       'test-third-der.csr',        'CERTIFICATE REQUEST',  {}),
-            ('keys/test-aes128.key', 'keys/test-aes128-der.key',  'RSA PRIVATE KEY',      {'Proc-Type': '4,ENCRYPTED', 'DEK-Info': 'AES-128-CBC,01F6EE04516C912788B11BD7377626C2'}),
+            ('keys/test-aes128.key', 'keys/test-aes128-der.key',  'RSA PRIVATE KEY',      OrderedDict([('Proc-Type', '4,ENCRYPTED'), ('DEK-Info', 'AES-128-CBC,01F6EE04516C912788B11BD7377626C2')])),
         )
 
     @data('unarmor_armor_files')
