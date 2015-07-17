@@ -89,7 +89,7 @@ class RequestExtensions(SequenceOf):
 
 class TBSRequestExtensionId(ObjectIdentifier):
     _map = {
-        '1.3.6.1.5.5.7.48.1.2': 'ocsp_noonce',
+        '1.3.6.1.5.5.7.48.1.2': 'ocsp_nonce',
         '1.3.6.1.5.5.7.48.1.4': 'ocsp_response',
         '1.3.6.1.5.5.7.48.1.8': 'ocsp_preferred_signature_algorithms',
     }
@@ -104,7 +104,7 @@ class TBSRequestExtension(Sequence):
 
     _oid_pair = ('extn_id', 'extn_value')
     _oid_specs = {
-        'ocsp_noonce': OctetString,
+        'ocsp_nonce': OctetString,
         'ocsp_response': AcceptableResponses,
         'ocsp_preferred_signature_algorithms': PreferredSignatureAlgorithms,
     }
@@ -116,7 +116,7 @@ class TBSRequestExtensions(SequenceOf):
 
 class ResponseDataExtensionId(ObjectIdentifier):
     _map = {
-        '1.3.6.1.5.5.7.48.1.2': 'ocsp_noonce',
+        '1.3.6.1.5.5.7.48.1.2': 'ocsp_nonce',
         '1.3.6.1.5.5.7.48.1.9': 'ocsp_extended_revoke',
     }
 
@@ -130,7 +130,7 @@ class ResponseDataExtension(Sequence):
 
     _oid_pair = ('extn_id', 'extn_value')
     _oid_specs = {
-        'ocsp_noonce': OctetString,
+        'ocsp_nonce': OctetString,
         'ocsp_extended_revoke': Null,
     }
 
@@ -239,7 +239,7 @@ class OCSPResponseStatus(Enumerated):
         2: 'internal_error',
         3: 'try_later',
         5: 'sign_required',
-        6: 'unauthoried',
+        6: 'unauthorized',
     }
 
 
