@@ -286,6 +286,40 @@ class KeysTests(unittest.TestCase):
 
     #pylint: disable=C0326
     @staticmethod
+    def key_sha1_hashes():
+        return (
+            ('keys/test-public-der.key',          b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK'),
+            ('keys/test-public-dsa-der.key',      b'\x81\xa37\x86\xf9\x99(\xf2tp`\x87\xf2\xd3~\x8d\x19a\xa8\xbe'),
+            ('keys/test-public-ec-named-der.key', b'#\x8d\xee\xeeGH*\xe45T\xb8\xfdVh\x16_\xe2\xaa\xcd\x81'),
+            ('keys/test-public-ec-der.key',       b'T\xaaTpl4\x1am\xeb]\x97\xd7\x1e\xfc\xd5$<\x8a\x0e\xd7'),
+        )
+
+    @data('key_sha1_hashes')
+    def sha1(self, relative_path, sha1):
+        with open(os.path.join(fixtures_dir, relative_path), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(sha1, public_key.sha1)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def key_sha256_hashes():
+        return (
+            ('keys/test-public-der.key',          b'\xd9\x80\xdf\x94J\x8e\x1e\xf5z\xd2o\x8eS\xa8\x03qX\x9a[\x17g\x12\x89\xc5\xcc\xca\x04\x94\xf2R|F'),
+            ('keys/test-public-dsa-der.key',      b'<\x10X\xbf=\xe4\xec3\xb9\xb2 \x11\xce9\xca\xd4\x95\xcf\xf9\xbc\x91q]O\x8f4\xbf\xdb\xdc\xe2\xd6\x82'),
+            ('keys/test-public-ec-named-der.key', b'\x87e \xb4\x13\x8cu\xdd\x11\x92\xa4\xd9;\x8e\xe5"p\xb2\xb7\xa7\xcb8\x88\x16;f\xb9\xf8I\x86J\x1c'),
+            ('keys/test-public-ec-der.key',       b'\xf3\xa3k\xe0\xbf\xa9\xd9sl\xaa\x99\xe7\x9c-\xec\xb9\x0e\xe2d\xe9\xc3$\xb9\x893\x99A\xc19ec_'),
+        )
+
+    @data('key_sha256_hashes')
+    def sha256(self, relative_path, sha256):
+        with open(os.path.join(fixtures_dir, relative_path), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(sha256, public_key.sha256)
+
+    #pylint: disable=C0326
+    @staticmethod
     def key_pairs():
         return (
             ('dsa',         'keys/test-pkcs8-dsa-der.key',         'keys/test-public-dsa-der.key',      'dsa',   3072),

@@ -828,6 +828,8 @@ class PublicKeyInfo(Sequence):
     _algorithm = None
     _bit_size = None
     _fingerprint = None
+    _sha1 = None
+    _sha256 = None
 
     @classmethod
     def wrap(cls, public_key, algorithm):
@@ -965,6 +967,28 @@ class PublicKeyInfo(Sequence):
         """
 
         return int(math.ceil(self.bit_size / 8))
+
+    @property
+    def sha1(self):
+        """
+        :return:
+            The SHA1 hash of the DER-encoded bytes of this public key info
+        """
+
+        if self._sha1 is None:
+            self._sha1 = hashlib.sha1(byte_cls(self['public_key'])).digest()
+        return self._sha1
+
+    @property
+    def sha256(self):
+        """
+        :return:
+            The SHA-256 hash of the DER-encoded bytes of this public key info
+        """
+
+        if self._sha256 is None:
+            self._sha256 = hashlib.sha256(byte_cls(self['public_key'])).digest()
+        return self._sha256
 
     @property
     def fingerprint(self):
