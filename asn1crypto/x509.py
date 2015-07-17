@@ -124,6 +124,35 @@ class NameType(ObjectIdentifier):
         '1.3.6.1.4.1.311.60.2.1.3': 'incorporation_country',
     }
 
+    @property
+    def human_friendly(self):
+        """
+        :return:
+            A human-friendly unicode string to display to users
+        """
+
+        return {
+            'common_name': 'Common Name',
+            'surname': 'Surname',
+            'serial_number': 'Serial Number',
+            'country_name': 'Country',
+            'locality_name': 'Locality',
+            'state_or_province_name': 'State/Province',
+            'organization_name': 'Organization',
+            'organizational_unit_name': 'Organizational Unit',
+            'title': 'Title',
+            'business_category': 'Business Category',
+            'name': 'Name',
+            'given_name': 'Given Name',
+            'initials': 'Initials',
+            'generation_qualifier': 'Generation Qualifier',
+            'dn_qualifier': 'DN Qualifier',
+            'email_address': 'Email Address',
+            'incorporation_locality': 'Incorporation Locality',
+            'incorporation_state_or_province': 'Incorporation State/Province',
+            'incorporation_country': 'Incorporation Country',
+        }[self.native]
+
 
 class NameTypeAndValue(Sequence):
     _fields = [
@@ -169,6 +198,7 @@ class Name(Choice):
         ('', RDNSequence),
     ]
 
+    _human_friendly = None
     _sha1 = None
     _sha256 = None
 
@@ -187,6 +217,41 @@ class Name(Choice):
                     else:
                         self._native[field_name] = type_val['value']
         return self._native
+
+    @property
+    def human_friendly(self):
+        """
+        :return:
+            A human-friendly unicode string containing the parts of the name
+        """
+
+        if self._human_friendly is None:
+            data = OrderedDict()
+            for rdn in self.chosen:
+                for type_val in rdn:
+                    field_name = type_val['type'].human_friendly
+                    if field_name in data:
+                        data[field_name] = [data[field_name]]
+                        data[field_name].append(type_val['value'])
+                    else:
+                        data[field_name] = type_val['value']
+            to_join = []
+            for key in data:
+                value = data[key]
+                if isinstance(value, list):
+                    value = ', '.join(value)
+                to_join.append('%s: %s' % (key, value.native))
+
+            has_comma = False
+            for element in to_join:
+                if element.find(',') != -1:
+                    has_comma = True
+                    break
+
+            separator = ', ' if not has_comma else '; '
+            self._human_friendly = separator.join(to_join[::-1])
+
+        return self._human_friendly
 
     @property
     def sha1(self):
