@@ -2333,22 +2333,8 @@ class SequenceOf(Asn1Value):
             self._parse_children()
 
         self.contents = b''
-        for index, info in enumerate(self._fields):
-            child = self.children[index]
-            if child is None:
-                child_dump = b''
-            elif isinstance(child, tuple):
-                if force:
-                    child_dump = self._lazy_child(index).dump(force=force)
-                else:
-                    child_dump = child[3] + child[4] + child[5]
-            else:
-                child_dump = child.dump(force=force)
-            # Skip values that are the same as the default
-            if len(info) > 2 and 'default' in info[2]:
-                default_value = info[1](**info[2])
-                if default_value.dump() == child_dump:
-                    continue
+        for child in self:
+            child_dump = child.dump(force=force)
             self.contents += child_dump
         self.header = None
         if self.trailer != b'':
@@ -2369,6 +2355,8 @@ class SequenceOf(Asn1Value):
 
         try:
             self.children = []
+            if self.contents is None:
+                return
             contents_length = len(self.contents)
             child_pointer = 0
             while child_pointer < contents_length:
