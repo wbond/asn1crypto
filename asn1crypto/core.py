@@ -1984,7 +1984,12 @@ class Sequence(Asn1Value):
         """
 
         if self.contents is None:
-            self.children = [NoValue()] * len(self._fields)
+            if self._fields:
+                self.children = [NoValue()] * len(self._fields)
+                for index, info in enumerate(self._fields):
+                    if len(info) > 2 and 'default' in info[2]:
+                        field_name, field_spec, value_spec, field_params, _ = self._determine_spec(index)
+                        self.children[index] = self._make_value(field_name, field_spec, value_spec, field_params, None)
             return
 
         try:
