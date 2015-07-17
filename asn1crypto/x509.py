@@ -109,6 +109,7 @@ class NameType(ObjectIdentifier):
         '2.5.4.10': 'organization_name',
         '2.5.4.11': 'organizational_unit_name',
         '2.5.4.12': 'title',
+        '2.5.4.15': 'business_category',
         '2.5.4.41': 'name',
         '2.5.4.42': 'given_name',
         '2.5.4.43': 'initials',
