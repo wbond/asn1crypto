@@ -1,5 +1,27 @@
-from setuptools import setup, find_packages
+import os
+import shutil
+
+from setuptools import setup, find_packages, Command
+
 import asn1crypto
+
+
+
+class CleanCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        folder = os.path.dirname(os.path.abspath(__file__))
+        for sub_folder in ['build', 'dist', 'asn1crypto.egg-info']:
+            full_path = os.path.join(folder, sub_folder)
+            if os.path.exists(full_path):
+                shutil.rmtree(full_path)
 
 
 setup(
@@ -30,5 +52,9 @@ setup(
 
     keywords='asn1 crypto',
 
-    packages=find_packages(exclude=['tests*', 'dev*'])
+    packages=find_packages(exclude=['tests*', 'dev*']),
+
+    cmdclass={
+        'clean': CleanCommand,
+    }
 )
