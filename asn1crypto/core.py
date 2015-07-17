@@ -397,6 +397,9 @@ class NoValue(Asn1Value):
     def __len__(self):
         return 0
 
+    def __iter__(self):
+        return iter(())
+
     @property
     def native(self):
         """
