@@ -20,6 +20,8 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import sys
+import re
 import hashlib
 from collections import OrderedDict
 
@@ -51,6 +53,12 @@ from .core import (
 )
 from .algos import SignedDigestAlgorithm
 from .keys import PublicKeyInfo
+
+if sys.version_info < (3,):
+    str_cls = unicode  #pylint: disable=E0602
+else:
+    str_cls = str
+
 
 
 # The structures in this file are taken from https://tools.ietf.org/html/rfc5280
@@ -870,6 +878,10 @@ class Certificate(Sequence):
     _extended_key_usage_value = None
     _authority_information_access_value = None
     _ocsp_no_check_value = None
+    _issuer_serial = None
+    _authority_issuer_serial = False
+    _valid_domains = None
+    _valid_ips = None
 
     def _set_extensions(self):
         """
@@ -1047,3 +1059,186 @@ class Certificate(Sequence):
         if not self._processed_extensions:
             self._set_extensions()
         return self._ocsp_no_check_value
+
+    @property
+    def public_key(self):
+        """
+        :return:
+            The PublicKeyInfo object for this certificate
+        """
+
+        return self['tbs_certificate']['subject_public_key_info']
+
+    @property
+    def subject(self):
+        """
+        :return:
+            The Name object for the subject of this certificate
+        """
+
+        return self['tbs_certificate']['subject']
+
+    @property
+    def issuer(self):
+        """
+        :return:
+            The Name object for the issuer of this certificate
+        """
+
+        return self['tbs_certificate']['issuer']
+
+    @property
+    def serial_number(self):
+        """
+        :return:
+            An integer of the certificate's serial number
+        """
+
+        return self['tbs_certificate']['serial_number'].native
+
+    @property
+    def key_identifier(self):
+        """
+        :return:
+            None or a byte string of the certificate's key identifier from the
+            key identifier extension
+        """
+
+        if not self.key_identifier_value:
+            return None
+
+        return self.key_identifier_value.native
+
+    @property
+    def issuer_serial(self):
+        """
+        :return:
+            A byte string of the SHA-256 hash of the issuer concatenated with
+            the ascii character ":", concatenated with the serial number as
+            an ascii string
+        """
+
+        if self._issuer_serial is None:
+            self._issuer_serial = self.issuer.sha256 + b':' + str_cls(self.serial_number).encode('ascii')
+        return self._issuer_serial
+
+    @property
+    def authority_key_identifier(self):
+        """
+        :return:
+            None or a byte string of the key_identifier from the authority key
+            identifier extension
+        """
+
+        if not self.authority_key_identifier_value:
+            return None
+
+        return self.authority_key_identifier_value['key_identifier'].native
+
+    @property
+    def authority_issuer_serial(self):
+        """
+        :return:
+            None or a byte string of the SHA-256 hash of the isser from the
+            authority key identifier extension concatenated with the ascii
+            character ":", concatenated with the serial number from the
+            authority key identifier extension as an ascii string
+        """
+
+        if self._authority_issuer_serial is False:
+            if self.authority_key_identifier_value and self.authority_key_identifier_value['authority_cert_issuer'].native:
+                authority_issuer = self.authority_key_identifier_value['authority_cert_issuer'][0].chosen
+                # We untag the element since it is tagged via being a choice from GeneralName
+                authority_issuer = authority_issuer.untag()
+                authority_serial = self.authority_key_identifier_value['authority_cert_serial_number'].native
+                self._authority_issuer_serial = authority_issuer.sha256 + b':' + str_cls(authority_serial).encode('ascii')
+            else:
+                self._authority_issuer_serial = None
+        return self._authority_issuer_serial
+
+    @property
+    def crl_urls(self):
+        """
+        :return:
+            A list of zero or more unicode strings of the CRL URLs for this cert
+        """
+
+        if not self.crl_distribution_points_value:
+            return []
+
+        output = []
+        for entry in self.crl_distribution_points_value:
+            distribution_point_name = entry['distribution_point']
+            # RFC5280 indicates conforming CA should not use the relative form
+            if distribution_point_name.name == 'name_relative_to_crl_issuer':
+                continue
+            for general_name in distribution_point_name.chosen:
+                if general_name.name == 'uniform_resource_identifier':
+                    output.append(general_name.native)
+
+        return output
+
+    @property
+    def ocsp_urls(self):
+        """
+        :return:
+            A list of zero or more unicode strings of the OCSP URLs for this
+            cert
+        """
+
+        if not self.authority_information_access_value:
+            return []
+
+        output = []
+        for entry in self.authority_information_access_value:
+            if entry['access_method'].native == 'ocsp':
+                output.append(entry['access_location'].native)
+
+        return output
+
+    @property
+    def valid_domains(self):
+        """
+        :return:
+            A list of unicode strings of valid domain names for the certificate.
+            Wildcard certificates will have a domain in the form: *.example.com
+        """
+
+        if self._valid_domains is None:
+            self._valid_domains = []
+
+            # If the common name in the subject looks like a domain, add it
+            pattern = re.compile('^(\\*\\.)?(?:[a-zA-Z0-9](?:[a-zA-Z0-9\\-]*[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$')
+            for rdn in self.subject.chosen:
+                for name_type_value in rdn:
+                    if name_type_value['type'].native == 'common_name':
+                        value = name_type_value['value'].native
+                        if pattern.match(value):
+                            self._valid_domains.append(value)
+
+            # For the subject alt name extension, we can look at the name of
+            # the choice selected since it distinguishes between domain names,
+            # email addresses, IPs, etc
+            if self.subject_alt_name_value:
+                for general_name in self.subject_alt_name_value:
+                    if general_name.name == 'dns_name' and general_name.native not in self._valid_domains:
+                        self._valid_domains.append(general_name.native)
+
+        return self._valid_domains
+
+    @property
+    def valid_ips(self):
+        """
+        :return:
+            A list of unicode strings of valid IP addresses for the certificate
+        """
+
+        if self._valid_ips is None:
+            self._valid_ips = []
+
+            if self.subject_alt_name_value:
+                for general_name in self.subject_alt_name_value:
+                    if general_name.name == 'ip_address':
+                        self._valid_ips.append(general_name.native)
+
+        return self._valid_ips

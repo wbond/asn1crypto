@@ -7,7 +7,9 @@ import os
 from collections import OrderedDict
 from datetime import datetime
 
-from asn1crypto import x509, core
+from asn1crypto import x509, core, pem
+
+from .unittest_data import DataDecorator, data
 
 if sys.version_info < (3,):
     byte_cls = str
@@ -19,215 +21,1211 @@ tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 
-
+@DataDecorator
 class X509Tests(unittest.TestCase):
 
-    def test_extensions(self):
-        with open(os.path.join(fixtures_dir, 'keys/test-der.crt'), 'rb') as f:
-            cert = x509.Certificate.load(f.read())
+    def _load_cert(self, relative_path):
+        with open(os.path.join(fixtures_dir, relative_path), 'rb') as f:
+            cert_bytes = f.read()
+            if pem.detect(cert_bytes):
+                _, _, cert_bytes = pem.unarmor(cert_bytes)
+            return x509.Certificate.load(cert_bytes)
 
-        self.assertEqual([], cert.critical_extensions)
-        self.assertEqual(b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK', cert.key_identifier_value.native)
-        self.assertEqual(None, cert.key_usage_value)
-        self.assertEqual(None, cert.subject_alt_name_value)
-        self.assertEqual(True, cert.basic_constraints_value['ca'].native)
-        self.assertEqual(None, cert.basic_constraints_value['path_len_constraint'].native)
-        self.assertEqual(None, cert.name_constraints_value)
-        self.assertEqual(None, cert.crl_distribution_points_value)
-        self.assertEqual(None, cert.certificate_policies_value)
-        self.assertEqual(None, cert.policy_mappings_value)
-        self.assertEqual(b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK', cert.authority_key_identifier_value['key_identifier'].native)
-        self.assertEqual(None, cert.policy_constraints_value)
-        self.assertEqual(None, cert.extended_key_usage_value)
-        self.assertEqual(None, cert.authority_information_access_value)
-        self.assertEqual(None, cert.ocsp_no_check_value)
-
-    def test_extensions2(self):
-        with open(os.path.join(fixtures_dir, 'keys/test-inter-der.crt'), 'rb') as f:
-            cert = x509.Certificate.load(f.read())
-
-        self.assertEqual([], cert.critical_extensions)
-        self.assertEqual(b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02', cert.key_identifier_value.native)
-        self.assertEqual(None, cert.key_usage_value)
-        self.assertEqual(None, cert.subject_alt_name_value)
-        self.assertEqual(True, cert.basic_constraints_value['ca'].native)
-        self.assertEqual(None, cert.basic_constraints_value['path_len_constraint'].native)
-        self.assertEqual(None, cert.name_constraints_value)
-        self.assertEqual(None, cert.crl_distribution_points_value)
-        self.assertEqual(None, cert.certificate_policies_value)
-        self.assertEqual(None, cert.policy_mappings_value)
-        self.assertEqual(b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK', cert.authority_key_identifier_value['key_identifier'].native)
-        self.assertEqual(None, cert.policy_constraints_value)
-        self.assertEqual(None, cert.extended_key_usage_value)
-        self.assertEqual(None, cert.authority_information_access_value)
-        self.assertEqual(None, cert.ocsp_no_check_value)
-
-    def test_extensions3(self):
-        with open(os.path.join(fixtures_dir, 'keys/test-third-der.crt'), 'rb') as f:
-            cert = x509.Certificate.load(f.read())
-
-        self.assertEqual([], cert.critical_extensions)
-        self.assertEqual(b'D8\xe0\xe0&\x85\xbf\x98\x86\xdc\x1b\xe1\x1d\xf520\xbe\xab\xac\r', cert.key_identifier_value.native)
-        self.assertEqual(None, cert.key_usage_value)
-        self.assertEqual(None, cert.subject_alt_name_value)
-        self.assertEqual(None, cert.basic_constraints_value)
-        self.assertEqual(None, cert.name_constraints_value)
-        self.assertEqual(None, cert.crl_distribution_points_value)
-        self.assertEqual(None, cert.certificate_policies_value)
-        self.assertEqual(None, cert.policy_mappings_value)
-        self.assertEqual(b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02', cert.authority_key_identifier_value['key_identifier'].native)
-        self.assertEqual(None, cert.policy_constraints_value)
-        self.assertEqual(None, cert.extended_key_usage_value)
-        self.assertEqual(None, cert.authority_information_access_value)
-        self.assertEqual(None, cert.ocsp_no_check_value)
-
-    def test_extensions4(self):
-        with open(os.path.join(fixtures_dir, 'geotrust_certs/GeoTrust_Universal_CA.crt'), 'rb') as f:
-            cert = x509.Certificate.load(f.read())
-
-        self.assertEqual(['basic_constraints', 'key_usage'], cert.critical_extensions)
-        self.assertEqual(b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6', cert.key_identifier_value.native)
-        self.assertEqual(
-            OrderedDict([
-                ('digital_signature', True),
-                ('non_repudiation', False),
-                ('key_encipherment', False),
-                ('data_encipherment', False),
-                ('key_agreement', False),
-                ('key_cert_sign', True),
-                ('crl_sign', True),
-                ('encipher_only', False),
-                ('decipher_only', False),
-            ]),
-            cert.key_usage_value.native
+    #pylint: disable=C0326
+    @staticmethod
+    def critical_extensions_info():
+        return (
+            ('keys/test-der.crt',                          []),
+            ('keys/test-inter-der.crt',                    []),
+            ('keys/test-third-der.crt',                    []),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   ['basic_constraints', 'key_usage']),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     ['basic_constraints', 'key_usage']),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', ['basic_constraints', 'key_usage']),
+            ('geotrust_certs/codex.crt',                   ['key_usage']),
+            ('lets_encrypt/isrgrootx1.pem',                ['key_usage', 'basic_constraints']),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    ['key_usage', 'basic_constraints']),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    ['key_usage', 'basic_constraints']),
+            ('globalsign_example_keys/IssuingCA-der.cer',  ['basic_constraints', 'key_usage']),
+            ('globalsign_example_keys/rootCA.cer',         ['basic_constraints', 'key_usage']),
+            ('globalsign_example_keys/SSL1.cer',           ['key_usage', 'extended_key_usage', 'basic_constraints']),
+            ('globalsign_example_keys/SSL2.cer',           ['key_usage', 'extended_key_usage', 'basic_constraints']),
+            ('globalsign_example_keys/SSL3.cer',           ['key_usage', 'extended_key_usage', 'basic_constraints']),
         )
-        self.assertEqual(None, cert.subject_alt_name_value)
-        self.assertEqual(
-            OrderedDict([
-                ('ca', True),
-                ('path_len_constraint', None),
-            ]),
-            cert.basic_constraints_value.native
+
+    @data('critical_extensions_info')
+    def critical_extensions(self, relative_path, critical_extensions):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(critical_extensions, cert.critical_extensions)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def key_identifier_value_info():
+        return (
+            ('keys/test-der.crt',                          b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK'),
+            ('keys/test-inter-der.crt',                    b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02'),
+            ('keys/test-third-der.crt',                    b'D8\xe0\xe0&\x85\xbf\x98\x86\xdc\x1b\xe1\x1d\xf520\xbe\xab\xac\r'),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6'),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92'),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', b'\xde\xcf\\P\xb7\xae\x02\x1f\x15\x17\xaa\x16\xe8\r\xb5(\x9djZ\xf3'),
+            ('geotrust_certs/codex.crt',                   None),
+            ('lets_encrypt/isrgrootx1.pem',                b'y\xb4Y\xe6{\xb6\xe5\xe4\x01s\x80\x08\x88\xc8\x1aX\xf6\xe9\x9bn'),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    b'\xa8Jjc\x04}\xdd\xba\xe6\xd19\xb7\xa6Ee\xef\xf3\xa8\xec\xa1'),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    b'\xc5\xb1\xabNL\xb1\xcdd0\x93~\xc1\x84\x99\x05\xab\xe6\x03\xe2%'),
+            ('globalsign_example_keys/IssuingCA-der.cer',  b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
+            ('globalsign_example_keys/rootCA.cer',         b'd|\\\xe1\xe0`8NH\x9f\x05\xbcUc~?\xaeM\xf7\x1e'),
+            ('globalsign_example_keys/SSL1.cer',           b'\x94a\x04\x92\x04L\xe6\xffh\xa8\x96\xafy\xd2\xf32\x84\xae[\xcf'),
+            ('globalsign_example_keys/SSL2.cer',           b'\xd2\xb7\x15\x7fd0\x07(p\x83\xca(\xfa\x88\x96\xde\x9e\xfc\x8a='),
+            ('globalsign_example_keys/SSL3.cer',           b'G\xde\xa4\xe7\xea`\xe7\xee6\xc8\xf1\xd5\xb0F\x07\x07\x9eBh\xce'),
         )
-        self.assertEqual(None, cert.name_constraints_value)
-        self.assertEqual(None, cert.crl_distribution_points_value)
-        self.assertEqual(None, cert.certificate_policies_value)
-        self.assertEqual(None, cert.policy_mappings_value)
-        self.assertEqual(b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6', cert.authority_key_identifier_value['key_identifier'].native)
-        self.assertEqual(None, cert.policy_constraints_value)
-        self.assertEqual(None, cert.extended_key_usage_value)
-        self.assertEqual(None, cert.authority_information_access_value)
-        self.assertEqual(None, cert.ocsp_no_check_value)
 
-    def test_extensions5(self):
-        with open(os.path.join(fixtures_dir, 'geotrust_certs/GeoTrust_Primary_CA.crt'), 'rb') as f:
-            cert = x509.Certificate.load(f.read())
+    @data('key_identifier_value_info')
+    def key_identifier_value(self, relative_path, key_identifier_value):
+        cert = self._load_cert(relative_path)
+        value = cert.key_identifier_value
+        self.assertEqual(key_identifier_value, value.native if value else None)
 
-        self.assertEqual(['basic_constraints', 'key_usage'], cert.critical_extensions)
-        self.assertEqual(b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92', cert.key_identifier_value.native)
-        self.assertEqual(
-            OrderedDict([
-                ('digital_signature', True),
-                ('non_repudiation', True),
-                ('key_encipherment', False),
-                ('data_encipherment', False),
-                ('key_agreement', False),
-                ('key_cert_sign', False),
-                ('crl_sign', False),
-                ('encipher_only', False),
-                ('decipher_only', False),
-            ]),
-            cert.key_usage_value.native
-        )
-        self.assertEqual(None, cert.subject_alt_name_value)
-        self.assertEqual(True, cert.basic_constraints_value['ca'].native)
-        self.assertEqual(None, cert.basic_constraints_value['path_len_constraint'].native)
-        self.assertEqual(None, cert.name_constraints_value)
-        self.assertEqual(None, cert.crl_distribution_points_value)
-        self.assertEqual(None, cert.certificate_policies_value)
-        self.assertEqual(None, cert.policy_mappings_value)
-        self.assertEqual(None, cert.authority_key_identifier_value)
-        self.assertEqual(None, cert.policy_constraints_value)
-        self.assertEqual(None, cert.extended_key_usage_value)
-        self.assertEqual(None, cert.authority_information_access_value)
-        self.assertEqual(None, cert.ocsp_no_check_value)
-
-    def test_extensions6(self):
-        with open(os.path.join(fixtures_dir, 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt'), 'rb') as f:
-            cert = x509.Certificate.load(f.read())
-
-        self.assertEqual(['basic_constraints', 'key_usage'], cert.critical_extensions)
-        self.assertEqual(b'\xde\xcf\\P\xb7\xae\x02\x1f\x15\x17\xaa\x16\xe8\r\xb5(\x9djZ\xf3', cert.key_identifier_value.native)
-        self.assertEqual(
-            OrderedDict([
-                ('digital_signature', True),
-                ('non_repudiation', True),
-                ('key_encipherment', False),
-                ('data_encipherment', False),
-                ('key_agreement', False),
-                ('key_cert_sign', False),
-                ('crl_sign', False),
-                ('encipher_only', False),
-                ('decipher_only', False),
-            ]),
-            cert.key_usage_value.native
-        )
-        self.assertEqual(
-            [
+    #pylint: disable=C0326
+    @staticmethod
+    def key_usage_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            (
+                'geotrust_certs/GeoTrust_Universal_CA.crt',
                 OrderedDict([
-                    ('common_name', 'SymantecPKI-1-538')
+                    ('digital_signature', True),
+                    ('non_repudiation', False),
+                    ('key_encipherment', False),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', True),
+                    ('crl_sign', True),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
                 ])
-            ],
-            cert.subject_alt_name_value.native
-        )
-        self.assertEqual(True, cert.basic_constraints_value['ca'].native)
-        self.assertEqual(0, cert.basic_constraints_value['path_len_constraint'].native)
-        self.assertEqual(None, cert.name_constraints_value)
-        self.assertEqual(
-            [
+            ),
+            (
+                'geotrust_certs/GeoTrust_Primary_CA.crt',
                 OrderedDict([
-                    ('distribution_point', ['http://g1.symcb.com/GeoTrustPCA.crl']),
-                    ('reasons', None),
-                    ('crl_issuer', None)
+                    ('digital_signature', True),
+                    ('non_repudiation', True),
+                    ('key_encipherment', False),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', False),
+                    ('crl_sign', False),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
                 ])
-            ],
-            cert.crl_distribution_points_value.native
-        )
-        self.assertEqual(
-            [
+            ),
+            (
+                'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
                 OrderedDict([
-                    ('policy_identifier', 'any_policy'),
+                    ('digital_signature', True),
+                    ('non_repudiation', True),
+                    ('key_encipherment', False),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', False),
+                    ('crl_sign', False),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+            (
+                'geotrust_certs/codex.crt',
+                OrderedDict([
+                    ('digital_signature', True),
+                    ('non_repudiation', False),
+                    ('key_encipherment', True),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', False),
+                    ('crl_sign', False),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+            (
+                'lets_encrypt/isrgrootx1.pem',
+                OrderedDict([
+                    ('digital_signature', True),
+                    ('non_repudiation', True),
+                    ('key_encipherment', False),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', False),
+                    ('crl_sign', False),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx1.pem',
+                OrderedDict([
+                    ('digital_signature', True),
+                    ('non_repudiation', False),
+                    ('key_encipherment', False),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', True),
+                    ('crl_sign', True),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx2.pem',
+                OrderedDict([
+                    ('digital_signature', True),
+                    ('non_repudiation', False),
+                    ('key_encipherment', False),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', True),
+                    ('crl_sign', True),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+            (
+                'globalsign_example_keys/IssuingCA-der.cer',
+                OrderedDict([
+                    ('digital_signature', True),
+                    ('non_repudiation', True),
+                    ('key_encipherment', False),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', False),
+                    ('crl_sign', False),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+            (
+                'globalsign_example_keys/rootCA.cer',
+                OrderedDict([
+                    ('digital_signature', True),
+                    ('non_repudiation', True),
+                    ('key_encipherment', False),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', False),
+                    ('crl_sign', False),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+            (
+                'globalsign_example_keys/SSL1.cer',
+                OrderedDict([
+                    ('digital_signature', True),
+                    ('non_repudiation', False),
+                    ('key_encipherment', True),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', False),
+                    ('crl_sign', False),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+            (
+                'globalsign_example_keys/SSL2.cer',
+                OrderedDict([
+                    ('digital_signature', True),
+                    ('non_repudiation', False),
+                    ('key_encipherment', True),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', False),
+                    ('crl_sign', False),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+            (
+                'globalsign_example_keys/SSL3.cer',
+                OrderedDict([
+                    ('digital_signature', True),
+                    ('non_repudiation', False),
+                    ('key_encipherment', True),
+                    ('data_encipherment', False),
+                    ('key_agreement', False),
+                    ('key_cert_sign', False),
+                    ('crl_sign', False),
+                    ('encipher_only', False),
+                    ('decipher_only', False),
+                ])
+            ),
+        )
+
+    @data('key_usage_value_info')
+    def key_usage_value(self, relative_path, key_usage_value):
+        cert = self._load_cert(relative_path)
+        value = cert.key_usage_value
+        self.assertEqual(key_usage_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def subject_alt_name_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', [OrderedDict([('common_name', 'SymantecPKI-1-538')])]),
+            ('geotrust_certs/codex.crt',                   ['dev.codexns.io', 'rc.codexns.io', 'packagecontrol.io', 'wbond.net', 'codexns.io']),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    None),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    None),
+            ('globalsign_example_keys/IssuingCA-der.cer',  None),
+            ('globalsign_example_keys/rootCA.cer',         None),
+            ('globalsign_example_keys/SSL1.cer',           ['anything.example.com']),
+            ('globalsign_example_keys/SSL2.cer',           ['anything.example.com']),
+            ('globalsign_example_keys/SSL3.cer',           None),
+        )
+
+    @data('subject_alt_name_value_info')
+    def subject_alt_name_value(self, relative_path, subject_alt_name_value):
+        cert = self._load_cert(relative_path)
+        value = cert.subject_alt_name_value
+        self.assertEqual(subject_alt_name_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def basic_constraints_value_info():
+        return (
+            ('keys/test-der.crt',                          {'ca': True, 'path_len_constraint': None}),
+            ('keys/test-inter-der.crt',                    {'ca': True, 'path_len_constraint': None}),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   {'ca': True, 'path_len_constraint': None}),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     {'ca': True, 'path_len_constraint': None}),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', {'ca': True, 'path_len_constraint': 0}),
+            ('geotrust_certs/codex.crt',                   {'ca': False, 'path_len_constraint': None}),
+            ('lets_encrypt/isrgrootx1.pem',                {'ca': True, 'path_len_constraint': None}),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    {'ca': True, 'path_len_constraint': 0}),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    {'ca': True, 'path_len_constraint': 0}),
+            ('globalsign_example_keys/IssuingCA-der.cer',  {'ca': True, 'path_len_constraint': None}),
+            ('globalsign_example_keys/rootCA.cer',         {'ca': True, 'path_len_constraint': None}),
+            ('globalsign_example_keys/SSL1.cer',           {'ca': False, 'path_len_constraint': None}),
+            ('globalsign_example_keys/SSL2.cer',           {'ca': False, 'path_len_constraint': None}),
+            ('globalsign_example_keys/SSL3.cer',           {'ca': False, 'path_len_constraint': None}),
+        )
+
+    @data('basic_constraints_value_info')
+    def basic_constraints_value(self, relative_path, basic_constraints_value):
+        cert = self._load_cert(relative_path)
+        value = cert.basic_constraints_value
+        self.assertEqual(basic_constraints_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def name_constraints_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', None),
+            ('geotrust_certs/codex.crt',                   None),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    None),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    None),
+            (
+                'globalsign_example_keys/IssuingCA-der.cer',
+                OrderedDict([
                     (
-                        'policy_qualifiers',
+                        'permitted_subtrees',
                         [
                             OrderedDict([
-                                ('policy_qualifier_id', 'certification_practice_statement'),
-                                ('qualifier', 'https://www.geotrust.com/resources/cps')
+                                ('base', 'onlythis.com'),
+                                ('minimum', 0),
+                                ('maximum', None)
+                            ]),
+                            OrderedDict([
+                                (
+                                    'base',
+                                    OrderedDict([
+                                        ('country_name', 'US'),
+                                        ('state_or_province_name', 'MA'),
+                                        ('locality_name', 'Boston'),
+                                        ('organization_name', 'Example LLC')
+                                    ])
+                                ),
+                                ('minimum', 0),
+                                ('maximum', None)
                             ])
                         ]
-                    )
+                    ),
+                    (
+                        'excluded_subtrees',
+                        [
+                            OrderedDict([
+                                ('base', b'\x00\x00\x00\x00\x00\x00\x00\x00'),
+                                ('minimum', 0),
+                                ('maximum', None)
+                            ]),
+                            OrderedDict([
+                                ('base', b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+                                ('minimum', 0),
+                                ('maximum', None)
+                            ])
+                        ]
+                    ),
                 ])
-            ],
-            cert.certificate_policies_value.native
+            ),
+            ('globalsign_example_keys/rootCA.cer',         None),
+            ('globalsign_example_keys/SSL1.cer',           None),
+            ('globalsign_example_keys/SSL2.cer',           None),
+            ('globalsign_example_keys/SSL3.cer',           None),
         )
-        self.assertEqual(None, cert.policy_mappings_value)
-        self.assertEqual(b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92', cert.authority_key_identifier_value['key_identifier'].native)
-        self.assertEqual(None, cert.policy_constraints_value)
-        self.assertEqual(None, cert.extended_key_usage_value)
-        self.assertEqual(
-            [
+
+    @data('name_constraints_value_info')
+    def name_constraints_value(self, relative_path, name_constraints_value):
+        cert = self._load_cert(relative_path)
+        value = cert.name_constraints_value
+        self.assertEqual(name_constraints_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def crl_distribution_points_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            (
+                'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://g1.symcb.com/GeoTrustPCA.crl']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
+            (
+                'geotrust_certs/codex.crt',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://gm.symcb.com/gm.crl']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            (
+                'lets_encrypt/letsencryptauthorityx1.pem',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://crl.root-x1.letsencrypt.org']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx2.pem',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://crl.root-x1.letsencrypt.org']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
+            (
+                'globalsign_example_keys/IssuingCA-der.cer',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]),
+            (
+                'globalsign_example_keys/rootCA.cer',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]),
+            ('globalsign_example_keys/SSL1.cer',           None),
+            ('globalsign_example_keys/SSL2.cer',           None),
+            ('globalsign_example_keys/SSL3.cer',           None),
+        )
+
+    @data('crl_distribution_points_value_info')
+    def crl_distribution_points_value(self, relative_path, crl_distribution_points_value):
+        cert = self._load_cert(relative_path)
+        value = cert.crl_distribution_points_value
+        self.assertEqual(crl_distribution_points_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def certificate_policies_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            (
+                'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
+                [
+                    OrderedDict([
+                        ('policy_identifier', 'any_policy'),
+                        (
+                            'policy_qualifiers',
+                            [
+                                OrderedDict([
+                                    ('policy_qualifier_id', 'certification_practice_statement'),
+                                    ('qualifier', 'https://www.geotrust.com/resources/cps')
+                                ])
+                            ]
+                        )
+                    ])
+                ]
+            ),
+            (
+                'geotrust_certs/codex.crt',
+                [
+                    OrderedDict([
+                        ('policy_identifier', '1.3.6.1.4.1.14370.1.6'),
+                        (
+                            'policy_qualifiers',
+                            [
+                                OrderedDict([
+                                    ('policy_qualifier_id', 'certification_practice_statement'),
+                                    ('qualifier', 'https://www.geotrust.com/resources/repository/legal')
+                                ]),
+                                OrderedDict([
+                                    ('policy_qualifier_id', 'user_notice'),
+                                    (
+                                        'qualifier',
+                                        OrderedDict([
+                                            ('notice_ref', None),
+                                            ('explicit_text', 'https://www.geotrust.com/resources/repository/legal')
+                                        ])
+                                    )
+                                ])
+                            ]
+                        )
+                    ])
+                ]
+            ),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            (
+                'lets_encrypt/letsencryptauthorityx1.pem',
+                [
+                    OrderedDict([
+                        ('policy_identifier', '2.23.140.1.2.1'),
+                        ('policy_qualifiers', None)
+                    ]),
+                    OrderedDict([
+                        ('policy_identifier', '1.3.6.1.4.1.44947.1.1.1'),
+                        (
+                            'policy_qualifiers',
+                            [
+                                OrderedDict([
+                                    ('policy_qualifier_id', 'certification_practice_statement'),
+                                    ('qualifier', 'http://cps.root-x1.letsencrypt.org')
+                                ])
+                            ]
+                        )
+                    ])
+                ]
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx2.pem',
+                [
+                    OrderedDict([
+                        ('policy_identifier', '2.23.140.1.2.1'),
+                        ('policy_qualifiers', None)
+                    ]),
+                    OrderedDict([
+                        ('policy_identifier', '1.3.6.1.4.1.44947.1.1.1'),
+                        (
+                            'policy_qualifiers',
+                            [
+                                OrderedDict([
+                                    ('policy_qualifier_id', 'certification_practice_statement'),
+                                    ('qualifier', 'http://cps.root-x1.letsencrypt.org')
+                                ])
+                            ]
+                        )
+                    ])
+                ]
+            ),
+            (
+                'globalsign_example_keys/IssuingCA-der.cer',
+                [
+                    OrderedDict([
+                        ('policy_identifier', '1.3.6.1.4.1.4146.1.60'),
+                        (
+                            'policy_qualifiers',
+                            [
+                                OrderedDict([
+                                    ('policy_qualifier_id', 'certification_practice_statement'),
+                                    ('qualifier', 'https://www.globalsign.com/repository/')
+                                ])
+                            ]
+                        )
+                    ])
+                ]
+            ),
+            ('globalsign_example_keys/rootCA.cer',         None),
+            (
+                'globalsign_example_keys/SSL1.cer',
+                [
+                    OrderedDict([
+                        ('policy_identifier', '1.3.6.1.4.1.4146.1.60'),
+                        (
+                            'policy_qualifiers',
+                            [
+                                OrderedDict([
+                                    ('policy_qualifier_id', 'certification_practice_statement'),
+                                    ('qualifier', 'https://www.globalsign.com/repository/')
+                                ])
+                            ]
+                        )
+                    ])
+                ]
+            ),
+            (
+                'globalsign_example_keys/SSL2.cer',
+                [
+                    OrderedDict([
+                        ('policy_identifier', '1.3.6.1.4.1.4146.1.60'),
+                        (
+                            'policy_qualifiers',
+                            [
+                                OrderedDict([
+                                    ('policy_qualifier_id', 'certification_practice_statement'),
+                                    ('qualifier', 'https://www.globalsign.com/repository/')
+                                ])
+                            ]
+                        )
+                    ])
+                ]
+            ),
+            (
+                'globalsign_example_keys/SSL3.cer',
+                [
+                    OrderedDict([
+                        ('policy_identifier', '1.3.6.1.4.1.4146.1.60'),
+                        (
+                            'policy_qualifiers',
+                            [
+                                OrderedDict([
+                                    ('policy_qualifier_id', 'certification_practice_statement'),
+                                    ('qualifier', 'https://www.globalsign.com/repository/')
+                                ])
+                            ]
+                        )
+                    ])
+                ]
+            ),
+        )
+
+    @data('certificate_policies_value_info')
+    def certificate_policies_value(self, relative_path, certificate_policies_value):
+        cert = self._load_cert(relative_path)
+        value = cert.certificate_policies_value
+        self.assertEqual(certificate_policies_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def policy_mappings_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', None),
+            ('geotrust_certs/codex.crt',                   None),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    None),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    None),
+            ('globalsign_example_keys/IssuingCA-der.cer',  None),
+            ('globalsign_example_keys/rootCA.cer',         None),
+            ('globalsign_example_keys/SSL1.cer',           None),
+            ('globalsign_example_keys/SSL2.cer',           None),
+            ('globalsign_example_keys/SSL3.cer',           None),
+        )
+
+    @data('policy_mappings_value_info')
+    def policy_mappings_value(self, relative_path, policy_mappings_value):
+        cert = self._load_cert(relative_path)
+        value = cert.policy_mappings_value
+        self.assertEqual(policy_mappings_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def authority_key_identifier_value_info():
+        return (
+            (
+                'keys/test-der.crt',
                 OrderedDict([
-                    ('access_method', 'ocsp'),
-                    ('access_location', 'http://g2.symcb.com')
+                    ('key_identifier', b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK'),
+                    (
+                        'authority_cert_issuer',
+                        [
+                            OrderedDict([
+                                ('country_name', 'US'),
+                                ('state_or_province_name', 'Massachusetts'),
+                                ('locality_name', 'Newbury'),
+                                ('organization_name', 'Codex Non Sufficit LC'),
+                                ('organizational_unit_name', 'Testing'),
+                                ('common_name', 'Will Bond'),
+                                ('email_address', 'will@codexns.io')
+                            ])
+                        ]
+                    ),
+                    ('authority_cert_serial_number', 13683582341504654466)
                 ])
-            ],
-            cert.authority_information_access_value.native
+            ),
+            (
+                'keys/test-inter-der.crt',
+                OrderedDict([
+                    ('key_identifier', b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK'),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'keys/test-third-der.crt',
+                OrderedDict([
+                    ('key_identifier', b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02'),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'geotrust_certs/GeoTrust_Universal_CA.crt',
+                OrderedDict([
+                    ('key_identifier', b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6'),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'geotrust_certs/GeoTrust_Primary_CA.crt',
+                None
+            ),
+            (
+                'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
+                OrderedDict([
+                    ('key_identifier', b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92'),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'geotrust_certs/codex.crt',
+                OrderedDict([
+                    ('key_identifier', b'\xde\xcf\\P\xb7\xae\x02\x1f\x15\x17\xaa\x16\xe8\r\xb5(\x9djZ\xf3'),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'lets_encrypt/isrgrootx1.pem',
+                None
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx1.pem',
+                OrderedDict([
+                    ('key_identifier', b'y\xb4Y\xe6{\xb6\xe5\xe4\x01s\x80\x08\x88\xc8\x1aX\xf6\xe9\x9bn'),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx2.pem',
+                OrderedDict([
+                    ('key_identifier', b'y\xb4Y\xe6{\xb6\xe5\xe4\x01s\x80\x08\x88\xc8\x1aX\xf6\xe9\x9bn'),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'globalsign_example_keys/IssuingCA-der.cer',
+                OrderedDict([
+                    ('key_identifier', b'd|\\\xe1\xe0`8NH\x9f\x05\xbcUc~?\xaeM\xf7\x1e'),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'globalsign_example_keys/rootCA.cer',
+                None
+            ),
+            (
+                'globalsign_example_keys/SSL1.cer',
+                OrderedDict([
+                    ('key_identifier', b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'globalsign_example_keys/SSL2.cer',
+                OrderedDict([
+                    ('key_identifier', b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
+            (
+                'globalsign_example_keys/SSL3.cer',
+                OrderedDict([
+                    ('key_identifier', b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
+                    ('authority_cert_issuer', None),
+                    ('authority_cert_serial_number', None)
+                ])
+            ),
         )
-        self.assertEqual(None, cert.ocsp_no_check_value)
+
+    @data('authority_key_identifier_value_info')
+    def authority_key_identifier_value(self, relative_path, authority_key_identifier_value):
+        cert = self._load_cert(relative_path)
+        value = cert.authority_key_identifier_value
+        self.assertEqual(authority_key_identifier_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def policy_constraints_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', None),
+            ('geotrust_certs/codex.crt',                   None),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    None),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    None),
+            ('globalsign_example_keys/IssuingCA-der.cer',  None),
+            ('globalsign_example_keys/rootCA.cer',         None),
+            ('globalsign_example_keys/SSL1.cer',           None),
+            ('globalsign_example_keys/SSL2.cer',           None),
+            ('globalsign_example_keys/SSL3.cer',           None),
+        )
+
+    @data('policy_constraints_value_info')
+    def policy_constraints_value(self, relative_path, policy_constraints_value):
+        cert = self._load_cert(relative_path)
+        value = cert.policy_constraints_value
+        self.assertEqual(policy_constraints_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def extended_key_usage_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', None),
+            ('geotrust_certs/codex.crt',                   ['server_auth', 'client_auth']),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    None),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    None),
+            ('globalsign_example_keys/IssuingCA-der.cer',  None),
+            ('globalsign_example_keys/rootCA.cer',         None),
+            ('globalsign_example_keys/SSL1.cer',           ['server_auth', 'client_auth']),
+            ('globalsign_example_keys/SSL2.cer',           ['server_auth', 'client_auth']),
+            ('globalsign_example_keys/SSL3.cer',           ['server_auth', 'client_auth']),
+        )
+
+    @data('extended_key_usage_value_info')
+    def extended_key_usage_value(self, relative_path, extended_key_usage_value):
+        cert = self._load_cert(relative_path)
+        value = cert.extended_key_usage_value
+        self.assertEqual(extended_key_usage_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def authority_information_access_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            (
+                'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
+                [
+                    OrderedDict([
+                        ('access_method', 'ocsp'),
+                        ('access_location', 'http://g2.symcb.com')
+                    ])
+                ]
+            ),
+            (
+                'geotrust_certs/codex.crt',
+                [
+                    OrderedDict([
+                        ('access_method', 'ocsp'),
+                        ('access_location', 'http://gm.symcd.com')
+                    ]),
+                    OrderedDict([
+                        ('access_method', 'ca_issuers'),
+                        ('access_location', 'http://gm.symcb.com/gm.crt')
+                    ]),
+                ]
+            ),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            (
+                'lets_encrypt/letsencryptauthorityx1.pem',
+                [
+                    OrderedDict([
+                        ('access_method', 'ocsp'),
+                        ('access_location', 'http://ocsp.root-x1.letsencrypt.org/')
+                    ]),
+                    OrderedDict([
+                        ('access_method', 'ca_issuers'),
+                        ('access_location', 'http://cert.root-x1.letsencrypt.org/')
+                    ])
+                ]
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx2.pem',
+                [
+                    OrderedDict([
+                        ('access_method', 'ocsp'),
+                        ('access_location', 'http://ocsp.root-x1.letsencrypt.org/')
+                    ]),
+                    OrderedDict([
+                        ('access_method', 'ca_issuers'),
+                        ('access_location', 'http://cert.root-x1.letsencrypt.org/')
+                    ])
+                ]
+            ),
+            ('globalsign_example_keys/IssuingCA-der.cer',  None),
+            ('globalsign_example_keys/rootCA.cer',         None),
+            (
+                'globalsign_example_keys/SSL1.cer',
+                [
+                    OrderedDict([
+                        ('access_method', 'ocsp'),
+                        ('access_location', 'http://ocsp.exampleovca.com/')
+                    ]),
+                    OrderedDict([
+                        ('access_method', 'ca_issuers'),
+                        ('access_location', 'http://secure.globalsign.com/cacert/trustrootcatg2.crt')
+                    ])
+                ]
+            ),
+            (
+                'globalsign_example_keys/SSL2.cer',
+                [
+                    OrderedDict([
+                        ('access_method', 'ocsp'),
+                        ('access_location', 'http://ocsp.exampleovca.com/')
+                    ]),
+                    OrderedDict([
+                        ('access_method', 'ca_issuers'),
+                        ('access_location', 'http://secure.globalsign.com/cacert/trustrootcatg2.crt')
+                    ])
+                ]
+            ),
+            (
+                'globalsign_example_keys/SSL3.cer',
+                [
+                    OrderedDict([
+                        ('access_method', 'ocsp'),
+                        ('access_location', 'http://ocsp.exampleovca.com/')
+                    ]),
+                    OrderedDict([
+                        ('access_method', 'ca_issuers'),
+                        ('access_location', 'http://secure.globalsign.com/cacert/trustrootcatg2.crt')
+                    ])
+                ]
+            ),
+        )
+
+    @data('authority_information_access_value_info')
+    def authority_information_access_value(self, relative_path, authority_information_access_value):
+        cert = self._load_cert(relative_path)
+        value = cert.authority_information_access_value
+        self.assertEqual(authority_information_access_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def ocsp_no_check_value_info():
+        return (
+            ('keys/test-der.crt',                          None),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', None),
+            ('geotrust_certs/codex.crt',                   None),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    None),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    None),
+            ('globalsign_example_keys/IssuingCA-der.cer',  None),
+            ('globalsign_example_keys/rootCA.cer',         None),
+            ('globalsign_example_keys/SSL1.cer',           None),
+            ('globalsign_example_keys/SSL2.cer',           None),
+            ('globalsign_example_keys/SSL3.cer',           None),
+        )
+
+    @data('ocsp_no_check_value_info')
+    def ocsp_no_check_value(self, relative_path, ocsp_no_check_value):
+        cert = self._load_cert(relative_path)
+        value = cert.ocsp_no_check_value
+        self.assertEqual(ocsp_no_check_value, value.native if value else None)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def serial_number_info():
+        return (
+            ('keys/test-der.crt',                          13683582341504654466),
+            ('keys/test-inter-der.crt',                    1590137),
+            ('keys/test-third-der.crt',                    2474902313),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   1),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     32798226551256963324313806436981982369),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', 146934555852773531829332059263122711876),
+            ('geotrust_certs/codex.crt',                   130338219198307073574879940486642352162),
+            ('lets_encrypt/isrgrootx1.pem',                172886928669790476064670243504169061120),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    307817870430047279283060309415759825539),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    199666138109676817050168330923544141416),
+            ('globalsign_example_keys/IssuingCA-der.cer',  43543335419752),
+            ('globalsign_example_keys/rootCA.cer',         342514332211132),
+            ('globalsign_example_keys/SSL1.cer',           425155524522),
+            ('globalsign_example_keys/SSL2.cer',           425155524522),
+            ('globalsign_example_keys/SSL3.cer',           425155524522),
+        )
+
+    @data('serial_number_info')
+    def serial_number(self, relative_path, serial_number):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(serial_number, cert.serial_number)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def key_identifier_info():
+        return (
+            ('keys/test-der.crt',                          b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK'),
+            ('keys/test-inter-der.crt',                    b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02'),
+            ('keys/test-third-der.crt',                    b'D8\xe0\xe0&\x85\xbf\x98\x86\xdc\x1b\xe1\x1d\xf520\xbe\xab\xac\r'),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6'),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92'),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', b'\xde\xcf\\P\xb7\xae\x02\x1f\x15\x17\xaa\x16\xe8\r\xb5(\x9djZ\xf3'),
+            ('geotrust_certs/codex.crt',                   None),
+            ('lets_encrypt/isrgrootx1.pem',                b'y\xb4Y\xe6{\xb6\xe5\xe4\x01s\x80\x08\x88\xc8\x1aX\xf6\xe9\x9bn'),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    b'\xa8Jjc\x04}\xdd\xba\xe6\xd19\xb7\xa6Ee\xef\xf3\xa8\xec\xa1'),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    b'\xc5\xb1\xabNL\xb1\xcdd0\x93~\xc1\x84\x99\x05\xab\xe6\x03\xe2%'),
+            ('globalsign_example_keys/IssuingCA-der.cer',  b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
+            ('globalsign_example_keys/rootCA.cer',         b'd|\\\xe1\xe0`8NH\x9f\x05\xbcUc~?\xaeM\xf7\x1e'),
+            ('globalsign_example_keys/SSL1.cer',           b'\x94a\x04\x92\x04L\xe6\xffh\xa8\x96\xafy\xd2\xf32\x84\xae[\xcf'),
+            ('globalsign_example_keys/SSL2.cer',           b'\xd2\xb7\x15\x7fd0\x07(p\x83\xca(\xfa\x88\x96\xde\x9e\xfc\x8a='),
+            ('globalsign_example_keys/SSL3.cer',           b'G\xde\xa4\xe7\xea`\xe7\xee6\xc8\xf1\xd5\xb0F\x07\x07\x9eBh\xce'),
+        )
+
+    @data('key_identifier_info')
+    def key_identifier(self, relative_path, key_identifier):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(key_identifier, cert.key_identifier)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def issuer_serial_info():
+        return (
+            ('keys/test-der.crt',                          b'\xdd\x8a\x19x\xae`\x19=\xa7\xf8\x00\xb9\xfbx\xf8\xedu\xb8!\xf8\x8c\xdb\x1f\x99\'7w\x93\xb4\xa4\'\xa0:13683582341504654466'),
+            ('keys/test-inter-der.crt',                    b'\xdd\x8a\x19x\xae`\x19=\xa7\xf8\x00\xb9\xfbx\xf8\xedu\xb8!\xf8\x8c\xdb\x1f\x99\'7w\x93\xb4\xa4\'\xa0:1590137'),
+            ('keys/test-third-der.crt',                    b'\xed{\x9b\xbf\x9b\xdbd\xa4\xea\xf2#+H\x96\xcd\x80\x99\xf6\xecCM\x94\x07\x02\xe2\x18\xf3\x83\x8c8%\x01:2474902313'),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   b'\xa1\x848\xf2\xe5w\xee\xec\xce\xfefJC+\xdf\x97\x7f\xd2Y\xe3\xdc\xa0D7~\x07\xd9\x9dzL@g:1'),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     b'\xdcg\x0c\x80\x03\xb3D\xa0v\xe2\xee\xec\x8b\xd6\x82\x01\xf0\x13\x0cwT\xb4\x8f\x80\x0eT\x9d\xbf\xbf\xa4\x11\x80:32798226551256963324313806436981982369'),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', b'\xdcg\x0c\x80\x03\xb3D\xa0v\xe2\xee\xec\x8b\xd6\x82\x01\xf0\x13\x0cwT\xb4\x8f\x80\x0eT\x9d\xbf\xbf\xa4\x11\x80:146934555852773531829332059263122711876'),
+            ('geotrust_certs/codex.crt',                   b'x\x12\xe0\x15\x00d;\xc3\xb9/\xf6\x13\n\xd8\xe2\xddY\xf7\xaf*=C\x01<\x86\xf5\x9f_\xab;e\xd1:130338219198307073574879940486642352162'),
+            ('lets_encrypt/isrgrootx1.pem',                b'\xf6\xdb/\xbd\x9d\xd8]\x92Y\xdd\xb3\xc6\xde}{/\xec?>\x0c\xef\x17a\xbc\xbf3 W\x1e-0\xf8:172886928669790476064670243504169061120'),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    b'\xf6\xdb/\xbd\x9d\xd8]\x92Y\xdd\xb3\xc6\xde}{/\xec?>\x0c\xef\x17a\xbc\xbf3 W\x1e-0\xf8:307817870430047279283060309415759825539'),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    b'\xf6\xdb/\xbd\x9d\xd8]\x92Y\xdd\xb3\xc6\xde}{/\xec?>\x0c\xef\x17a\xbc\xbf3 W\x1e-0\xf8:199666138109676817050168330923544141416'),
+            ('globalsign_example_keys/IssuingCA-der.cer',  b'\xd2\xe7\xca\x10\xc1\x91\x92Y^A\x11\xd3Rz\xd5\x93\x19wk\x11\xef\xaa\x9c\xad\x10\x8ak\x8a\x08-\x0c\xff:43543335419752'),
+            ('globalsign_example_keys/rootCA.cer',         b'\xd2\xe7\xca\x10\xc1\x91\x92Y^A\x11\xd3Rz\xd5\x93\x19wk\x11\xef\xaa\x9c\xad\x10\x8ak\x8a\x08-\x0c\xff:342514332211132'),
+            ('globalsign_example_keys/SSL1.cer',           b'_\xc0S\xb1\xeb}\xe3\x8e\xe4{\xdb\xd7\xe2\xd9}=3\x97|\x0c\x1e\xecz\xcc\x92u\x1f\xf0\x1d\xbc\x9f\xe4:425155524522'),
+            ('globalsign_example_keys/SSL2.cer',           b'_\xc0S\xb1\xeb}\xe3\x8e\xe4{\xdb\xd7\xe2\xd9}=3\x97|\x0c\x1e\xecz\xcc\x92u\x1f\xf0\x1d\xbc\x9f\xe4:425155524522'),
+            ('globalsign_example_keys/SSL3.cer',           b'_\xc0S\xb1\xeb}\xe3\x8e\xe4{\xdb\xd7\xe2\xd9}=3\x97|\x0c\x1e\xecz\xcc\x92u\x1f\xf0\x1d\xbc\x9f\xe4:425155524522'),
+        )
+
+    @data('issuer_serial_info')
+    def issuer_serial(self, relative_path, issuer_serial):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(issuer_serial, cert.issuer_serial)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def authority_key_identifier_info():
+        return (
+            ('keys/test-der.crt', b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK'),
+            ('keys/test-inter-der.crt', b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK'),
+            ('keys/test-third-der.crt', b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02'),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt', b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6'),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt', None),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92'),
+            ('geotrust_certs/codex.crt', b'\xde\xcf\\P\xb7\xae\x02\x1f\x15\x17\xaa\x16\xe8\r\xb5(\x9djZ\xf3'),
+            ('lets_encrypt/isrgrootx1.pem', None),
+            ('lets_encrypt/letsencryptauthorityx1.pem', b'y\xb4Y\xe6{\xb6\xe5\xe4\x01s\x80\x08\x88\xc8\x1aX\xf6\xe9\x9bn'),
+            ('lets_encrypt/letsencryptauthorityx2.pem', b'y\xb4Y\xe6{\xb6\xe5\xe4\x01s\x80\x08\x88\xc8\x1aX\xf6\xe9\x9bn'),
+            ('globalsign_example_keys/IssuingCA-der.cer', b'd|\\\xe1\xe0`8NH\x9f\x05\xbcUc~?\xaeM\xf7\x1e'),
+            ('globalsign_example_keys/rootCA.cer', None),
+            ('globalsign_example_keys/SSL1.cer', b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
+            ('globalsign_example_keys/SSL2.cer', b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
+            ('globalsign_example_keys/SSL3.cer', b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
+        )
+
+    @data('authority_key_identifier_info')
+    def authority_key_identifier(self, relative_path, authority_key_identifier):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(authority_key_identifier, cert.authority_key_identifier)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def authority_issuer_serial_info():
+        return (
+            ('keys/test-der.crt',                          b'\xdd\x8a\x19x\xae`\x19=\xa7\xf8\x00\xb9\xfbx\xf8\xedu\xb8!\xf8\x8c\xdb\x1f\x99\'7w\x93\xb4\xa4\'\xa0:13683582341504654466'),
+            ('keys/test-inter-der.crt',                    None),
+            ('keys/test-third-der.crt',                    None),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', None),
+            ('geotrust_certs/codex.crt',                   None),
+            ('lets_encrypt/isrgrootx1.pem',                None),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    None),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    None),
+            ('globalsign_example_keys/IssuingCA-der.cer',  None),
+            ('globalsign_example_keys/rootCA.cer',         None),
+            ('globalsign_example_keys/SSL1.cer',           None),
+            ('globalsign_example_keys/SSL2.cer',           None),
+            ('globalsign_example_keys/SSL3.cer',           None),
+        )
+
+    @data('authority_issuer_serial_info')
+    def authority_issuer_serial(self, relative_path, authority_issuer_serial):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(authority_issuer_serial, cert.authority_issuer_serial)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def ocsp_urls_info():
+        return (
+            ('keys/test-der.crt',                          []),
+            ('keys/test-inter-der.crt',                    []),
+            ('keys/test-third-der.crt',                    []),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   []),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     []),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', ['http://g2.symcb.com']),
+            ('geotrust_certs/codex.crt',                   ['http://gm.symcd.com']),
+            ('lets_encrypt/isrgrootx1.pem',                []),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    ['http://ocsp.root-x1.letsencrypt.org/']),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    ['http://ocsp.root-x1.letsencrypt.org/']),
+            ('globalsign_example_keys/IssuingCA-der.cer',  []),
+            ('globalsign_example_keys/rootCA.cer',         []),
+            ('globalsign_example_keys/SSL1.cer',           ['http://ocsp.exampleovca.com/']),
+            ('globalsign_example_keys/SSL2.cer',           ['http://ocsp.exampleovca.com/']),
+            ('globalsign_example_keys/SSL3.cer',           ['http://ocsp.exampleovca.com/']),
+        )
+
+    @data('ocsp_urls_info')
+    def ocsp_urls(self, relative_path, ocsp_url):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(ocsp_url, cert.ocsp_urls)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def crl_urls_info():
+        return (
+            ('keys/test-der.crt',                          []),
+            ('keys/test-inter-der.crt',                    []),
+            ('keys/test-third-der.crt',                    []),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   []),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     []),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', ['http://g1.symcb.com/GeoTrustPCA.crl']),
+            ('geotrust_certs/codex.crt',                   ['http://gm.symcb.com/gm.crl']),
+            ('lets_encrypt/isrgrootx1.pem',                []),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    ['http://crl.root-x1.letsencrypt.org']),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    ['http://crl.root-x1.letsencrypt.org']),
+            ('globalsign_example_keys/IssuingCA-der.cer',  ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
+            ('globalsign_example_keys/rootCA.cer',         ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
+            ('globalsign_example_keys/SSL1.cer',           []),
+            ('globalsign_example_keys/SSL2.cer',           []),
+            ('globalsign_example_keys/SSL3.cer',           []),
+        )
+
+    @data('crl_urls_info')
+    def crl_urls(self, relative_path, crl_url):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(crl_url, cert.crl_urls)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def valid_domains_info():
+        return (
+            ('keys/test-der.crt',                          []),
+            ('keys/test-inter-der.crt',                    []),
+            ('keys/test-third-der.crt',                    []),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   []),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     []),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', []),
+            ('geotrust_certs/codex.crt',                   ['codexns.io', 'dev.codexns.io', 'rc.codexns.io', 'packagecontrol.io', 'wbond.net']),
+            ('lets_encrypt/isrgrootx1.pem',                []),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    []),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    []),
+            ('globalsign_example_keys/IssuingCA-der.cer',  []),
+            ('globalsign_example_keys/rootCA.cer',         []),
+            ('globalsign_example_keys/SSL1.cer',           ['anything.example.com']),
+            ('globalsign_example_keys/SSL2.cer',           ['*.google.com', 'anything.example.com']),
+            ('globalsign_example_keys/SSL3.cer',           ['*.google.com']),
+        )
+
+    @data('valid_domains_info')
+    def valid_domains(self, relative_path, valid_domains):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(valid_domains, cert.valid_domains)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def valid_ips_info():
+        return (
+            ('keys/test-der.crt',                          []),
+            ('keys/test-inter-der.crt',                    []),
+            ('keys/test-third-der.crt',                    []),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   []),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     []),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', []),
+            ('geotrust_certs/codex.crt',                   []),
+            ('lets_encrypt/isrgrootx1.pem',                []),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    []),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    []),
+            ('globalsign_example_keys/IssuingCA-der.cer',  []),
+            ('globalsign_example_keys/rootCA.cer',         []),
+            ('globalsign_example_keys/SSL1.cer',           []),
+            ('globalsign_example_keys/SSL2.cer',           []),
+            ('globalsign_example_keys/SSL3.cer',           []),
+        )
+
+    @data('valid_ips_info')
+    def valid_ips(self, relative_path, crl_url):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(crl_url, cert.valid_ips)
 
     def test_parse_certificate(self):
-        with open(os.path.join(fixtures_dir, 'keys/test-der.crt'), 'rb') as f:
-            cert = x509.Certificate.load(f.read())
+        cert = self._load_cert('keys/test-der.crt')
 
         tbs_certificate = cert['tbs_certificate']
         signature = tbs_certificate['signature']
@@ -374,8 +1372,7 @@ class X509Tests(unittest.TestCase):
         )
 
     def test_parse_dsa_certificate(self):
-        with open(os.path.join(fixtures_dir, 'keys/test-dsa-der.crt'), 'rb') as f:
-            cert = x509.Certificate.load(f.read())
+        cert = self._load_cert('keys/test-dsa-der.crt')
 
         tbs_certificate = cert['tbs_certificate']
         signature = tbs_certificate['signature']
@@ -509,8 +1506,7 @@ class X509Tests(unittest.TestCase):
         )
 
     def test_parse_ec_certificate(self):
-        with open(os.path.join(fixtures_dir, 'keys/test-ec-der.crt'), 'rb') as f:
-            cert = x509.Certificate.load(f.read())
+        cert = self._load_cert('keys/test-ec-der.crt')
 
         tbs_certificate = cert['tbs_certificate']
         signature = tbs_certificate['signature']
