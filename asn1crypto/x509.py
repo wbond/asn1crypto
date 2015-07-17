@@ -666,6 +666,7 @@ class AccessMethod(ObjectIdentifier):
     _map = {
         '1.3.6.1.5.5.7.48.1': 'ocsp',
         '1.3.6.1.5.5.7.48.2': 'ca_issuers',
+        '1.3.6.1.5.5.7.48.3': 'timestamping',
     }
 
 
