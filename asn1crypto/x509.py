@@ -871,6 +871,7 @@ class Certificate(Sequence):
 
     _processed_extensions = False
     _critical_extensions = None
+    _subject_directory_attributes = None
     _key_identifier_value = None
     _key_usage_value = None
     _subject_alt_name_value = None
@@ -883,6 +884,7 @@ class Certificate(Sequence):
     _authority_key_identifier_value = None
     _policy_constraints_value = None
     _freshest_crl_value = None
+    _inhibit_any_policy_value = None
     _extended_key_usage_value = None
     _authority_information_access_value = None
     _subject_information_access_value = None
@@ -923,6 +925,20 @@ class Certificate(Sequence):
         if not self._processed_extensions:
             self._set_extensions()
         return self._critical_extensions
+
+    @property
+    def subject_directory_attributes_value(self):
+        """
+        This extension is used to contain additional identification attributes
+        about the subject.
+
+        :return:
+            None or an Attributes object
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._key_identifier_value
 
     @property
     def key_identifier_value(self):
@@ -1062,6 +1078,20 @@ class Certificate(Sequence):
         if not self._processed_extensions:
             self._set_extensions()
         return self._freshest_crl_value
+
+    @property
+    def inhibit_any_policy_value(self):
+        """
+        This extension is used to prevent mapping of the any policy to
+        specific requirements
+
+        :return:
+            None or a Integer object
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._inhibit_any_policy_value
 
     @property
     def extended_key_usage_value(self):
