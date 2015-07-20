@@ -191,6 +191,77 @@ class SignedDigestAlgorithm(Sequence):
         'rsa_pss': RSASSAPSSParams,
     }
 
+    @property
+    def signature_algo(self):
+        """
+        :return:
+            A unicode string of "rsassa_pkcs1v15", "rsassa_pss", "dsa" or
+            "ecdsa"
+        """
+
+        algorithm = self['algorithm'].native
+
+        algo_map = {
+            'md2_rsa': 'rsassa_pkcs1v15',
+            'md5_rsa': 'rsassa_pkcs1v15',
+            'sha1_rsa': 'rsassa_pkcs1v15',
+            'sha224_rsa': 'rsassa_pkcs1v15',
+            'sha256_rsa': 'rsassa_pkcs1v15',
+            'sha384_rsa': 'rsassa_pkcs1v15',
+            'sha512_rsa': 'rsassa_pkcs1v15',
+            'rsassa_pkcs1v15': 'rsassa_pkcs1v15',
+            'rsassa_pss': 'rsassa_pss',
+            'sha1_dsa': 'dsa',
+            'sha224_dsa': 'dsa',
+            'sha256_dsa': 'dsa',
+            'dsa': 'dsa',
+            'sha1_ecdsa': 'ecdsa',
+            'sha224_ecdsa': 'ecdsa',
+            'sha256_ecdsa': 'ecdsa',
+            'sha384_ecdsa': 'ecdsa',
+            'sha512_ecdsa': 'ecdsa',
+            'ecdsa': 'ecdsa',
+        }
+        if algorithm in algo_map:
+            return algo_map[algorithm]
+
+        raise ValueError('Signature algorithm not known for %s' % algorithm)
+
+    @property
+    def hash_algo(self):
+        """
+        :return:
+            A unicode string of "md2", "md5", "sha1", "sha224", "sha256",
+            "sha384", "sha512", "sha512_224", "sha512_256"
+        """
+
+        algorithm = self['algorithm'].native
+
+        algo_map = {
+            'md2_rsa': 'md2',
+            'md5_rsa': 'md5',
+            'sha1_rsa': 'sha1',
+            'sha224_rsa': 'sha224',
+            'sha256_rsa': 'sha256',
+            'sha384_rsa': 'sha384',
+            'sha512_rsa': 'sha512',
+            'sha1_dsa': 'sha1',
+            'sha224_dsa': 'sha224',
+            'sha256_dsa': 'sha256',
+            'sha1_ecdsa': 'sha1',
+            'sha224_ecdsa': 'sha224',
+            'sha256_ecdsa': 'sha256',
+            'sha384_ecdsa': 'sha384',
+            'sha512_ecdsa': 'sha512',
+        }
+        if algorithm in algo_map:
+            return algo_map[algorithm]
+
+        if algorithm == 'rsassa_pss':
+            return self['parameters']['hash_algorithm']['algorithm'].native
+
+        raise ValueError('Hash algorithm not known for %s' % algorithm)
+
 
 class Pbkdf2Salt(Choice):
     _alternatives = [

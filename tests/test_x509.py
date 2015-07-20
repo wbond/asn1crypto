@@ -33,6 +33,23 @@ class X509Tests(unittest.TestCase):
 
     #pylint: disable=C0326
     @staticmethod
+    def signature_algo_info():
+        return (
+            ('keys/test-der.crt',       'rsassa_pkcs1v15', 'sha256'),
+            ('keys/test-inter-der.crt', 'rsassa_pkcs1v15', 'sha256'),
+            ('keys/test-dsa-der.crt',   'dsa',             'sha256'),
+            ('keys/test-third-der.crt', 'rsassa_pkcs1v15', 'sha256'),
+            ('keys/test-ec-der.crt',    'ecdsa',           'sha256'),
+        )
+
+    @data('signature_algo_info')
+    def signature_algo(self, relative_path, signature_algo, hash_algo):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(signature_algo, cert['signature_algorithm'].signature_algo)
+        self.assertEqual(hash_algo, cert['signature_algorithm'].hash_algo)
+
+    #pylint: disable=C0326
+    @staticmethod
     def critical_extensions_info():
         return (
             ('keys/test-der.crt',                          []),
