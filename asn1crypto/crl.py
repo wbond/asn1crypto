@@ -273,13 +273,13 @@ class CertificateList(Sequence):
 
     _processed_extensions = False
     _critical_extensions = None
-    _issuer_alt_name = None
-    _crl_number = None
-    _delta_crl_indicator = None
-    _issuing_distribution_point = None
-    _authority_key_identifier = None
-    _freshest_crl = None
-    _authority_information_access = None
+    _issuer_alt_name_value = None
+    _crl_number_value = None
+    _delta_crl_indicator_value = None
+    _issuing_distribution_point_value = None
+    _authority_key_identifier_value = None
+    _freshest_crl_value = None
+    _authority_information_access_value = None
 
     def _set_extensions(self):
         """
