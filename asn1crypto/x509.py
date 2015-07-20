@@ -781,6 +781,7 @@ class ExtensionId(ObjectIdentifier):
         '2.5.29.15': 'key_usage',
         '2.5.29.16': 'private_key_usage_period',
         '2.5.29.17': 'subject_alt_name',
+        '2.5.29.18': 'issuer_alt_name',
         '2.5.29.19': 'basic_constraints',
         '2.5.29.23': 'hold_instruction_code',
         '2.5.29.30': 'name_constraints',
@@ -813,6 +814,7 @@ class Extension(Sequence):
         'key_usage': KeyUsage,
         'private_key_usage_period': PrivateKeyUsagePeriod,
         'subject_alt_name': GeneralNames,
+        'issuer_alt_name': GeneralNames,
         'basic_constraints': BasicConstraints,
         'hold_instruction_code': ObjectIdentifier,
         'name_constraints': NameConstraints,
@@ -870,6 +872,7 @@ class Certificate(Sequence):
     _key_identifier_value = None
     _key_usage_value = None
     _subject_alt_name_value = None
+    _issuer_alt_name_value = None
     _basic_constraints_value = None
     _name_constraints_value = None
     _crl_distribution_points_value = None
@@ -950,6 +953,20 @@ class Certificate(Sequence):
         if not self._processed_extensions:
             self._set_extensions()
         return self._subject_alt_name_value
+
+    @property
+    def issuer_alt_name_value(self):
+        """
+        This extension allows associating one or more alternative names with
+        the issuer of the certificate.
+
+        :return:
+            None or an x509.GeneralNames object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._issuer_alt_name_value
 
     @property
     def basic_constraints_value(self):
