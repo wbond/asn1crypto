@@ -107,6 +107,29 @@ class CRLReason(Enumerated):
         10: 'aa_compromise',
     }
 
+    @property
+    def human_friendly(self):
+        """
+        :return:
+            A unicode string with revocation description that is suitable to
+            show to end-users. Starts with a lower case letter and phrased in
+            such a way that it makes sense after the phrase "because of" or
+            "due to".
+        """
+
+        return {
+            'unspecified': 'an unspecified reason',
+            'key_compromise': 'a compromised key',
+            'ca_compromise': 'the CA being compromised',
+            'affiliation_changed': 'an affiliation change',
+            'superseded': 'certificate supersession',
+            'cessation_of_operation': 'a cessation of operation',
+            'certificate_hold': 'a certificate hold',
+            'remove_from_crl': 'removal from the CRL',
+            'privilege_withdrawn': 'privilege withdrawl',
+            'aa_compromise': 'the AA being compromised',
+        }[self.native]
+
 
 class CRLEntryExtensionId(ObjectIdentifier):
     _map = {
