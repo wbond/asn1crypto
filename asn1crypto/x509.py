@@ -791,6 +791,7 @@ class ExtensionId(ObjectIdentifier):
         '2.5.29.35': 'authority_key_identifier',
         '2.5.29.36': 'policy_constraints',
         '2.5.29.37': 'extended_key_usage',
+        '2.5.29.46': 'freshest_crl',
         '2.5.29.54': 'inhibit_any_policy',
         '1.3.6.1.5.5.7.1.1': 'authority_information_access',
         '1.3.6.1.5.5.7.1.11': 'subject_information_access',
@@ -824,6 +825,7 @@ class Extension(Sequence):
         'authority_key_identifier': AuthorityKeyIdentifier,
         'policy_constraints': PolicyConstraints,
         'extended_key_usage': ExtKeyUsageSyntax,
+        'freshest_crl': CRLDistributionPoints,
         'inhibit_any_policy': Integer,
         'authority_information_access': AuthorityInfoAccessSyntax,
         'subject_information_access': SubjectInfoAccessSyntax,
@@ -880,6 +882,7 @@ class Certificate(Sequence):
     _policy_mappings_value = None
     _authority_key_identifier_value = None
     _policy_constraints_value = None
+    _freshest_crl_value = None
     _extended_key_usage_value = None
     _authority_information_access_value = None
     _subject_information_access_value = None
@@ -1046,6 +1049,19 @@ class Certificate(Sequence):
         if not self._processed_extensions:
             self._set_extensions()
         return self._policy_constraints_value
+
+    @property
+    def freshest_crl_value(self):
+        """
+        This extension is used to help locate any available delta CRLs
+
+        :return:
+            None or an CRLDistributionPoints object
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._freshest_crl_value
 
     @property
     def extended_key_usage_value(self):
