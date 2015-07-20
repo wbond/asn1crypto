@@ -943,8 +943,12 @@ class Certificate(Sequence):
     @property
     def key_identifier_value(self):
         """
+        This extension is used to help in creating certificate validation paths.
+        It contains an identifier that should generally, but is not guaranteed
+        to, be unique.
+
         :return:
-            None or the parsed value of the key identifier extension
+            None or an OctetString object
         """
 
         if not self._processed_extensions:
@@ -954,8 +958,11 @@ class Certificate(Sequence):
     @property
     def key_usage_value(self):
         """
+        This extension is used to define the purpose of the public key
+        contained within the certificate.
+
         :return:
-            None or the parsed value of the key usage extension
+            None or a KeyUsage
         """
 
         if not self._processed_extensions:
@@ -965,8 +972,13 @@ class Certificate(Sequence):
     @property
     def subject_alt_name_value(self):
         """
+        This extension allows for additional names to be associate with the
+        subject of the certificate. While it may contain a whole host of
+        possible names, it is usually used to allow certificates to be used
+        with multiple different domain names.
+
         :return:
-            None or the parsed value of the subject alt name extension
+            None or a GeneralNames object
         """
 
         if not self._processed_extensions:
@@ -990,8 +1002,12 @@ class Certificate(Sequence):
     @property
     def basic_constraints_value(self):
         """
+        This extension is used to determine if the subject of the certificate
+        is a CA, and if so, what the maximum number of intermediate CA certs
+        after this are, before an end-entity certificate is found.
+
         :return:
-            None or the parsed value of the basic constraints extension
+            None or a BasicConstraints object
         """
 
         if not self._processed_extensions:
@@ -1001,8 +1017,11 @@ class Certificate(Sequence):
     @property
     def name_constraints_value(self):
         """
+        This extension is used in CA certificates, and is used to limit the
+        possible names of certificates issued.
+
         :return:
-            None or the parsed value of the name constraints extension
+            None or a NameConstraints object
         """
 
         if not self._processed_extensions:
@@ -1012,8 +1031,10 @@ class Certificate(Sequence):
     @property
     def crl_distribution_points_value(self):
         """
+        This extension is used to help in locating the CRL for this certificate.
+
         :return:
-            None or the parsed value of the CRL distribution points
+            None or a CRLDistributionPoints object
             extension
         """
 
@@ -1024,8 +1045,13 @@ class Certificate(Sequence):
     @property
     def certificate_policies_value(self):
         """
+        This extension defines policies in CA certificates under which
+        certificates may be issued. In end-entity certificates, the inclusion
+        of a policy indicates the issuance of the certificate follows the
+        policy.
+
         :return:
-            None or the parsed value of the certificate policies extension
+            None or a CertificatePolicies object
         """
 
         if not self._processed_extensions:
@@ -1035,8 +1061,12 @@ class Certificate(Sequence):
     @property
     def policy_mappings_value(self):
         """
+        This extension allows mapping policy OIDs to other OIDs. This is used
+        to allow different policies to be treated as equivalent in the process
+        of validation.
+
         :return:
-            None or the parsed value of the policy mappings extension
+            None or a PolicyMappings object
         """
 
         if not self._processed_extensions:
@@ -1046,9 +1076,11 @@ class Certificate(Sequence):
     @property
     def authority_key_identifier_value(self):
         """
+        This extension helps in identifying the public key with which to
+        validate the authenticity of the certificate.
+
         :return:
-            None or the parsed value of the authority key identifier
-            extension
+            None or an AuthorityKeyIdentifier object
         """
 
         if not self._processed_extensions:
@@ -1058,8 +1090,11 @@ class Certificate(Sequence):
     @property
     def policy_constraints_value(self):
         """
+        This extension is used to control if policy mapping is allowed and
+        when policies are required.
+
         :return:
-            None or the parsed value of the policy constraints extension
+            None or a PolicyConstraints object
         """
 
         if not self._processed_extensions:
@@ -1096,8 +1131,11 @@ class Certificate(Sequence):
     @property
     def extended_key_usage_value(self):
         """
+        This extension is used to define additional purposes for the public key
+        beyond what is contained in the basic constraints.
+
         :return:
-            None or the parsed value of the extended key usage extension
+            None or an ExtKeyUsageSyntax object
         """
 
         if not self._processed_extensions:
@@ -1107,8 +1145,11 @@ class Certificate(Sequence):
     @property
     def authority_information_access_value(self):
         """
+        This extension is used to locate the CA certificate used to sign this
+        certificate, or the OCSP responder for this certificate.
+
         :return:
-            None or the parsed value of the authority information access extension
+            None or an AuthorityInfoAccessSyntax object
         """
 
         if not self._processed_extensions:
@@ -1132,8 +1173,12 @@ class Certificate(Sequence):
     @property
     def ocsp_no_check_value(self):
         """
+        This extension is used on certificates of OCSP responders, indicating
+        that revocation information for the certificate should never need to
+        be verified, thus preventing possible loops in path validation.
+
         :return:
-            None or the parsed value of the OCSP no check extension
+            None or Null (if present)
         """
 
         if not self._processed_extensions:
