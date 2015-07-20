@@ -1,7 +1,12 @@
 # coding: utf-8
 
 """
-Encoding DER to PEM and decoding PEM to DER
+Encoding DER to PEM and decoding PEM to DER. Exports the following items:
+
+ - armor()
+ - detect()
+ - unarmor()
+
 """
 
 from __future__ import unicode_literals, division, absolute_import, print_function
