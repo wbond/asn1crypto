@@ -60,7 +60,7 @@ class ServiceLocator(Sequence):
 
 class RequestExtensionId(ObjectIdentifier):
     _map = {
-        '1.3.6.1.5.5.7.48.1.7': 'ocsp_service_locator',
+        '1.3.6.1.5.5.7.48.1.7': 'service_locator',
     }
 
 
@@ -73,7 +73,7 @@ class RequestExtension(Sequence):
 
     _oid_pair = ('extn_id', 'extn_value')
     _oid_specs = {
-        'ocsp_service_locator': ServiceLocator,
+        'service_locator': ServiceLocator,
     }
 
 
@@ -115,9 +115,9 @@ class PreferredSignatureAlgorithms(SequenceOf):
 
 class TBSRequestExtensionId(ObjectIdentifier):
     _map = {
-        '1.3.6.1.5.5.7.48.1.2': 'ocsp_nonce',
-        '1.3.6.1.5.5.7.48.1.4': 'ocsp_response',
-        '1.3.6.1.5.5.7.48.1.8': 'ocsp_preferred_signature_algorithms',
+        '1.3.6.1.5.5.7.48.1.2': 'nonce',
+        '1.3.6.1.5.5.7.48.1.4': 'acceptable_responses',
+        '1.3.6.1.5.5.7.48.1.8': 'preferred_signature_algorithms',
     }
 
 
@@ -130,9 +130,9 @@ class TBSRequestExtension(Sequence):
 
     _oid_pair = ('extn_id', 'extn_value')
     _oid_specs = {
-        'ocsp_nonce': OctetString,
-        'ocsp_response': AcceptableResponses,
-        'ocsp_preferred_signature_algorithms': PreferredSignatureAlgorithms,
+        'nonce': OctetString,
+        'acceptable_responses': AcceptableResponses,
+        'preferred_signature_algorithms': PreferredSignatureAlgorithms,
     }
 
 
@@ -211,9 +211,10 @@ class CrlId(Sequence):
 
 class SingleResponseExtensionId(ObjectIdentifier):
     _map = {
-        '1.3.6.1.5.5.7.48.1.3': 'ocsp_crl',
-        '1.3.6.1.5.5.7.48.1.6': 'ocsp_archive_cutoff',
-        # These are CRLEntryExtension values from https://tools.ietf.org/html/rfc5280
+        '1.3.6.1.5.5.7.48.1.3': 'crl',
+        '1.3.6.1.5.5.7.48.1.6': 'archive_cutoff',
+        # These are CRLEntryExtension values from
+        # https://tools.ietf.org/html/rfc5280
         '2.5.29.21': 'crl_reason',
         '2.5.29.24': 'invalidity_date',
         '2.5.29.29': 'certificate_issuer',
@@ -229,8 +230,8 @@ class SingleResponseExtension(Sequence):
 
     _oid_pair = ('extn_id', 'extn_value')
     _oid_specs = {
-        'ocsp_crl': CrlId,
-        'ocsp_archive_cutoff': GeneralizedTime,
+        'crl': CrlId,
+        'archive_cutoff': GeneralizedTime,
         'crl_reason': CRLReason,
         'invalidity_date': GeneralizedTime,
         'certificate_issuer': GeneralNames,
@@ -257,8 +258,8 @@ class Responses(SequenceOf):
 
 class ResponseDataExtensionId(ObjectIdentifier):
     _map = {
-        '1.3.6.1.5.5.7.48.1.2': 'ocsp_nonce',
-        '1.3.6.1.5.5.7.48.1.9': 'ocsp_extended_revoke',
+        '1.3.6.1.5.5.7.48.1.2': 'nonce',
+        '1.3.6.1.5.5.7.48.1.9': 'extended_revoke',
     }
 
 
@@ -271,8 +272,8 @@ class ResponseDataExtension(Sequence):
 
     _oid_pair = ('extn_id', 'extn_value')
     _oid_specs = {
-        'ocsp_nonce': OctetString,
-        'ocsp_extended_revoke': Null,
+        'nonce': OctetString,
+        'extended_revoke': Null,
     }
 
 
