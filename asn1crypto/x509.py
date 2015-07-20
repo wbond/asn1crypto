@@ -734,7 +734,8 @@ class AccessMethod(ObjectIdentifier):
     _map = {
         '1.3.6.1.5.5.7.48.1': 'ocsp',
         '1.3.6.1.5.5.7.48.2': 'ca_issuers',
-        '1.3.6.1.5.5.7.48.3': 'timestamping',
+        '1.3.6.1.5.5.7.48.3': 'time_stamping',
+        '1.3.6.1.5.5.7.48.5': 'ca_repository',
     }
 
 
@@ -746,6 +747,10 @@ class AccessDescription(Sequence):
 
 
 class AuthorityInfoAccessSyntax(SequenceOf):
+    _child_spec = AccessDescription
+
+
+class SubjectInfoAccessSyntax(SequenceOf):
     _child_spec = AccessDescription
 
 
@@ -787,6 +792,7 @@ class ExtensionId(ObjectIdentifier):
         '2.5.29.37': 'extended_key_usage',
         '2.5.29.54': 'inhibit_any_policy',
         '1.3.6.1.5.5.7.1.1': 'authority_information_access',
+        '1.3.6.1.5.5.7.1.11': 'subject_information_access',
         '1.3.6.1.5.5.7.48.1.5': 'ocsp_no_check',
         '1.2.840.113533.7.65.0': 'entrust_version_extension',
         '2.16.840.1.113730.1.1': 'netscape_certificate_type',
@@ -818,6 +824,7 @@ class Extension(Sequence):
         'extended_key_usage': ExtKeyUsageSyntax,
         'inhibit_any_policy': Integer,
         'authority_information_access': AuthorityInfoAccessSyntax,
+        'subject_information_access': SubjectInfoAccessSyntax,
         'ocsp_no_check': Null,
         'entrust_version_extension': EntrustVersionInfo,
         'netscape_certificate_type': NetscapeCertificateType,
@@ -872,6 +879,7 @@ class Certificate(Sequence):
     _policy_constraints_value = None
     _extended_key_usage_value = None
     _authority_information_access_value = None
+    _subject_information_access_value = None
     _ocsp_no_check_value = None
     _issuer_serial = None
     _authority_issuer_serial = False
@@ -1043,6 +1051,20 @@ class Certificate(Sequence):
         if not self._processed_extensions:
             self._set_extensions()
         return self._authority_information_access_value
+
+    @property
+    def subject_information_access_value(self):
+        """
+        This extension is used to access information about the subject of this
+        certificate.
+
+        :return:
+            None or a SubjectInfoAccessSyntax object
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._subject_information_access_value
 
     @property
     def ocsp_no_check_value(self):
