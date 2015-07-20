@@ -165,6 +165,88 @@ class RevokedCertificate(Sequence):
         ('crl_entry_extensions', CRLEntryExtensions, {'optional': True}),
     ]
 
+    _processed_extensions = False
+    _critical_extensions = None
+    _crl_reason_value = None
+    _invalidity_date_value = None
+    _certificate_issuer_value = None
+
+    def _set_extensions(self):
+        """
+        Sets common named extensions to private attributes and creates a list
+        of critical extensions
+        """
+
+        self._critical_extensions = []
+
+        for extension in self['crl_entry_extensions']:
+            name = extension['extn_id'].native
+            attribute_name = '_%s_value' % name
+            if hasattr(self, attribute_name):
+                setattr(self, attribute_name, extension['extn_value'].parsed)
+            if extension['critical'].native:
+                self._critical_extensions.append(name)
+
+        self._processed_extensions = True
+
+    @property
+    def critical_extensions(self):
+        """
+        Returns a list of the names (or OID if not a known extension) of the
+        extensions marked as critical
+
+        :return:
+            A list of unicode strings
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._critical_extensions
+
+    @property
+    def crl_reason_value(self):
+        """
+        This extension indicates the reason that a certificate was revoked.
+
+        :return:
+            None or a CRLReason object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._crl_reason_value
+
+    @property
+    def invalidity_date_value(self):
+        """
+        This extension indicates the suspected date/time the private key was
+        compromised or the certificate became invalid. This would usually be
+        before the revocation date, which is when the CA processed the
+        revocation.
+
+        :return:
+            None or a GeneralizedTime object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._invalidity_date_value
+
+    @property
+    def certificate_issuer_value(self):
+        """
+        This extension indicates the issuer of the certificate in question,
+        and is used in indirect CRLs. CRL entries without this extension are
+        for certificates issued from the last seen issuer.
+
+        :return:
+            None or an x509.GeneralNames object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._certificate_issuer_value
+
 
 class RevokedCertificates(SequenceOf):
     _child_spec = RevokedCertificate
@@ -188,3 +270,143 @@ class CertificateList(Sequence):
         ('signature_algorith', SignedDigestAlgorithm),
         ('signature', OctetBitString),
     ]
+
+    _processed_extensions = False
+    _critical_extensions = None
+    _issuer_alt_name = None
+    _crl_number = None
+    _delta_crl_indicator = None
+    _issuing_distribution_point = None
+    _authority_key_identifier = None
+    _freshest_crl = None
+    _authority_information_access = None
+
+    def _set_extensions(self):
+        """
+        Sets common named extensions to private attributes and creates a list
+        of critical extensions
+        """
+
+        self._critical_extensions = []
+
+        for extension in self['tbs_cert_list']['crl_extensions']:
+            name = extension['extn_id'].native
+            attribute_name = '_%s_value' % name
+            if hasattr(self, attribute_name):
+                setattr(self, attribute_name, extension['extn_value'].parsed)
+            if extension['critical'].native:
+                self._critical_extensions.append(name)
+
+        self._processed_extensions = True
+
+    @property
+    def critical_extensions(self):
+        """
+        Returns a list of the names (or OID if not a known extension) of the
+        extensions marked as critical
+
+        :return:
+            A list of unicode strings
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._critical_extensions
+
+    @property
+    def issuer_alt_name_value(self):
+        """
+        This extension allows associating one or more alternative names with
+        the issuer of the CRL.
+
+        :return:
+            None or an x509.GeneralNames object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._issuer_alt_name_value
+
+    @property
+    def crl_number_value(self):
+        """
+        This extension adds a monotonically increasing number to the CRL and is
+        used to distinguish different versions of the CRL.
+
+        :return:
+            None or an Integer object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._crl_number_value
+
+    @property
+    def delta_crl_indicator_value(self):
+        """
+        This extension indicates a CRL is a delta CRL, and contains the CRL
+        number of the base CRL that it is a delta from.
+
+        :return:
+            None or an Integer object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._delta_crl_indicator_value
+
+    @property
+    def issuing_distribution_point_value(self):
+        """
+        This extension includes information about what types of revocations
+        and certificates are part of the CRL.
+
+        :return:
+            None or an IssuingDistributionPoint object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._issuing_distribution_point_value
+
+    @property
+    def authority_key_identifier_value(self):
+        """
+        This extension helps in identifying the public key with which to
+        validate the authenticity of the CRL.
+
+        :return:
+            None or an AuthorityKeyIdentifier object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._authority_key_identifier_value
+
+    @property
+    def freshest_crl_value(self):
+        """
+        This extension is used in complete CRLs to indicate where a delta CRL
+        may be located.
+
+        :return:
+            None or a CRLDistributionPoints object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._freshest_crl_value
+
+    @property
+    def authority_information_access_value(self):
+        """
+        This extension is used to provide a URL with which to download the
+        certificate used to sign this CRL.
+
+        :return:
+            None or an AuthorityInfoAccessSyntax object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._authority_information_access_value
