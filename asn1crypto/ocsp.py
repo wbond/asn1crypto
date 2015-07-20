@@ -134,7 +134,7 @@ class Request(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._service_locator_value
 
 
@@ -266,7 +266,7 @@ class OCSPRequest(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._nonce_value
 
     @property
@@ -281,7 +281,7 @@ class OCSPRequest(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._acceptable_responses_value
 
     @property
@@ -297,7 +297,7 @@ class OCSPRequest(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._preferred_signature_algorithms_value
 
 
@@ -435,7 +435,7 @@ class SingleResponse(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._crl_value
 
     @property
@@ -449,7 +449,7 @@ class SingleResponse(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._archive_cutoff_value
 
     @property
@@ -462,7 +462,7 @@ class SingleResponse(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._crl_reason_value
 
     @property
@@ -478,7 +478,7 @@ class SingleResponse(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._invalidity_date_value
 
     @property
@@ -491,7 +491,7 @@ class SingleResponse(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._certificate_issuer_value
 
 
@@ -609,7 +609,7 @@ class OCSPResponse(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._nonce_value
 
     @property
@@ -623,5 +623,5 @@ class OCSPResponse(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._extended_revoke_value

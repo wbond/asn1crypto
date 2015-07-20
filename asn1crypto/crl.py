@@ -213,7 +213,7 @@ class RevokedCertificate(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._crl_reason_value
 
     @property
@@ -229,7 +229,7 @@ class RevokedCertificate(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._invalidity_date_value
 
     @property
@@ -244,7 +244,7 @@ class RevokedCertificate(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._certificate_issuer_value
 
 
@@ -324,7 +324,7 @@ class CertificateList(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._issuer_alt_name_value
 
     @property
@@ -338,7 +338,7 @@ class CertificateList(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._crl_number_value
 
     @property
@@ -352,7 +352,7 @@ class CertificateList(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._delta_crl_indicator_value
 
     @property
@@ -366,7 +366,7 @@ class CertificateList(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._issuing_distribution_point_value
 
     @property
@@ -380,7 +380,7 @@ class CertificateList(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._authority_key_identifier_value
 
     @property
@@ -394,7 +394,7 @@ class CertificateList(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._freshest_crl_value
 
     @property
@@ -408,5 +408,5 @@ class CertificateList(Sequence):
         """
 
         if self._processed_extensions is False:
-            self._processed_extensions()
+            self._set_extensions()
         return self._authority_information_access_value
