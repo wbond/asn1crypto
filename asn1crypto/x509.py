@@ -1178,7 +1178,7 @@ class Certificate(Sequence):
         be verified, thus preventing possible loops in path validation.
 
         :return:
-            None or Null (if present)
+            None or a Null object (if present)
         """
 
         if not self._processed_extensions:
