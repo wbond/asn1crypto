@@ -481,7 +481,7 @@ class PrivateKeyInfo(Sequence):
             params = private_key['parameters']
             del private_key['parameters']
         else:
-            raise ValueError('algorithm must be one of "rsa", "dsa", "ec" - is %s' % repr(algorithm))
+            raise ValueError('algorithm must be one of "rsa", "dsa", "ec", not %s' % repr(algorithm))
 
         private_key_algo = PrivateKeyAlgorithm()
         private_key_algo['algorithm'] = PrivateKeyAlgorithmId(algorithm)
@@ -850,7 +850,7 @@ class PublicKeyInfo(Sequence):
             raise ValueError('public_key must be a byte string or Asn1Value, not %s' % public_key.__class__.__name__)
 
         if algorithm != 'rsa':
-            raise ValueError('algorithm must be one of "rsa" - is %s' % repr(algorithm))
+            raise ValueError('algorithm must "rsa", not %s' % repr(algorithm))
 
         algo = PublicKeyAlgorithm()
         algo['algorithm'] = PublicKeyAlgorithmId(algorithm)

@@ -221,13 +221,13 @@ class Asn1Value():
 
         if tag_type is not None:
             if tag_type not in ('implicit', 'explicit'):
-                raise ValueError('tag_type must be one of "implicit", "explicit" - is %s' % repr(tag_type))
+                raise ValueError('tag_type must be one of "implicit", "explicit", not %s' % repr(tag_type))
             self.tag_type = tag_type
 
             if class_ is None:
                 class_ = 'context'
             if class_ not in CLASS_NAME_TO_NUM_MAP:
-                raise ValueError('class_ must be one of "universal", "application", "context", "private" - is %s' % repr(class_))
+                raise ValueError('class_ must be one of "universal", "application", "context", "private", not %s' % repr(class_))
             class_ = CLASS_NAME_TO_NUM_MAP[class_]
 
             if tag is not None:
@@ -243,7 +243,7 @@ class Asn1Value():
         else:
             if class_ is not None:
                 if class_ not in CLASS_NUM_TO_NAME_MAP:
-                    raise ValueError('class_ must be one of "universal", "application", "context", "private" - is %s' % repr(class_))
+                    raise ValueError('class_ must be one of "universal", "application", "context", "private", not %s' % repr(class_))
                 self.class_ = CLASS_NAME_TO_NUM_MAP[class_]
 
             if tag is not None:
