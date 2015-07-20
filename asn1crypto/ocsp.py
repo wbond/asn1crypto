@@ -36,14 +36,19 @@ from .x509 import Certificate, GeneralName, GeneralNames, Name
 # The structures in this file are taken from https://tools.ietf.org/html/rfc6960
 
 
-class ResponseType(ObjectIdentifier):
+class Version(Integer):
     _map = {
-        '1.3.6.1.5.5.7.48.1.1': 'basic_ocsp_response',
+        0: 'v1'
     }
 
 
-class AcceptableResponses(SequenceOf):
-    _child_spec = ResponseType
+class CertId(Sequence):
+    _fields = [
+        ('hash_algorithm', DigestAlgorithm),
+        ('issuer_name_hash', OctetString),
+        ('issuer_key_hash', OctetString),
+        ('serial_number', Integer),
+    ]
 
 
 class ServiceLocator(Sequence):
@@ -51,17 +56,6 @@ class ServiceLocator(Sequence):
         ('issuer', Name),
         ('locator', AuthorityInfoAccessSyntax),
     ]
-
-
-class PreferredSignatureAlgorithm(Sequence):
-    _fields = [
-        ('sig_identifier', SignedDigestAlgorithm),
-        ('cert_identifier', PublicKeyAlgorithm, {'optional': True}),
-    ]
-
-
-class PreferredSignatureAlgorithms(SequenceOf):
-    _child_spec = PreferredSignatureAlgorithm
 
 
 class RequestExtensionId(ObjectIdentifier):
@@ -85,6 +79,38 @@ class RequestExtension(Sequence):
 
 class RequestExtensions(SequenceOf):
     _child_spec = RequestExtension
+
+
+class Request(Sequence):
+    _fields = [
+        ('req_cert', CertId),
+        ('single_request_extensions', RequestExtensions, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+    ]
+
+
+class Requests(SequenceOf):
+    _child_spec = Request
+
+
+class ResponseType(ObjectIdentifier):
+    _map = {
+        '1.3.6.1.5.5.7.48.1.1': 'basic_ocsp_response',
+    }
+
+
+class AcceptableResponses(SequenceOf):
+    _child_spec = ResponseType
+
+
+class PreferredSignatureAlgorithm(Sequence):
+    _fields = [
+        ('sig_identifier', SignedDigestAlgorithm),
+        ('cert_identifier', PublicKeyAlgorithm, {'optional': True}),
+    ]
+
+
+class PreferredSignatureAlgorithms(SequenceOf):
+    _child_spec = PreferredSignatureAlgorithm
 
 
 class TBSRequestExtensionId(ObjectIdentifier):
@@ -112,96 +138,6 @@ class TBSRequestExtension(Sequence):
 
 class TBSRequestExtensions(SequenceOf):
     _child_spec = TBSRequestExtension
-
-
-class ResponseDataExtensionId(ObjectIdentifier):
-    _map = {
-        '1.3.6.1.5.5.7.48.1.2': 'ocsp_nonce',
-        '1.3.6.1.5.5.7.48.1.9': 'ocsp_extended_revoke',
-    }
-
-
-class ResponseDataExtension(Sequence):
-    _fields = [
-        ('extn_id', ResponseDataExtensionId),
-        ('critical', Boolean, {'default': False}),
-        ('extn_value', OctetString),
-    ]
-
-    _oid_pair = ('extn_id', 'extn_value')
-    _oid_specs = {
-        'ocsp_nonce': OctetString,
-        'ocsp_extended_revoke': Null,
-    }
-
-
-class ResponseDataExtensions(SequenceOf):
-    _child_spec = ResponseDataExtension
-
-
-class CrlId(Sequence):
-    _fields = [
-        ('crl_url', IA5String, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('crl_num', Integer, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
-        ('crl_time', GeneralizedTime, {'tag_type': 'explicit', 'tag': 2, 'optional': True}),
-    ]
-
-
-class SingleResponseExtensionId(ObjectIdentifier):
-    _map = {
-        '1.3.6.1.5.5.7.48.1.3': 'ocsp_crl',
-        '1.3.6.1.5.5.7.48.1.6': 'ocsp_archive_cutoff',
-        # These are CRLEntryExtension values from https://tools.ietf.org/html/rfc5280
-        '2.5.29.21': 'crl_reason',
-        '2.5.29.24': 'invalidity_date',
-        '2.5.29.29': 'certificate_issuer',
-    }
-
-
-class SingleResponseExtension(Sequence):
-    _fields = [
-        ('extn_id', SingleResponseExtensionId),
-        ('critical', Boolean, {'default': False}),
-        ('extn_value', OctetString),
-    ]
-
-    _oid_pair = ('extn_id', 'extn_value')
-    _oid_specs = {
-        'ocsp_crl': CrlId,
-        'ocsp_archive_cutoff': GeneralizedTime,
-        'crl_reason': CRLReason,
-        'invalidity_date': GeneralizedTime,
-        'certificate_issuer': GeneralNames,
-    }
-
-
-class SingleResponseExtensions(SequenceOf):
-    _child_spec = SingleResponseExtension
-
-
-class Version(Integer):
-    _map = {
-        0: 'v1'
-    }
-
-class CertId(Sequence):
-    _fields = [
-        ('hash_algorithm', DigestAlgorithm),
-        ('issuer_name_hash', OctetString),
-        ('issuer_key_hash', OctetString),
-        ('serial_number', Integer),
-    ]
-
-
-class Request(Sequence):
-    _fields = [
-        ('req_cert', CertId),
-        ('single_request_extensions', RequestExtensions, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-    ]
-
-
-class Requests(SequenceOf):
-    _child_spec = Request
 
 
 class TBSRequest(Sequence):
@@ -265,6 +201,46 @@ class CertStatus(Choice):
     ]
 
 
+class CrlId(Sequence):
+    _fields = [
+        ('crl_url', IA5String, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+        ('crl_num', Integer, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
+        ('crl_time', GeneralizedTime, {'tag_type': 'explicit', 'tag': 2, 'optional': True}),
+    ]
+
+
+class SingleResponseExtensionId(ObjectIdentifier):
+    _map = {
+        '1.3.6.1.5.5.7.48.1.3': 'ocsp_crl',
+        '1.3.6.1.5.5.7.48.1.6': 'ocsp_archive_cutoff',
+        # These are CRLEntryExtension values from https://tools.ietf.org/html/rfc5280
+        '2.5.29.21': 'crl_reason',
+        '2.5.29.24': 'invalidity_date',
+        '2.5.29.29': 'certificate_issuer',
+    }
+
+
+class SingleResponseExtension(Sequence):
+    _fields = [
+        ('extn_id', SingleResponseExtensionId),
+        ('critical', Boolean, {'default': False}),
+        ('extn_value', OctetString),
+    ]
+
+    _oid_pair = ('extn_id', 'extn_value')
+    _oid_specs = {
+        'ocsp_crl': CrlId,
+        'ocsp_archive_cutoff': GeneralizedTime,
+        'crl_reason': CRLReason,
+        'invalidity_date': GeneralizedTime,
+        'certificate_issuer': GeneralNames,
+    }
+
+
+class SingleResponseExtensions(SequenceOf):
+    _child_spec = SingleResponseExtension
+
+
 class SingleResponse(Sequence):
     _fields = [
         ('cert_id', CertId),
@@ -277,6 +253,31 @@ class SingleResponse(Sequence):
 
 class Responses(SequenceOf):
     _child_spec = SingleResponse
+
+
+class ResponseDataExtensionId(ObjectIdentifier):
+    _map = {
+        '1.3.6.1.5.5.7.48.1.2': 'ocsp_nonce',
+        '1.3.6.1.5.5.7.48.1.9': 'ocsp_extended_revoke',
+    }
+
+
+class ResponseDataExtension(Sequence):
+    _fields = [
+        ('extn_id', ResponseDataExtensionId),
+        ('critical', Boolean, {'default': False}),
+        ('extn_value', OctetString),
+    ]
+
+    _oid_pair = ('extn_id', 'extn_value')
+    _oid_specs = {
+        'ocsp_nonce': OctetString,
+        'ocsp_extended_revoke': Null,
+    }
+
+
+class ResponseDataExtensions(SequenceOf):
+    _child_spec = ResponseDataExtension
 
 
 class ResponseData(Sequence):
