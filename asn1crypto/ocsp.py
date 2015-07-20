@@ -87,6 +87,56 @@ class Request(Sequence):
         ('single_request_extensions', RequestExtensions, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
     ]
 
+    _processed_extensions = False
+    _critical_extensions = None
+    _service_locator_value = None
+
+    def _set_extensions(self):
+        """
+        Sets common named extensions to private attributes and creates a list
+        of critical extensions
+        """
+
+        self._critical_extensions = []
+
+        for extension in self['single_request_extensions']:
+            name = extension['extn_id'].native
+            attribute_name = '_%s_value' % name
+            if hasattr(self, attribute_name):
+                setattr(self, attribute_name, extension['extn_value'].parsed)
+            if extension['critical'].native:
+                self._critical_extensions.append(name)
+
+        self._processed_extensions = True
+
+    @property
+    def critical_extensions(self):
+        """
+        Returns a list of the names (or OID if not a known extension) of the
+        extensions marked as critical
+
+        :return:
+            A list of unicode strings
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._critical_extensions
+
+    @property
+    def service_locator_value(self):
+        """
+        This extension is used when communicating with an OCSP responder that
+        acts as a proxy for OCSP requests
+
+        :return:
+            None or a ServiceLocator object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._service_locator_value
+
 
 class Requests(SequenceOf):
     _child_spec = Request
@@ -166,6 +216,89 @@ class OCSPRequest(Sequence):
         ('tbs_request', TBSRequest),
         ('optional_signature', Signature, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
     ]
+
+    _processed_extensions = False
+    _critical_extensions = None
+    _nonce_value = None
+    _acceptable_responses_value = None
+    _preferred_signature_algorithms_value = None
+
+    def _set_extensions(self):
+        """
+        Sets common named extensions to private attributes and creates a list
+        of critical extensions
+        """
+
+        self._critical_extensions = []
+
+        for extension in self['tbs_request']['request_extensions']:
+            name = extension['extn_id'].native
+            attribute_name = '_%s_value' % name
+            if hasattr(self, attribute_name):
+                setattr(self, attribute_name, extension['extn_value'].parsed)
+            if extension['critical'].native:
+                self._critical_extensions.append(name)
+
+        self._processed_extensions = True
+
+    @property
+    def critical_extensions(self):
+        """
+        Returns a list of the names (or OID if not a known extension) of the
+        extensions marked as critical
+
+        :return:
+            A list of unicode strings
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._critical_extensions
+
+    @property
+    def nonce_value(self):
+        """
+        This extension is used to prevent replay attacks by including a unique,
+        random value with each request/response pair
+
+        :return:
+            None or an OctetString object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._nonce_value
+
+    @property
+    def acceptable_responses_value(self):
+        """
+        This extension is used to allow the client and server to communicate
+        with alternative response formats other than just basic_ocsp_response,
+        although no other formats are defined in the standard.
+
+        :return:
+            None or an AcceptableResponses object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._acceptable_responses_value
+
+    @property
+    def preferred_signature_algorithms_value(self):
+        """
+        This extension is used by the client to define what signature algorithms
+        are preferred, including both the hash algorithm and the public key
+        algorithm, with a level of detail down to even the public key algorithm
+        parameters, such as curve name.
+
+        :return:
+            None or a PreferredSignatureAlgorithms object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._preferred_signature_algorithms_value
 
 
 class OCSPResponseStatus(Enumerated):
@@ -251,6 +384,116 @@ class SingleResponse(Sequence):
         ('single_extensions', SingleResponseExtensions, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
     ]
 
+    _processed_extensions = False
+    _critical_extensions = None
+    _crl_value = None
+    _archive_cutoff_value = None
+    _crl_reason_value = None
+    _invalidity_date_value = None
+    _certificate_issuer_value = None
+
+    def _set_extensions(self):
+        """
+        Sets common named extensions to private attributes and creates a list
+        of critical extensions
+        """
+
+        self._critical_extensions = []
+
+        for extension in self['single_extensions']:
+            name = extension['extn_id'].native
+            attribute_name = '_%s_value' % name
+            if hasattr(self, attribute_name):
+                setattr(self, attribute_name, extension['extn_value'].parsed)
+            if extension['critical'].native:
+                self._critical_extensions.append(name)
+
+        self._processed_extensions = True
+
+    @property
+    def critical_extensions(self):
+        """
+        Returns a list of the names (or OID if not a known extension) of the
+        extensions marked as critical
+
+        :return:
+            A list of unicode strings
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._critical_extensions
+
+    @property
+    def crl_value(self):
+        """
+        This extension is used to locate the CRL that a certificate's revocation
+        is contained within.
+
+        :return:
+            None or a CrlId object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._crl_value
+
+    @property
+    def archive_cutoff_value(self):
+        """
+        This extension is used to indicate the date at which an archived
+        (historical) certificate status entry will no longer be available.
+
+        :return:
+            None or a GeneralizedTime object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._archive_cutoff_value
+
+    @property
+    def crl_reason_value(self):
+        """
+        This extension indicates the reason that a certificate was revoked.
+
+        :return:
+            None or a CRLReason object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._crl_reason_value
+
+    @property
+    def invalidity_date_value(self):
+        """
+        This extension indicates the suspected date/time the private key was
+        compromised or the certificate became invalid. This would usually be
+        before the revocation date, which is when the CA processed the
+        revocation.
+
+        :return:
+            None or a GeneralizedTime object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._invalidity_date_value
+
+    @property
+    def certificate_issuer_value(self):
+        """
+        This extension indicates the issuer of the certificate in question.
+
+        :return:
+            None or an x509.GeneralNames object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._certificate_issuer_value
+
 
 class Responses(SequenceOf):
     _child_spec = SingleResponse
@@ -317,3 +560,68 @@ class OCSPResponse(Sequence):
         ('response_status', OCSPResponseStatus),
         ('response_bytes', ResponseBytes, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
     ]
+
+    _processed_extensions = False
+    _critical_extensions = None
+    _nonce_value = None
+    _extended_revoke_value = None
+
+    def _set_extensions(self):
+        """
+        Sets common named extensions to private attributes and creates a list
+        of critical extensions
+        """
+
+        self._critical_extensions = []
+
+        for extension in self['response_bytes']['response'].parsed['tbs_response_data']['response_extensions']:
+            name = extension['extn_id'].native
+            attribute_name = '_%s_value' % name
+            if hasattr(self, attribute_name):
+                setattr(self, attribute_name, extension['extn_value'].parsed)
+            if extension['critical'].native:
+                self._critical_extensions.append(name)
+
+        self._processed_extensions = True
+
+    @property
+    def critical_extensions(self):
+        """
+        Returns a list of the names (or OID if not a known extension) of the
+        extensions marked as critical
+
+        :return:
+            A list of unicode strings
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._critical_extensions
+
+    @property
+    def nonce_value(self):
+        """
+        This extension is used to prevent replay attacks on the request/response
+        exchange
+
+        :return:
+            None or an OctetString object
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._nonce_value
+
+    @property
+    def extended_revoke_value(self):
+        """
+        This extension is used to signal that the responder will return a
+        "revoked" status for non-issued certificates.
+
+        :return:
+            None or a Null object (if present)
+        """
+
+        if self._processed_extensions is False:
+            self._processed_extensions()
+        return self._extended_revoke_value
