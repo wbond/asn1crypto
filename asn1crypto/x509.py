@@ -620,6 +620,30 @@ class DistributionPoint(Sequence):
         ('crl_issuer', GeneralNames, {'tag_type': 'implicit', 'tag': 2, 'optional': True}),
     ]
 
+    _url = False
+
+    @property
+    def url(self):
+        """
+        :return:
+            None or a unicode string of the distribution point's URL
+        """
+
+        if self._url is False:
+            self._url = None
+            name = self['distribution_point']
+            if name.name != 'full_name':
+                raise ValueError('CRL distribution points that are relative to the issuer are not supported')
+
+            for general_name in name.chosen:
+                if general_name.name == 'uniform_resource_identifier':
+                    url = general_name.native
+                    if url[0:7] == 'http://':
+                        self._url = url
+                        break
+
+        return self._url
+
 
 class CRLDistributionPoints(SequenceOf):
     _child_spec = DistributionPoint
