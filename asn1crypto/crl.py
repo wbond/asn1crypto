@@ -170,6 +170,7 @@ class RevokedCertificate(Sequence):
     _crl_reason_value = None
     _invalidity_date_value = None
     _certificate_issuer_value = None
+    _issuer_name = False
 
     def _set_extensions(self):
         """
@@ -247,6 +248,22 @@ class RevokedCertificate(Sequence):
             self._set_extensions()
         return self._certificate_issuer_value
 
+    @property
+    def issuer_name(self):
+        """
+        :return:
+            None, or an asn1crypto.x509.Name object for the issuer of the cert
+        """
+
+        if self._issuer_name is False:
+            self._issuer_name = None
+            if self.certificate_issuer_value:
+                for general_name in self.certificate_issuer_value:
+                    if general_name.name == 'directory_name':
+                        self._issuer_name = general_name.chosen
+                        break
+        return self._issuer_name
+
 
 class RevokedCertificates(SequenceOf):
     _child_spec = RevokedCertificate
@@ -280,6 +297,8 @@ class CertificateList(Sequence):
     _authority_key_identifier_value = None
     _freshest_crl_value = None
     _authority_information_access_value = None
+    _issuer_cert_urls = None
+    _delta_crl_distribution_points = None
 
     def _set_extensions(self):
         """
@@ -410,3 +429,63 @@ class CertificateList(Sequence):
         if self._processed_extensions is False:
             self._set_extensions()
         return self._authority_information_access_value
+
+    @property
+    def authority_key_identifier(self):
+        """
+        :return:
+            None or a byte string of the key_identifier from the authority key
+            identifier extension
+        """
+
+        if not self.authority_key_identifier_value:
+            return None
+
+        return self.authority_key_identifier_value['key_identifier'].native
+
+    @property
+    def issuer_cert_urls(self):
+        """
+        :return:
+            A list of unicode strings that are URLs that should contain either
+            an individual DER-encoded X509 certificate, or a DER-encoded CMS
+            message containing multiple certificates
+        """
+
+        if self._issuer_cert_urls is None:
+            self._issuer_cert_urls = []
+            if self.authority_information_access_value:
+                for entry in self.authority_information_access_value:
+                    if entry['access_method'].native == 'ca_issuers':
+                        location = entry['access_location']
+                        if location.name != 'uniform_resource_identifier':
+                            continue
+                        url = location.native
+                        if url.lower()[0:7] == 'http://':
+                            self._issuer_cert_urls.append(url)
+        return self._issuer_cert_urls
+
+    @property
+    def delta_crl_distribution_points(self):
+        """
+        Returns delta CRL URLs - only applies to complete CRLs
+
+        :return:
+            A list of zero or more DistributionPoint objects
+        """
+
+        if self._delta_crl_distribution_points is None:
+            self._delta_crl_distribution_points = []
+
+            if self.freshest_crl_value is not None:
+                for distribution_point in self.freshest_crl_value:
+                    distribution_point_name = distribution_point['distribution_point']
+                    # RFC5280 indicates conforming CA should not use the relative form
+                    if distribution_point_name.name == 'name_relative_to_crl_issuer':
+                        continue
+                    # This library is currently only concerned with HTTP-based CRLs
+                    for general_name in distribution_point_name.chosen:
+                        if general_name.name == 'uniform_resource_identifier':
+                            self._delta_crl_distribution_points.append(distribution_point)
+
+        return self._delta_crl_distribution_points
