@@ -1376,8 +1376,12 @@ class Certificate(Sequence):
         output = []
         for entry in self.authority_information_access_value:
             if entry['access_method'].native == 'ocsp':
-                output.append(entry['access_location'].native)
-
+                location = entry['access_location']
+                if location.name != 'uniform_resource_identifier':
+                    continue
+                url = location.native
+                if url.lower()[0:7] == 'http://':
+                    output.append(url)
         return output
 
     @property
