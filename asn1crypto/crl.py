@@ -267,7 +267,7 @@ class TbsCertList(Sequence):
 class CertificateList(Sequence):
     _fields = [
         ('tbs_cert_list', TbsCertList),
-        ('signature_algorith', SignedDigestAlgorithm),
+        ('signature_algorithm', SignedDigestAlgorithm),
         ('signature', OctetBitString),
     ]
 
