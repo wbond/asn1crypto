@@ -1165,29 +1165,84 @@ class X509Tests(unittest.TestCase):
 
     #pylint: disable=C0326
     @staticmethod
-    def crl_urls_info():
+    def crl_distribution_points_info():
         return (
             ('keys/test-der.crt',                          []),
             ('keys/test-inter-der.crt',                    []),
             ('keys/test-third-der.crt',                    []),
             ('geotrust_certs/GeoTrust_Universal_CA.crt',   []),
             ('geotrust_certs/GeoTrust_Primary_CA.crt',     []),
-            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', ['http://g1.symcb.com/GeoTrustPCA.crl']),
-            ('geotrust_certs/codex.crt',                   ['http://gm.symcb.com/gm.crl']),
+            (
+                'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://g1.symcb.com/GeoTrustPCA.crl']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
+            (
+                'geotrust_certs/codex.crt',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://gm.symcb.com/gm.crl']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
             ('lets_encrypt/isrgrootx1.pem',                []),
-            ('lets_encrypt/letsencryptauthorityx1.pem',    ['http://crl.root-x1.letsencrypt.org']),
-            ('lets_encrypt/letsencryptauthorityx2.pem',    ['http://crl.root-x1.letsencrypt.org']),
-            ('globalsign_example_keys/IssuingCA-der.cer',  ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
-            ('globalsign_example_keys/rootCA.cer',         ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
+            (
+                'lets_encrypt/letsencryptauthorityx1.pem',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://crl.root-x1.letsencrypt.org']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx2.pem',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://crl.root-x1.letsencrypt.org']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
+            (
+                'globalsign_example_keys/IssuingCA-der.cer',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
+            (
+                'globalsign_example_keys/rootCA.cer',
+                [
+                    OrderedDict([
+                        ('distribution_point', ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
+                        ('reasons', None),
+                        ('crl_issuer', None)
+                    ])
+                ]
+            ),
             ('globalsign_example_keys/SSL1.cer',           []),
             ('globalsign_example_keys/SSL2.cer',           []),
             ('globalsign_example_keys/SSL3.cer',           []),
         )
 
-    @data('crl_urls_info')
-    def crl_urls(self, relative_path, crl_url):
+    @data('crl_distribution_points_info')
+    def crl_distribution_points(self, relative_path, crl_distribution_point):
         cert = self._load_cert(relative_path)
-        self.assertEqual(crl_url, cert.crl_urls)
+        points = [point.native for point in cert.crl_distribution_points]
+        self.assertEqual(crl_distribution_point, points)
 
     #pylint: disable=C0326
     @staticmethod

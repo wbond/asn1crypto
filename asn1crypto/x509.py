@@ -891,6 +891,8 @@ class Certificate(Sequence):
     _ocsp_no_check_value = None
     _issuer_serial = None
     _authority_issuer_serial = False
+    _crl_distribution_points = None
+    _delta_crl_distribution_points = None
     _valid_domains = None
     _valid_ips = None
 
@@ -1282,24 +1284,57 @@ class Certificate(Sequence):
         return self._authority_issuer_serial
 
     @property
-    def crl_urls(self):
+    def crl_distribution_points(self):
         """
+        Returns complete CRL URLs - does not include delta CRLs
+
         :return:
-            A list of zero or more unicode strings of the CRL URLs for this cert
+            A list of zero or more DistributionPoint objects
         """
 
-        if not self.crl_distribution_points_value:
-            return []
+        if self._crl_distribution_points is None:
+            self._crl_distribution_points = self._get_http_crl_distribution_points(self.crl_distribution_points_value)
+        return self._crl_distribution_points
+
+    @property
+    def delta_crl_distribution_points(self):
+        """
+        Returns delta CRL URLs - does not include complete CRLs
+
+        :return:
+            A list of zero or more DistributionPoint objects
+        """
+
+        if self._delta_crl_distribution_points is None:
+            self._delta_crl_distribution_points = self._get_http_crl_distribution_points(self.freshest_crl_value)
+        return self._delta_crl_distribution_points
+
+    def _get_http_crl_distribution_points(self, crl_distribution_points):
+        """
+        Fetches the DistributionPoint object for non-relative, HTTP CRLs
+        referenced by the certificate
+
+        :param crl_distribution_points:
+            A CRLDistributionPoints object to grab the DistributionPoints from
+
+        :return:
+            A list of zero or more DistributionPoint objects
+        """
 
         output = []
-        for entry in self.crl_distribution_points_value:
-            distribution_point_name = entry['distribution_point']
+
+        if crl_distribution_points is None:
+            return []
+
+        for distribution_point in crl_distribution_points:
+            distribution_point_name = distribution_point['distribution_point']
             # RFC5280 indicates conforming CA should not use the relative form
             if distribution_point_name.name == 'name_relative_to_crl_issuer':
                 continue
+            # This library is currently only concerned with HTTP-based CRLs
             for general_name in distribution_point_name.chosen:
                 if general_name.name == 'uniform_resource_identifier':
-                    output.append(general_name.native)
+                    output.append(distribution_point)
 
         return output
 
