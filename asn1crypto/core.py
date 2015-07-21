@@ -1053,6 +1053,22 @@ class BitString(Primitive, ValueMap, object):
         self.set(self._native)
 
     @property
+    def named_bits(self):
+        """
+        :return:
+            A set of unicode strings for the bits that are set to 1
+        """
+
+        if not isinstance(self._map, dict):
+            raise ValueError('%s bit map has not been defined' % self.__class__.__name__)
+
+        output = set()
+        for key, value in self.native.items():
+            if value:
+                output.add(key)
+        return output
+
+    @property
     def native(self):
         """
         The a native Python datatype representation of this value
