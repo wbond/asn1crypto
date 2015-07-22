@@ -18,6 +18,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import sys
 import re
 import hashlib
+import socket
 from collections import OrderedDict
 
 from .core import (
@@ -48,11 +49,17 @@ from .core import (
 )
 from .algos import SignedDigestAlgorithm
 from .keys import PublicKeyInfo
+from ._int import int_to_bytes, int_from_bytes
 
 if sys.version_info < (3,):
     str_cls = unicode  #pylint: disable=E0602
 else:
     str_cls = str
+
+if sys.platform == 'win32':
+    from ._win._ws2_32 import inet_ntop, inet_pton
+else:
+    from socket import inet_ntop, inet_pton
 
 
 
@@ -526,6 +533,93 @@ class EDIPartyName(Sequence):
     ]
 
 
+class IPAddress(OctetString):
+    def parse(self, spec=None, spec_params=None):
+        """
+        This method is not applicable to IP addresses
+        """
+
+        raise ValueError('IP address values can not be parsed')
+
+    def set(self, value):
+        """
+        Sets the value of the object
+
+        :param value:
+            A unicode string containing an IPv4 address, IPv4 address with CIDR,
+            an IPv6 address or IPv6 address with CIDR
+        """
+
+        if not isinstance(value, str_cls):
+            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+
+        original_value = value
+
+        has_cidr = value.find('/') != -1
+        cidr = 0
+        if has_cidr:
+            parts = value.split('/', 1)
+            value = parts[0]
+            cidr = int(parts[1])
+            if cidr < 0:
+                raise ValueError('%s value contains a CIDR range less than 0' % self.__class__.__name__)
+
+        if value.find(':') != -1:
+            family = socket.AF_INET6
+            if cidr > 128:
+                raise ValueError('%s value contains a CIDR range bigger than 128, the maximum value for an IPv6 address' % self.__class__.__name__)
+            cidr_size = 128
+        else:
+            family = socket.AF_INET
+            if cidr > 32:
+                raise ValueError('%s value contains a CIDR range bigger than 32, the maximum value for an IPv4 address' % self.__class__.__name__)
+            cidr_size = 32
+
+        cidr_bytes = b''
+        if has_cidr:
+            cidr_mask = '1' * cidr
+            cidr_mask += '0' * (cidr_size - len(cidr_mask))
+            cidr_bytes = int_to_bytes(int(cidr_mask, 2))
+            cidr_bytes = (b'\x00' * ((cidr_size // 8) - len(cidr_bytes))) + cidr_bytes
+
+        self._native = original_value
+        self.contents = inet_pton(family, value) + cidr_bytes
+        self.header = None
+        if self.trailer != b'':
+            self.trailer = b''
+
+    @property
+    def native(self):
+        """
+        The a native Python datatype representation of this value
+
+        :return:
+            A unicode string or None
+        """
+
+        if self.contents is None:
+            return None
+
+        if self._native is None:
+            byte_string = self.__bytes__()
+            byte_len = len(byte_string)
+            cidr_int = None
+            if byte_len in {32, 16}:
+                value = inet_ntop(socket.AF_INET6, byte_string[0:16])
+                if byte_len > 16:
+                    cidr_int = int_from_bytes(byte_string[16:])
+            elif byte_len in {8, 4}:
+                value = inet_ntop(socket.AF_INET, byte_string[0:4])
+                if byte_len > 4:
+                    cidr_int = int_from_bytes(byte_string[4:])
+            if cidr_int is not None:
+                cidr_bits = '{0:b}'.format(cidr_int)
+                cidr = len(cidr_bits.rstrip('0'))
+                value = value + '/' + str_cls(cidr)
+            self._native = value
+        return self._native
+
+
 class GeneralName(Choice):
     _alternatives = [
         ('other_name', AnotherName, {'tag_type': 'implicit', 'tag': 0}),
@@ -535,7 +629,7 @@ class GeneralName(Choice):
         ('directory_name', Name, {'tag_type': 'explicit', 'tag': 4}),
         ('edi_party_name', EDIPartyName, {'tag_type': 'implicit', 'tag': 5}),
         ('uniform_resource_identifier', IA5String, {'tag_type': 'implicit', 'tag': 6}),
-        ('ip_address', OctetString, {'tag_type': 'implicit', 'tag': 7}),
+        ('ip_address', IPAddress, {'tag_type': 'implicit', 'tag': 7}),
         ('registered_id', ObjectIdentifier, {'tag_type': 'implicit', 'tag': 8}),
     ]
 

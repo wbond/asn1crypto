@@ -33,6 +33,24 @@ class X509Tests(unittest.TestCase):
 
     #pylint: disable=C0326
     @staticmethod
+    def ip_address_info():
+        return (
+            ('127.0.0.1',          b'\x04\x04\x7F\x00\x00\x01'),
+            ('255.255.255.255',    b'\x04\x04\xFF\xFF\xFF\xFF'),
+            ('127.0.0.1/28',       b'\x04\x08\x7F\x00\x00\x01\xFF\xFF\xFF\xF0'),
+            ('255.255.255.255/0',  b'\x04\x08\xFF\xFF\xFF\xFF\x00\x00\x00\x00'),
+            ('af::ed',             b'\x04\x10\x00\xAF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xED'),
+            ('af::ed/128',         b'\x04\x20\x00\xAF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xED\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF'),
+            ('af::ed/0',           b'\x04\x20\x00\xAF\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xED\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+        )
+
+    @data('ip_address_info')
+    def ip_address(self, unicode_string, der_bytes):
+        self.assertEqual(der_bytes, x509.IPAddress(unicode_string).dump())
+        self.assertEqual(unicode_string, x509.IPAddress.load(der_bytes).native)
+
+    #pylint: disable=C0326
+    @staticmethod
     def signature_algo_info():
         return (
             ('keys/test-der.crt',       'rsassa_pkcs1v15', 'sha256'),
@@ -382,12 +400,12 @@ class X509Tests(unittest.TestCase):
                         'excluded_subtrees',
                         [
                             OrderedDict([
-                                ('base', b'\x00\x00\x00\x00\x00\x00\x00\x00'),
+                                ('base', '0.0.0.0/0'),
                                 ('minimum', 0),
                                 ('maximum', None)
                             ]),
                             OrderedDict([
-                                ('base', b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'),
+                                ('base', '::/0'),
                                 ('minimum', 0),
                                 ('maximum', None)
                             ])

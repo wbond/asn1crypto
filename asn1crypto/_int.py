@@ -39,7 +39,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import sys
 import math
 
-from ._perf._ffi import LibraryNotFoundError, FFIEngineError
+from ._ffi import LibraryNotFoundError, FFIEngineError, buffer_from_bytes, bytes_from_buffer, null
 
 
 
@@ -140,9 +140,9 @@ else:
 # First try to use ctypes or cffi with OpenSSL for better performance
 try:
     try:
-        from ._perf._big_num_cffi import libcrypto, buffer_from_bytes, bytes_from_buffer, null
+        from ._perf._big_num_cffi import libcrypto
     except (FFIEngineError) as e:
-        from ._perf._big_num_ctypes import libcrypto, buffer_from_bytes, bytes_from_buffer, null
+        from ._perf._big_num_ctypes import libcrypto
 
     def inverse_mod(a, p):
         """

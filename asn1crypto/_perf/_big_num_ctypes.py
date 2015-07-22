@@ -4,8 +4,6 @@
 ctypes interface for BN_mod_inverse() function from OpenSSL. Exports the
 following items:
 
- - buffer_from_bytes()
- - bytes_from_buffer()
  - libcrypto
     - BN_bin2bin()
     - BN_CTX_free()
@@ -15,7 +13,6 @@ following items:
     - BN_new()
     - BN_num_bits()
     - BN_set_negative()
- - null()
 
 Will raise asn1crypto._ffi.LibraryNotFoundError() if libcrypto can not be
 found. Will raise asn1crypto._ffi.FFIEngineError() if there is an error
@@ -25,9 +22,9 @@ interfacing with libcrypto.
 from __future__ import unicode_literals, division, absolute_import, print_function
 
 from ctypes.util import find_library
-from ctypes import CDLL, c_int, c_char_p, c_void_p, create_string_buffer
+from ctypes import CDLL, c_int, c_char_p, c_void_p
 
-from ._ffi import LibraryNotFoundError, FFIEngineError
+from .._ffi import LibraryNotFoundError, FFIEngineError
 
 
 try:
@@ -63,15 +60,6 @@ try:
 
     libcrypto.BN_mod_inverse.argtypes = [c_void_p, c_void_p, c_void_p, c_void_p]
     libcrypto.BN_mod_inverse.restype = c_void_p
-
-    def buffer_from_bytes(initializer):
-        return create_string_buffer(initializer)
-
-    def bytes_from_buffer(buffer, maxlen=None):  #pylint: disable=W0613
-        return buffer.raw
-
-    def null():
-        return None
 
 except (AttributeError):
     raise FFIEngineError('Error initializing ctypes')

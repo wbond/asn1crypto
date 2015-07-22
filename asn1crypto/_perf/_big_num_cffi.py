@@ -4,8 +4,6 @@
 cffi interface for BN_mod_inverse() function from OpenSSL. Exports the
 following items:
 
- - buffer_from_bytes()
- - bytes_from_buffer()
  - libcrypto
     - BN_bin2bin()
     - BN_CTX_free()
@@ -15,7 +13,6 @@ following items:
     - BN_new()
     - BN_num_bits()
     - BN_set_negative()
- - null()
 
 Will raise asn1crypto._ffi.LibraryNotFoundError() if libcrypto can not be
 found. Will raise asn1crypto._ffi.FFIEngineError() if cffi is not instaled
@@ -26,7 +23,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 from ctypes.util import find_library
 
-from ._ffi import LibraryNotFoundError, FFIEngineError
+from .._ffi import LibraryNotFoundError, FFIEngineError
 
 try:
     from cffi import FFI
@@ -63,15 +60,6 @@ try:
         raise LibraryNotFoundError('The library libcrypto could not be found')
 
     libcrypto = ffi.dlopen(libcrypto_path)
-
-    def buffer_from_bytes(initializer):
-        return ffi.new('char[]', initializer)
-
-    def bytes_from_buffer(buffer, maxlen=None):
-        return ffi.buffer(buffer, maxlen)[:]
-
-    def null():
-        return ffi.NULL
 
 except (AttributeError):
     raise FFIEngineError('Error initializing ctypes')
