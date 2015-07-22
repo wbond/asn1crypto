@@ -25,8 +25,8 @@ try:
     ffi = FFI()
     ffi.set_unicode(True)
     ffi.cdef("""
-        LPCWSTR InetNtop(INT Family, void *pAddr, LPWSTR pStringBuf, size_t StringBufSize);
-        INT InetPton(INT Family, LPCWSTR pszAddrString, void *pAddrBuf);
+        LPCWSTR InetNtopW(INT Family, void *pAddr, LPWSTR pStringBuf, size_t StringBufSize);
+        INT InetPtonW(INT Family, LPCWSTR pszAddrString, void *pAddrBuf);
         int WSAGetLastError(void);
     """)
 

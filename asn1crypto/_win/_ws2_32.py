@@ -35,9 +35,10 @@ def inet_ntop(address_family, packed_ip):
         socket.AF_INET6: ws2_32_const.AF_INET6,
     }[address_family]
 
-    buffer_size = 45 if family == ws2_32_const.AF_INET6 else 15
+    buffer_size = 46 if family == ws2_32_const.AF_INET6 else 16
     buffer = unicode_buffer(buffer_size)
-    result = ws2_32.InetNtop(family, cast_void_p(packed_ip), buffer, buffer_size)
+    packed_ip_buffer = buffer_from_bytes(packed_ip)
+    result = ws2_32.InetNtopW(family, cast_void_p(packed_ip_buffer), buffer, buffer_size)
     if is_null(result):
         raise OSError('Windows error %s calling InetNtop' % ws2_32.WSAGetLastError())
 
@@ -65,8 +66,8 @@ def inet_pton(address_family, ip_string):
 
     buffer_size = 16 if family == ws2_32_const.AF_INET6 else 4
     buffer = buffer_from_bytes(buffer_size)
-    result = ws2_32.InetPton(family, ip_string, buffer)
+    result = ws2_32.InetPtonW(family, ip_string, buffer)
     if result != 1:
         raise OSError('Windows error %s calling InetPtob' % ws2_32.WSAGetLastError())
 
-    return bytes_from_buffer(buffer_size)
+    return bytes_from_buffer(buffer, buffer_size)
