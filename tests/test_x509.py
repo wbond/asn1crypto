@@ -51,6 +51,49 @@ class X509Tests(unittest.TestCase):
 
     #pylint: disable=C0326
     @staticmethod
+    def compare_name_info():
+        return (
+            (
+                True,
+                x509.Name.build({
+                    'common_name': 'Will Bond'
+                }),
+                x509.Name.build({
+                    'common_name': 'will bond'
+                })
+            ),
+            (
+                True,
+                x509.Name.build({
+                    'common_name': 'Will Bond'
+                }),
+                x509.Name.build({
+                    'common_name': 'will\tbond'
+                })
+            ),
+            (
+                False,
+                x509.Name.build({
+                    'country_name': 'US',
+                    'common_name': 'Will Bond'
+                }),
+                x509.Name.build({
+                    'country_name': 'US',
+                    'state_or_province_name': 'Massachusetts',
+                    'common_name': 'Will Bond'
+                })
+            ),
+        )
+
+    @data('compare_name_info')
+    def compare_name(self, are_equal, general_name_1, general_name_2):
+        if are_equal:
+            self.assertEqual(general_name_1, general_name_2)
+        else:
+            self.assertNotEqual(general_name_1, general_name_2)
+
+    #pylint: disable=C0326
+    @staticmethod
     def signature_algo_info():
         return (
             ('keys/test-der.crt',       'rsassa_pkcs1v15', 'sha256'),

@@ -18,6 +18,8 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import sys
 import re
 import hashlib
+import stringprep
+import unicodedata
 import socket
 from collections import OrderedDict
 
@@ -237,13 +239,197 @@ class NameTypeAndValue(Sequence):
         'domain_component': IA5String,
     }
 
+    _prepped = None
+
+    @property
+    def prepped_value(self):
+        """
+        Returns the value after being processed by the internationalized string
+        preparation as specified by RFC5280
+
+        :return:
+            A unicode string
+        """
+
+        if self._prepped is None:
+            self._prepped = self._ldap_string_prep(self['value'].native)
+        return self._prepped
+
+    def __eq__(self, other):
+        """
+        Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.1
+
+        :param other:
+            Another NameTypeAndValue object
+
+        :return:
+            A boolean
+        """
+
+        if not isinstance(other, NameTypeAndValue):
+            return False
+
+        if other['type'].native != self['type'].native:
+            return False
+
+        return other.prepped_value == self.prepped_value
+
+    def _ldap_string_prep(self, string):
+        """
+        Implements the internationalized string preparation algorithm from
+        RFC 4518. https://tools.ietf.org/html/rfc4518#section-2
+
+        :param string:
+            A unicode string to prepare
+
+        :return:
+            A prepared unicode string, ready for comparison
+        """
+
+        # Map step
+        string = re.sub('[\u00ad\u1806\u034f\u180b-\u180d\ufe0f-\uff00\ufffc]+', '', string)
+        string = re.sub('[\u0009\u000a\u000b\u000c\u000d\u0085]', ' ', string)
+        string = re.sub('[\u0000-\u0008\u000e-\u001f\u007f-\u0084\u0086-\u009f\u06dd\u070f\u180e\u200c-\u200f\u202a-\u202e\u2060-\u2063\u206a-\u206f\ufeff\ufff9-\ufffb\U0001d173-\U0001d17a\U000e0001\U000e0020-\U000e007f]+', '', string)
+        string = string.replace('\u200b', '')
+        string = re.sub('[\u00a0\u1680\u2000-\u200a\u2028-\u2029\u202f\u205f\u3000]', ' ', string)
+
+        string = ''.join(map(stringprep.map_table_b2, string))
+
+        # Normalize step
+        string = unicodedata.normalize('NFKC', string)
+
+        # Prohibit step
+        for char in string:
+            if stringprep.in_table_a1(char):
+                raise ValueError('X509 Name objects may not contain unassigned code points')
+
+            if stringprep.in_table_c8(char):
+                raise ValueError('X509 Name objects may not contain change display or deprecated characters')
+
+            if stringprep.in_table_c3(char):
+                raise ValueError('X509 Name objects may not contain private use characters')
+
+            if stringprep.in_table_c4(char):
+                raise ValueError('X509 Name objects may not contain non-character code points')
+
+            if stringprep.in_table_c5(char):
+                raise ValueError('X509 Name objects may not contain surrogate code points')
+
+            if char == '\ufffd':
+                raise ValueError('X509 Name objects may not contain the replacement character')
+
+        # Check bidirectional step - here we ensure that we are not mixing
+        # left-to-right and right-to-left text in the string
+        has_r_and_al_cat = False
+        has_l_cat = False
+        for char in string:
+            if stringprep.in_table_d1(char):
+                has_r_and_al_cat = True
+            elif stringprep.in_table_d2(char):
+                has_l_cat = True
+
+        if has_r_and_al_cat:
+            first_is_r_and_al = stringprep.in_table_d1(string[0])
+            last_is_r_and_al = stringprep.in_table_d1(string[-1])
+
+            if has_l_cat or not first_is_r_and_al or not last_is_r_and_al:
+                raise ValueError('X509 Name object contains a malformed bidirectional sequence')
+
+        # Insignificant space handling step
+        string = ' ' + re.sub(' +', '  ', string).strip() + ' '
+
+        return string
+
 
 class RelativeDistinguishedName(SetOf):
     _child_spec = NameTypeAndValue
 
+    def __eq__(self, other):
+        """
+        Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.1
+
+        :param other:
+            Another RelativeDistinguishedName object
+
+        :return:
+            A boolean
+        """
+
+        if not isinstance(other, RelativeDistinguishedName):
+            return False
+
+        if len(self) != len(other):
+            return False
+
+        self_types = self._get_types(self)
+        other_types = self._get_types(other)
+
+        if self_types != other_types:
+            return False
+
+        self_values = self._get_values(self)
+        other_values = self._get_values(other)
+
+        for type_name in self_types:
+            if self_values[type_name] != other_values[type_name]:
+                return False
+
+        return True
+
+    def _get_types(self, rdn):
+        """
+        Returns a set of types contained in an RDN
+
+        :param rdn:
+            A RelativeDistinguishedName object
+
+        :return:
+            A set object with unicode strings of NameTypeAndValue type field
+            values
+        """
+
+        return set([ntv['type'].native for ntv in rdn])
+
+    def _get_values(self, rdn):
+        """
+        Returns a dict of prepped values contained in an RDN
+
+        :param rdn:
+            A RelativeDistinguishedName object
+
+        :return:
+            A dict object with unicode strings of NameTypeAndValue value field
+            values that have been prepped for comparison
+        """
+
+        return {ntv['type'].native: ntv.prepped_value for ntv in rdn}
+
 
 class RDNSequence(SequenceOf):
     _child_spec = RelativeDistinguishedName
+
+    def __eq__(self, other):
+        """
+        Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.1
+
+        :param other:
+            Another RDNSequence object
+
+        :return:
+            A boolean
+        """
+
+        if not isinstance(other, RDNSequence):
+            return False
+
+        if len(self) != len(other):
+            return False
+
+        for index, self_rdn in enumerate(self):
+            if other[index] != self_rdn:
+                return False
+
+        return True
 
 
 class Name(Choice):
@@ -254,6 +440,56 @@ class Name(Choice):
     _human_friendly = None
     _sha1 = None
     _sha256 = None
+
+    @classmethod
+    def build(cls, name_dict):
+        """
+        Creates a Name object from a dict of unicode string keys and values.
+        The keys should be from NameType._map, or a dotted-integer OID unicode
+        string.
+
+        :param name_dict:
+            A dict of name information, e.g. {"common_name": "Will Bond",
+            "country_name": "US", "organization": "Codex Non Sufficit LC"}
+
+        :return:
+            An x509.Name object
+        """
+
+        attributes = []
+
+        for attribute_name in NameType.preferred_order:
+            if attribute_name not in name_dict:
+                continue
+
+            if attribute_name in {'email_address', 'domain_component'}:
+                value = IA5String(name_dict[attribute_name])
+            else:
+                value = DirectoryString(name='utf8_string', value=UTF8String(name_dict[attribute_name]))
+
+            attributes.append(NameTypeAndValue({
+                'type': attribute_name,
+                'value': value
+            }))
+
+        rdn = RelativeDistinguishedName(attributes)
+        sequence = RDNSequence([rdn])
+        return cls(name='', value=sequence)
+
+    def __eq__(self, other):
+        """
+        Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.1
+
+        :param other:
+            Another Name object
+
+        :return:
+            A boolean
+        """
+
+        if not isinstance(other, Name):
+            return False
+        return self.chosen == other.chosen
 
     @property
     def native(self):
@@ -675,6 +911,31 @@ class GeneralName(Choice):
         ('ip_address', IPAddress, {'tag_type': 'implicit', 'tag': 7}),
         ('registered_id', ObjectIdentifier, {'tag_type': 'implicit', 'tag': 8}),
     ]
+
+    def __eq__(self, other):
+        """
+        Does not support other_name, x400_address or edi_party_name
+
+        :param other:
+            The other GeneralName to compare to
+
+        :return:
+            A boolean
+        """
+
+        if self.name in ('other_name', 'x400_address', 'edi_party_name'):
+            raise ValueError('comparison is not supported for GeneralName objects of choice %s' % self.name)
+
+        if other.name in ('other_name', 'x400_address', 'edi_party_name'):
+            raise ValueError('comparison is not supported for GeneralName objects of choice %s' % other.name)
+
+        if self.name != other.name:
+            return False
+
+        if self.name == 'directory_name':
+            return self.chosen == other.chosen
+
+        return self.native == other.native
 
 
 class GeneralNames(SequenceOf):
