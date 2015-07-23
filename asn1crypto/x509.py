@@ -1317,6 +1317,8 @@ class Certificate(Sequence):
     _delta_crl_distribution_points = None
     _valid_domains = None
     _valid_ips = None
+    _self_issued = None
+    _self_signed = None
 
     def _set_extensions(self):
         """
@@ -1828,3 +1830,39 @@ class Certificate(Sequence):
                         self._valid_ips.append(general_name.native)
 
         return self._valid_ips
+
+    @property
+    def self_issued(self):
+        """
+        :return:
+            A boolean - if the certificate is self-issued, as defined by RFC5280
+        """
+
+        if self._self_issued is None:
+            self._self_issued = False
+            if self.basic_constraints_value and self.basic_constraints_value['ca'].native:
+                self._self_issued = self.subject == self.issuer
+        return self._self_issued
+
+    @property
+    def self_signed(self):
+        """
+        :return:
+            A unicode string of "yes", "no" or "maybe". The "maybe" result will
+            be returned if the certificate does not contain a key identifier
+            extension, but is issued by the subject. In this case the
+            certificate signature will need to be verified using the subject
+            public key to determine a "yes" or "no" answer.
+        """
+
+        if self._self_signed is None:
+            self._self_signed = 'no'
+            if self.self_issued:
+                if self.key_identifier:
+                    if not self.authority_key_identifier:
+                        self._self_signed = 'yes'
+                    elif self.authority_key_identifier == self.key_identifier:
+                        self._self_signed = 'yes'
+                else:
+                    self._self_signed = 'maybe'
+        return self._self_signed

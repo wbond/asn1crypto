@@ -1357,6 +1357,58 @@ class X509Tests(unittest.TestCase):
         cert = self._load_cert(relative_path)
         self.assertEqual(crl_url, cert.valid_ips)
 
+    #pylint: disable=C0326
+    @staticmethod
+    def self_issued_info():
+        return (
+            ('keys/test-der.crt',                          True),
+            ('keys/test-inter-der.crt',                    False),
+            ('keys/test-third-der.crt',                    False),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   True),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     True),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', False),
+            ('geotrust_certs/codex.crt',                   False),
+            ('lets_encrypt/isrgrootx1.pem',                True),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    False),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    False),
+            ('globalsign_example_keys/IssuingCA-der.cer',  False),
+            ('globalsign_example_keys/rootCA.cer',         True),
+            ('globalsign_example_keys/SSL1.cer',           False),
+            ('globalsign_example_keys/SSL2.cer',           False),
+            ('globalsign_example_keys/SSL3.cer',           False),
+        )
+
+    @data('self_issued_info')
+    def self_issued(self, relative_path, self_issued):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(self_issued, cert.self_issued)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def self_signed_info():
+        return (
+            ('keys/test-der.crt',                          'yes'),
+            ('keys/test-inter-der.crt',                    'no'),
+            ('keys/test-third-der.crt',                    'no'),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   'yes'),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     'yes'),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', 'no'),
+            ('geotrust_certs/codex.crt',                   'no'),
+            ('lets_encrypt/isrgrootx1.pem',                'yes'),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    'no'),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    'no'),
+            ('globalsign_example_keys/IssuingCA-der.cer',  'no'),
+            ('globalsign_example_keys/rootCA.cer',         'yes'),
+            ('globalsign_example_keys/SSL1.cer',           'no'),
+            ('globalsign_example_keys/SSL2.cer',           'no'),
+            ('globalsign_example_keys/SSL3.cer',           'no'),
+        )
+
+    @data('self_signed_info')
+    def self_signed(self, relative_path, self_signed):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(self_signed, cert.self_signed)
+
     def test_parse_certificate(self):
         cert = self._load_cert('keys/test-der.crt')
 
