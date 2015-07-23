@@ -139,6 +139,35 @@ class NameType(ObjectIdentifier):
         '0.9.2342.19200300.100.1.25': 'domain_component',
     }
 
+    # This order is largely based on observed order seen in EV certs from
+    # Symantec and DigiCert. Some of the uncommon name-related fields are
+    # just placed in what seems like a reasonable order.
+    preferred_order = [
+        'incorporation_country',
+        'incorporation_state_or_province',
+        'incorporation_locality',
+        'business_category',
+        'serial_number',
+        'country_name',
+        'postal_code',
+        'state_or_province_name',
+        'locality_name',
+        'street_address',
+        'organization_name',
+        'organizational_unit_name',
+        'title',
+        'common_name',
+        'initials',
+        'generation_qualifier',
+        'surname',
+        'given_name',
+        'name',
+        'pseudonym',
+        'dn_qualifier',
+        'email_address',
+        'domain_component',
+    ]
+
     @property
     def human_friendly(self):
         """
