@@ -1785,7 +1785,8 @@ class Sequence(Asn1Value):
 
         new_value = self._make_value(field_name, field_spec, value_spec, field_params, value)
 
-        if new_value.contents is None:
+        is_choice = isinstance(new_value, Choice)
+        if (is_choice and new_value.chosen.contents is None) or (not is_choice and new_value.contents is None):
             raise ValueError('Value for field "%s" of %s is not set' % (field_name, self.__class__.__name__))
 
         self.children[key] = new_value
