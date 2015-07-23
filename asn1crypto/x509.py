@@ -117,21 +117,26 @@ class NameType(ObjectIdentifier):
         '2.5.4.6': 'country_name',
         '2.5.4.7': 'locality_name',
         '2.5.4.8': 'state_or_province_name',
+        '2.5.4.9': 'street_address',
         '2.5.4.10': 'organization_name',
         '2.5.4.11': 'organizational_unit_name',
         '2.5.4.12': 'title',
         '2.5.4.15': 'business_category',
+        '2.5.4.17': 'postal_code',
         '2.5.4.41': 'name',
         '2.5.4.42': 'given_name',
         '2.5.4.43': 'initials',
         '2.5.4.44': 'generation_qualifier',
         '2.5.4.46': 'dn_qualifier',
+        '2.5.4.65': 'pseudonym',
         # https://tools.ietf.org/html/rfc2985#page-26
         '1.2.840.113549.1.9.1': 'email_address',
         # Page 10 of https://cabforum.org/wp-content/uploads/EV-V1_5_5.pdf
         '1.3.6.1.4.1.311.60.2.1.1': 'incorporation_locality',
         '1.3.6.1.4.1.311.60.2.1.2': 'incorporation_state_or_province',
         '1.3.6.1.4.1.311.60.2.1.3': 'incorporation_country',
+        # https://tools.ietf.org/html/rfc2247#section-4
+        '0.9.2342.19200300.100.1.25': 'domain_component',
     }
 
     @property
@@ -148,19 +153,23 @@ class NameType(ObjectIdentifier):
             'country_name': 'Country',
             'locality_name': 'Locality',
             'state_or_province_name': 'State/Province',
+            'street_address': 'Street Address',
             'organization_name': 'Organization',
             'organizational_unit_name': 'Organizational Unit',
             'title': 'Title',
             'business_category': 'Business Category',
+            'postal_code': 'Postal Code',
             'name': 'Name',
             'given_name': 'Given Name',
             'initials': 'Initials',
             'generation_qualifier': 'Generation Qualifier',
             'dn_qualifier': 'DN Qualifier',
+            'pseudonym': 'Pseudonym',
             'email_address': 'Email Address',
             'incorporation_locality': 'Incorporation Locality',
             'incorporation_state_or_province': 'Incorporation State/Province',
             'incorporation_country': 'Incorporation Country',
+            'domain_component': 'Domain Component',
         }[self.native]
 
 
@@ -178,20 +187,25 @@ class NameTypeAndValue(Sequence):
         'country_name': DirectoryString,
         'locality_name': DirectoryString,
         'state_or_province_name': DirectoryString,
+        'street_address': DirectoryString,
         'organization_name': DirectoryString,
         'organizational_unit_name': DirectoryString,
         'title': DirectoryString,
+        'business_category': DirectoryString,
+        'postal_code': DirectoryString,
         'name': DirectoryString,
         'given_name': DirectoryString,
         'initials': DirectoryString,
         'generation_qualifier': DirectoryString,
         'dn_qualifier': DirectoryString,
+        'pseudonym': DirectoryString,
         # https://tools.ietf.org/html/rfc2985#page-26
         'email_address': IA5String,
         # Page 10 of https://cabforum.org/wp-content/uploads/EV-V1_5_5.pdf
         'incorporation_locality': DirectoryString,
         'incorporation_state_or_province': DirectoryString,
         'incorporation_country': DirectoryString,
+        'domain_component': IA5String,
     }
 
 
