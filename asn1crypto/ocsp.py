@@ -97,7 +97,7 @@ class Request(Sequence):
         of critical extensions
         """
 
-        self._critical_extensions = []
+        self._critical_extensions = set()
 
         for extension in self['single_request_extensions']:
             name = extension['extn_id'].native
@@ -105,18 +105,18 @@ class Request(Sequence):
             if hasattr(self, attribute_name):
                 setattr(self, attribute_name, extension['extn_value'].parsed)
             if extension['critical'].native:
-                self._critical_extensions.append(name)
+                self._critical_extensions.add(name)
 
         self._processed_extensions = True
 
     @property
     def critical_extensions(self):
         """
-        Returns a list of the names (or OID if not a known extension) of the
+        Returns a set of the names (or OID if not a known extension) of the
         extensions marked as critical
 
         :return:
-            A list of unicode strings
+            A set of unicode strings
         """
 
         if not self._processed_extensions:
@@ -229,7 +229,7 @@ class OCSPRequest(Sequence):
         of critical extensions
         """
 
-        self._critical_extensions = []
+        self._critical_extensions = set()
 
         for extension in self['tbs_request']['request_extensions']:
             name = extension['extn_id'].native
@@ -237,18 +237,18 @@ class OCSPRequest(Sequence):
             if hasattr(self, attribute_name):
                 setattr(self, attribute_name, extension['extn_value'].parsed)
             if extension['critical'].native:
-                self._critical_extensions.append(name)
+                self._critical_extensions.add(name)
 
         self._processed_extensions = True
 
     @property
     def critical_extensions(self):
         """
-        Returns a list of the names (or OID if not a known extension) of the
+        Returns a set of the names (or OID if not a known extension) of the
         extensions marked as critical
 
         :return:
-            A list of unicode strings
+            A set of unicode strings
         """
 
         if not self._processed_extensions:
@@ -398,7 +398,7 @@ class SingleResponse(Sequence):
         of critical extensions
         """
 
-        self._critical_extensions = []
+        self._critical_extensions = set()
 
         for extension in self['single_extensions']:
             name = extension['extn_id'].native
@@ -406,18 +406,18 @@ class SingleResponse(Sequence):
             if hasattr(self, attribute_name):
                 setattr(self, attribute_name, extension['extn_value'].parsed)
             if extension['critical'].native:
-                self._critical_extensions.append(name)
+                self._critical_extensions.add(name)
 
         self._processed_extensions = True
 
     @property
     def critical_extensions(self):
         """
-        Returns a list of the names (or OID if not a known extension) of the
+        Returns a set of the names (or OID if not a known extension) of the
         extensions marked as critical
 
         :return:
-            A list of unicode strings
+            A set of unicode strings
         """
 
         if not self._processed_extensions:
@@ -572,7 +572,7 @@ class OCSPResponse(Sequence):
         of critical extensions
         """
 
-        self._critical_extensions = []
+        self._critical_extensions = set()
 
         for extension in self['response_bytes']['response'].parsed['tbs_response_data']['response_extensions']:
             name = extension['extn_id'].native
@@ -580,18 +580,18 @@ class OCSPResponse(Sequence):
             if hasattr(self, attribute_name):
                 setattr(self, attribute_name, extension['extn_value'].parsed)
             if extension['critical'].native:
-                self._critical_extensions.append(name)
+                self._critical_extensions.add(name)
 
         self._processed_extensions = True
 
     @property
     def critical_extensions(self):
         """
-        Returns a list of the names (or OID if not a known extension) of the
+        Returns a set of the names (or OID if not a known extension) of the
         extensions marked as critical
 
         :return:
-            A list of unicode strings
+            A set of unicode strings
         """
 
         if not self._processed_extensions:

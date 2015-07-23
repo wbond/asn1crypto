@@ -178,7 +178,7 @@ class RevokedCertificate(Sequence):
         of critical extensions
         """
 
-        self._critical_extensions = []
+        self._critical_extensions = set()
 
         for extension in self['crl_entry_extensions']:
             name = extension['extn_id'].native
@@ -186,18 +186,18 @@ class RevokedCertificate(Sequence):
             if hasattr(self, attribute_name):
                 setattr(self, attribute_name, extension['extn_value'].parsed)
             if extension['critical'].native:
-                self._critical_extensions.append(name)
+                self._critical_extensions.add(name)
 
         self._processed_extensions = True
 
     @property
     def critical_extensions(self):
         """
-        Returns a list of the names (or OID if not a known extension) of the
+        Returns a set of the names (or OID if not a known extension) of the
         extensions marked as critical
 
         :return:
-            A list of unicode strings
+            A set of unicode strings
         """
 
         if not self._processed_extensions:
@@ -306,7 +306,7 @@ class CertificateList(Sequence):
         of critical extensions
         """
 
-        self._critical_extensions = []
+        self._critical_extensions = set()
 
         for extension in self['tbs_cert_list']['crl_extensions']:
             name = extension['extn_id'].native
@@ -314,18 +314,18 @@ class CertificateList(Sequence):
             if hasattr(self, attribute_name):
                 setattr(self, attribute_name, extension['extn_value'].parsed)
             if extension['critical'].native:
-                self._critical_extensions.append(name)
+                self._critical_extensions.add(name)
 
         self._processed_extensions = True
 
     @property
     def critical_extensions(self):
         """
-        Returns a list of the names (or OID if not a known extension) of the
+        Returns a set of the names (or OID if not a known extension) of the
         extensions marked as critical
 
         :return:
-            A list of unicode strings
+            A set of unicode strings
         """
 
         if not self._processed_extensions:

@@ -113,21 +113,21 @@ class X509Tests(unittest.TestCase):
     @staticmethod
     def critical_extensions_info():
         return (
-            ('keys/test-der.crt',                          []),
-            ('keys/test-inter-der.crt',                    []),
-            ('keys/test-third-der.crt',                    []),
-            ('geotrust_certs/GeoTrust_Universal_CA.crt',   ['basic_constraints', 'key_usage']),
-            ('geotrust_certs/GeoTrust_Primary_CA.crt',     ['basic_constraints', 'key_usage']),
-            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', ['basic_constraints', 'key_usage']),
-            ('geotrust_certs/codex.crt',                   ['key_usage']),
-            ('lets_encrypt/isrgrootx1.pem',                ['key_usage', 'basic_constraints']),
-            ('lets_encrypt/letsencryptauthorityx1.pem',    ['key_usage', 'basic_constraints']),
-            ('lets_encrypt/letsencryptauthorityx2.pem',    ['key_usage', 'basic_constraints']),
-            ('globalsign_example_keys/IssuingCA-der.cer',  ['basic_constraints', 'key_usage']),
-            ('globalsign_example_keys/rootCA.cer',         ['basic_constraints', 'key_usage']),
-            ('globalsign_example_keys/SSL1.cer',           ['key_usage', 'extended_key_usage', 'basic_constraints']),
-            ('globalsign_example_keys/SSL2.cer',           ['key_usage', 'extended_key_usage', 'basic_constraints']),
-            ('globalsign_example_keys/SSL3.cer',           ['key_usage', 'extended_key_usage', 'basic_constraints']),
+            ('keys/test-der.crt',                          set()),
+            ('keys/test-inter-der.crt',                    set()),
+            ('keys/test-third-der.crt',                    set()),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   {'basic_constraints', 'key_usage'}),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     {'basic_constraints', 'key_usage'}),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', {'basic_constraints', 'key_usage'}),
+            ('geotrust_certs/codex.crt',                   {'key_usage'}),
+            ('lets_encrypt/isrgrootx1.pem',                {'key_usage', 'basic_constraints'}),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    {'key_usage', 'basic_constraints'}),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    {'key_usage', 'basic_constraints'}),
+            ('globalsign_example_keys/IssuingCA-der.cer',  {'basic_constraints', 'key_usage'}),
+            ('globalsign_example_keys/rootCA.cer',         {'basic_constraints', 'key_usage'}),
+            ('globalsign_example_keys/SSL1.cer',           {'key_usage', 'extended_key_usage', 'basic_constraints'}),
+            ('globalsign_example_keys/SSL2.cer',           {'key_usage', 'extended_key_usage', 'basic_constraints'}),
+            ('globalsign_example_keys/SSL3.cer',           {'key_usage', 'extended_key_usage', 'basic_constraints'}),
         )
 
     @data('critical_extensions_info')
