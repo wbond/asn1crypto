@@ -1696,8 +1696,16 @@ class Sequence(Asn1Value):
             value = default
 
         if value is not None:
-            for key, child in value.items():
-                self.__setitem__(key, child)
+            # Fields are iterated in definition order to allow things like
+            # OID-based specs. Otherwise sometimes the value would be processed
+            # before the OID field, resulting in invalid value object creation.
+            if self._fields:
+                keys = [info[0] for info in self._fields]
+            else:
+                keys = value.keys()
+            for key in keys:
+                if key in value:
+                    self.__setitem__(key, value[key])
 
     def _lazy_child(self, index):
         """
