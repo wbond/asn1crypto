@@ -1897,6 +1897,26 @@ class Certificate(Sequence):
         return self._valid_ips
 
     @property
+    def ca(self):
+        """
+        :return;
+            A boolean - if the certificate is marked as a CA
+        """
+
+        return self.basic_constraints_value and self.basic_constraints_value['ca'].native
+
+    @property
+    def max_path_length(self):
+        """
+        :return;
+            None or an integer of the maximum path length
+        """
+
+        if not self.ca:
+            return None
+        return self.basic_constraints_value['path_len_constraint'].native
+
+    @property
     def self_issued(self):
         """
         :return:
@@ -1905,7 +1925,7 @@ class Certificate(Sequence):
 
         if self._self_issued is None:
             self._self_issued = False
-            if self.basic_constraints_value and self.basic_constraints_value['ca'].native:
+            if self.ca:
                 self._self_issued = self.subject == self.issuer
         return self._self_issued
 
