@@ -1649,6 +1649,34 @@ class Certificate(Sequence):
         return self._ocsp_no_check_value
 
     @property
+    def signature(self):
+        """
+        :return:
+            A byte string of the signature
+        """
+
+        return self['signature_value'].native
+
+    @property
+    def signature_algo(self):
+        """
+        :return:
+            A unicode string of "rsassa_pkcs1v15", "rsassa_pss", "dsa", "ecdsa"
+        """
+
+        return self['signature_algorithm'].signature_algo
+
+    @property
+    def hash_algo(self):
+        """
+        :return:
+            A unicode string of "md2", "md5", "sha1", "sha224", "sha256",
+            "sha384", "sha512", "sha512_224", "sha512_256"
+        """
+
+        return self['signature_algorithm'].hash_algo
+
+    @property
     def public_key(self):
         """
         :return:
