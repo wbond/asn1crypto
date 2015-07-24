@@ -171,171 +171,51 @@ class X509Tests(unittest.TestCase):
             ('keys/test-third-der.crt',                    None),
             (
                 'geotrust_certs/GeoTrust_Universal_CA.crt',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', False),
-                    ('key_encipherment', False),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', True),
-                    ('crl_sign', True),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'digital_signature', 'key_cert_sign', 'crl_sign'}
             ),
             (
                 'geotrust_certs/GeoTrust_Primary_CA.crt',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', True),
-                    ('key_encipherment', False),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', False),
-                    ('crl_sign', False),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'key_cert_sign', 'crl_sign'}
             ),
             (
                 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', True),
-                    ('key_encipherment', False),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', False),
-                    ('crl_sign', False),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'key_cert_sign', 'crl_sign'}
             ),
             (
                 'geotrust_certs/codex.crt',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', False),
-                    ('key_encipherment', True),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', False),
-                    ('crl_sign', False),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'digital_signature', 'key_encipherment'}
             ),
             (
                 'lets_encrypt/isrgrootx1.pem',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', True),
-                    ('key_encipherment', False),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', False),
-                    ('crl_sign', False),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'key_cert_sign', 'crl_sign'}
             ),
             (
                 'lets_encrypt/letsencryptauthorityx1.pem',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', False),
-                    ('key_encipherment', False),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', True),
-                    ('crl_sign', True),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'digital_signature', 'key_cert_sign', 'crl_sign'}
             ),
             (
                 'lets_encrypt/letsencryptauthorityx2.pem',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', False),
-                    ('key_encipherment', False),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', True),
-                    ('crl_sign', True),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'digital_signature', 'key_cert_sign', 'crl_sign'}
             ),
             (
                 'globalsign_example_keys/IssuingCA-der.cer',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', True),
-                    ('key_encipherment', False),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', False),
-                    ('crl_sign', False),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'key_cert_sign', 'crl_sign'}
             ),
             (
                 'globalsign_example_keys/rootCA.cer',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', True),
-                    ('key_encipherment', False),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', False),
-                    ('crl_sign', False),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'key_cert_sign', 'crl_sign'}
             ),
             (
                 'globalsign_example_keys/SSL1.cer',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', False),
-                    ('key_encipherment', True),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', False),
-                    ('crl_sign', False),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'digital_signature', 'key_encipherment'}
             ),
             (
                 'globalsign_example_keys/SSL2.cer',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', False),
-                    ('key_encipherment', True),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', False),
-                    ('crl_sign', False),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'digital_signature', 'key_encipherment'}
             ),
             (
                 'globalsign_example_keys/SSL3.cer',
-                OrderedDict([
-                    ('digital_signature', True),
-                    ('non_repudiation', False),
-                    ('key_encipherment', True),
-                    ('data_encipherment', False),
-                    ('key_agreement', False),
-                    ('key_cert_sign', False),
-                    ('crl_sign', False),
-                    ('encipher_only', False),
-                    ('decipher_only', False),
-                ])
+                {'digital_signature', 'key_encipherment'}
             ),
         )
 

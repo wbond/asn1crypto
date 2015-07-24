@@ -46,6 +46,7 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import math
 import sys
 import re
 from collections import OrderedDict
@@ -968,6 +969,20 @@ class BitString(Primitive, ValueMap, object):
 
     tag = 3
 
+    _size = None
+
+    #pylint: disable=W0212
+    def _setup(self):
+        """
+        Generates _reverse_map from _map
+        """
+
+        ValueMap._setup(self)
+
+        cls = self.__class__
+        if cls._map is not None:
+            cls._size = max(self._map.keys()) + 1
+
     def set(self, value):
         """
         Sets the value of the object
@@ -979,26 +994,64 @@ class BitString(Primitive, ValueMap, object):
             ValueError - when an invalid value is passed
         """
 
-        if not isinstance(value, int_types) and not isinstance(value, tuple):
-            raise ValueError('%s value must be an integer or a tuple of ones and zeros, not %s' % (self.__class__.__name__, value.__class__.__name__))
+        if isinstance(value, set):
+            if self._map is None:
+                raise ValueError('%s _map has not been defined' % self.__class__.__name__)
 
-        if isinstance(value, tuple):
+            bits = [0] * self._size
             self._native = value
+            for index in range(0, self._size):
+                key = self._map.get(index)
+                if key is None:
+                    continue
+                if key in value:
+                    bits[index] = 1
+
+            value = ''.join(map(str_cls, bits))
+
+        elif isinstance(value, tuple):
+            if self._map is None:
+                self._native = value
+            else:
+                self._native = set()
+                for index, bit in enumerate(value):
+                    if bit:
+                        name = self._map.get(index, index)
+                        self._native.add(name)
             value = ''.join(map(str_cls, value))
 
-        elif isinstance(value, int_types):
-            value = '{0:b}'.format(value)
-            self._native = tuple(map(int, tuple(value)))
+        else:
+            raise ValueError('%s value must be a tuple of ones and zeros or a set of unicode strings, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
-        size = max(self._map.keys()) + 1
-        if len(value) != size:
-            raise ValueError('%s value must be %s bits long, specified was only %s long' % (self.__class__.__name__, size, len(value)))
+        if self._map is not None:
+            size = self._size
+            if len(value) > size:
+                raise ValueError('%s value must be at most %s bits long, specified was %s long' % (self.__class__.__name__, size, len(value)))
+            value += '0' * (size - len(value))
+        else:
+            size = len(value)
 
-        extra_bits = (size % 8)
-        if extra_bits != 0:
+        size_mod = size % 8
+        extra_bits = 0
+        if size_mod != 0:
+            extra_bits = 8 - size_mod
             value += '0' * extra_bits
 
-        self.contents = int_to_bytes(extra_bits) + int_to_bytes(int(value, 2))
+        size_in_bytes = int(math.ceil(size / 8))
+
+        if extra_bits:
+            extra_bits_byte = int_to_bytes(extra_bits)
+        else:
+            extra_bits_byte = b'\x00'
+
+        if value == '':
+            value_bytes = b''
+        else:
+            value_bytes = int_to_bytes(int(value, 2))
+        if len(value_bytes) != size_in_bytes:
+            value_bytes = (b'\x00' * (size_in_bytes - len(value_bytes))) + value_bytes
+
+        self.contents = extra_bits_byte + value_bytes
         self.header = None
         if self.trailer != b'':
             self.trailer = b''
@@ -1018,16 +1071,26 @@ class BitString(Primitive, ValueMap, object):
             A boolean if the bit is set
         """
 
-        if not isinstance(self._map, dict):
-            raise ValueError('%s bit map has not been defined' % self.__class__.__name__)
+        is_int = isinstance(key, int_types)
+        if not is_int:
+            if not isinstance(self._map, dict):
+                raise ValueError('%s _map has not been defined' % self.__class__.__name__)
 
-        if key not in self._map:
-            raise ValueError('%s map does not contain an entry for "%s"' % (self.__class__.__name__, key))
+            if key not in self._reverse_map:
+                raise ValueError('%s _map does not contain an entry for "%s"' % (self.__class__.__name__, key))
 
         if self._native is None:
             _ = self.native
 
-        return self._native[key]
+        if self._map is None:
+            if len(self._native) >= key + 1:
+                return bool(self._native[key])
+            return False
+
+        if is_int:
+            key = self._map.get(key, key)
+
+        return key in self._native
 
     def __setitem__(self, key, value):
         """
@@ -1043,30 +1106,37 @@ class BitString(Primitive, ValueMap, object):
             ValueError - when _map is not set or the key name is invalid
         """
 
-        if not isinstance(self._map, dict) or key not in self._map:
-            return super(BitString, self).__setattr__(key, value)
+        is_int = isinstance(key, int_types)
+        if not is_int:
+            if self._map is None:
+                raise ValueError('%s _map has not been defined' % self.__class__.__name__)
+
+            if key not in self._reverse_map:
+                raise ValueError('%s _map does not contain an entry for "%s"' % (self.__class__.__name__, key))
 
         if self._native is None:
             _ = self.native
 
-        self._native[key] = bool(value)
-        self.set(self._native)
+        if self._map is None:
+            new_native = list(self._native)
+            max_key = len(new_native) - 1
+            if key > max_key:
+                new_native.extend([0] * (key - max_key))
+            new_native[key] = 1 if value else 0
+            self._native = tuple(new_native)
 
-    @property
-    def named_bits(self):
-        """
-        :return:
-            A set of unicode strings for the bits that are set to 1
-        """
+        else:
+            if is_int:
+                key = self._map.get(key, key)
 
-        if not isinstance(self._map, dict):
-            raise ValueError('%s bit map has not been defined' % self.__class__.__name__)
-
-        output = set()
-        for key, value in self.native.items():
             if value:
-                output.add(key)
-        return output
+                if key not in self._native:
+                    self._native.add(key)
+            else:
+                if key in self._native:
+                    self._native.remove(key)
+
+        self.set(self._native)
 
     @property
     def native(self):
@@ -1074,28 +1144,38 @@ class BitString(Primitive, ValueMap, object):
         The a native Python datatype representation of this value
 
         :return:
-            If a _map is set, an OrdredDict of names as keys and boolean values
-            or if no _map is set, a tuple of integers 1 and 0. None if no value.
+            If a _map is set, a set of names, or if no _map is set, a tuple of
+            integers 1 and 0. None if no value.
         """
 
         # For BitString we default the value to be all zeros
         if self.contents is None:
-            size = max(self._map.keys()) + 1
-            self.set((0,) * size)
+            if self._map is None:
+                self.set(())
+            else:
+                self.set(set())
 
         if self._native is None:
             extra_bits = int_from_bytes(self.contents[0:1])
             bit_string = '{0:b}'.format(int_from_bytes(self.contents[1:]))
+
+            # Left-pad the bit string to a byte multiple to ensure we didn't
+            # lose any zero bits on the left
+            mod_bit_len = len(bit_string) % 8
+            if mod_bit_len != 0:
+                bit_string = ('0' * (8 - mod_bit_len)) + bit_string
+
+            # Trim off the extra bits on the right used to fill the last byte
             if extra_bits > 0:
                 bit_string = bit_string[0:0-extra_bits]
+
             bits = tuple(map(int, tuple(bit_string)))
             if self._map:
-                self._native = OrderedDict()
-                for i, bit in enumerate(bits):
-                    self._native[self._map.get(i, i)] = bool(bit)
-                for i, name in self._map.items():
-                    if name not in self._native:
-                        self._native[name] = False
+                self._native = set()
+                for index, bit in enumerate(bits):
+                    if bit:
+                        name = self._map.get(index, index)
+                        self._native.add(name)
             else:
                 self._native = bits
         return self._native

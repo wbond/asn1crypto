@@ -128,17 +128,7 @@ class CSRTests(unittest.TestCase):
                                     ('critical', False),
                                     (
                                         'extn_value',
-                                        OrderedDict([
-                                            ('digital_signature', True),
-                                            ('non_repudiation', True),
-                                            ('key_encipherment', True),
-                                            ('data_encipherment', False),
-                                            ('key_agreement', False),
-                                            ('key_cert_sign', False),
-                                            ('crl_sign', False),
-                                            ('encipher_only', False),
-                                            ('decipher_only', False),
-                                        ]),
+                                        {'digital_signature', 'non_repudiation', 'key_encipherment'},
                                     ),
                                 ])
                             ]
