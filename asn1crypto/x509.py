@@ -344,6 +344,22 @@ class NameTypeAndValue(Sequence):
 class RelativeDistinguishedName(SetOf):
     _child_spec = NameTypeAndValue
 
+    @property
+    def hashable(self):
+        """
+        :return:
+            A unicode string that can be used as a dict key or in a set
+        """
+
+        output = []
+        values = self._get_values()
+        for key in sorted(values.keys()):
+            output.append('%s: %s' % (key, values[key]))
+        # Unit separator is used here since the normalization process for
+        # values moves any such character, and the keys are all dotted integers
+        # or under_score_words
+        return '\x1F'.join(output)
+
     def __eq__(self, other):
         """
         Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.1
@@ -407,6 +423,18 @@ class RelativeDistinguishedName(SetOf):
 
 class RDNSequence(SequenceOf):
     _child_spec = RelativeDistinguishedName
+
+    @property
+    def hashable(self):
+        """
+        :return:
+            A unicode string that can be used as a dict key or in a set
+        """
+
+        # Record separator is used here since the normalization process for
+        # values moves any such character, and the keys are all dotted integers
+        # or under_score_words
+        return '\x1E'.join(rdn.hashable for rdn in self)
 
     def __eq__(self, other):
         """
@@ -475,6 +503,15 @@ class Name(Choice):
         rdn = RelativeDistinguishedName(attributes)
         sequence = RDNSequence([rdn])
         return cls(name='', value=sequence)
+
+    @property
+    def hashable(self):
+        """
+        :return:
+            A unicode string that can be used as a dict key or in a set
+        """
+
+        return self.chosen.hashable
 
     def __eq__(self, other):
         """
