@@ -431,6 +431,15 @@ class CertificateList(Sequence):
         return self._authority_information_access_value
 
     @property
+    def issuer(self):
+        """
+        :return:
+            An asn1crypto.x509.Name object for the issuer of the CRL
+        """
+
+        return self['tbs_cert_list']['issuer']
+
+    @property
     def authority_key_identifier(self):
         """
         :return:
