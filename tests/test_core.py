@@ -108,6 +108,12 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(True, named['one'])
         self.assertEqual(True, 'one' in named.native)
 
+    def test_mapped_bit_string_unset_bit(self):
+        named = NamedBits({'one', 'two'})
+        named['one'] = False
+        self.assertEqual(True, named['two'])
+        self.assertEqual({'two'}, named.native)
+
     def test_mapped_bit_string_sparse(self):
         named = NamedBits((0, 0, 0, 0, 0, 1))
         self.assertEqual(False, named['two'])
