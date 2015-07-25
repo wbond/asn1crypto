@@ -25,6 +25,15 @@ class NamedBits(core.BitString):
     }
 
 
+class SequenceOfInts(core.SequenceOf):
+    _child_spec = core.Integer
+
+
+class SequenceAny(core.SequenceOf):
+    _child_spec = core.Any
+
+
+
 @DataDecorator
 class CoreTests(unittest.TestCase):
 
@@ -110,3 +119,37 @@ class CoreTests(unittest.TestCase):
         named[1] = True
         self.assertEqual(True, named['one'])
         self.assertEqual({'one'}, named.native)
+
+    def test_get_sequence_value(self):
+        seq = SequenceOfInts([1, 2])
+        self.assertEqual(2, seq[1].native)
+
+    def test_replace_sequence_value(self):
+        seq = SequenceOfInts([1, 2])
+        self.assertEqual([1, 2], seq.native)
+        seq[0] = 5
+        self.assertEqual([5, 2], seq.native)
+
+    def test_add_to_end_sequence_value(self):
+        seq = SequenceOfInts([1, 2])
+        self.assertEqual([1, 2], seq.native)
+        seq[2] = 5
+        self.assertEqual([1, 2, 5], seq.native)
+        seq.append(6)
+        self.assertEqual([1, 2, 5, 6], seq.native)
+
+    def test_delete_sequence_value(self):
+        seq = SequenceOfInts([1, 2])
+        self.assertEqual([1, 2], seq.native)
+        del seq[0]
+        self.assertEqual([2], seq.native)
+
+    def test_sequence_any_asn1value(self):
+        seq = SequenceAny()
+        seq.append(core.Integer(5))
+        self.assertEqual([5], seq.native)
+
+    def test_sequence_any_native_value(self):
+        seq = SequenceAny()
+        with self.assertRaises(ValueError):
+            seq.append(5)

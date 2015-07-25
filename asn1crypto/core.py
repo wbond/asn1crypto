@@ -2324,6 +2324,40 @@ class SequenceOf(Asn1Value):
             self.children[index] = child
         return child
 
+    def _make_value(self, value):
+        """
+        Constructs a _child_spec value from a native Python data type, or
+        an appropriate Asn1Value object
+
+        :param value:
+            A native Python value, or some child of Asn1Value
+
+        :return:
+            An object of type _child_spec
+        """
+
+        if isinstance(value, self._child_spec):
+            return value
+
+        elif issubclass(self._child_spec, Any):
+            if isinstance(value, Asn1Value):
+                return value
+            else:
+                raise ValueError('Can not set a native python value to %s where the _child_spec is Any – value must be an instance of Asn1Value' % self.__class__.__name__)
+
+        elif issubclass(self._child_spec, Choice):
+            if not isinstance(value, Asn1Value):
+                raise ValueError('Can not set a native python value to %s where the _child_spec is the choice type %s – value must be an instance of Asn1Value' % (self.__class__.__name__, self._child_spec.__name__))
+            if not isinstance(value, self._child_spec):
+                wrapper = self._child_spec()
+                wrapper.validate(value.class_, value.tag)
+                wrapper._parsed = value  #pylint: disable=W0212
+                value = wrapper
+            return value
+
+        else:
+            return self._child_spec(value=value)
+
     def __len__(self):
         """
         :return:
@@ -2365,34 +2399,19 @@ class SequenceOf(Asn1Value):
         if self.children is None:
             self._parse_children()
 
+        new_value = self._make_value(value)
+
         # If adding at the end, create a space for the new value
         if key == len(self.children):
             self.children.append(None)
+            if self._native is not None:
+                self._native.append(None)
 
-        if issubclass(self._child_spec, Any):
-            if isinstance(value, Asn1Value):
-                self.chilren[key] = value
-            else:
-                raise ValueError('Can not set a native python value to %s where the _child_spec is Any – value must be an instance of Asn1Value' % self.__class__.__name__)
-
-        elif issubclass(self._child_spec, Choice):
-            if not isinstance(value, Asn1Value):
-                raise ValueError('Can not set a native python value to %s where the _child_spec is the choice type %s – value must be an instance of Asn1Value' % (self.__class__.__name__, self._child_spec.__name__))
-            if not isinstance(value, self._child_spec):
-                wrapper = self._child_spec()
-                wrapper.validate(value.class_, value.tag)
-                wrapper._parsed = value  #pylint: disable=W0212
-                value = wrapper
-            self.children[key] = value
-
-        elif isinstance(value, self._child_spec):
-            self.children[key] = value
-
-        else:
-            self.children[key] = self._child_spec(value=value)
+        self.children[key] = new_value
 
         if self._native is not None:
             self._native[key] = self.children[key].native
+
         self._set_contents()
 
     def __delitem__(self, key):
@@ -2407,9 +2426,9 @@ class SequenceOf(Asn1Value):
         if self.children is None:
             self._parse_children()
 
-        self.children.remove(key)
+        self.children.pop(key)
         if self._native is not None:
-            self._native.remove(key)
+            self._native.pop(key)
         self._set_contents()
 
     def __iter__(self):  #pylint: disable=W0234
@@ -2424,6 +2443,25 @@ class SequenceOf(Asn1Value):
 
         for index in range(0, len(self.children)):
             yield self._lazy_child(index)
+
+    def append(self, value):
+        """
+        Allows adding a child to the end of the sequence
+
+        :param value:
+            Native python datatype that will be passed to _child_spec to create
+            new child object
+        """
+
+        # We inline this checks to prevent method invocation each time
+        if self.children is None:
+            self._parse_children()
+
+        self.children.append(self._make_value(value))
+
+        if self._native is not None:
+            self._native.append(self.children[-1].native)
+        self._set_contents()
 
     def _set_contents(self, force=False):
         """
