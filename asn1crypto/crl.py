@@ -134,6 +134,7 @@ class CRLReason(Enumerated):
 class CRLEntryExtensionId(ObjectIdentifier):
     _map = {
         '2.5.29.21': 'crl_reason',
+        '2.5.29.23': 'hold_instruction_code',
         '2.5.29.24': 'invalidity_date',
         '2.5.29.29': 'certificate_issuer',
     }
@@ -149,6 +150,7 @@ class CRLEntryExtension(Sequence):
     _oid_pair = ('extn_id', 'extn_value')
     _oid_specs = {
         'crl_reason': CRLReason,
+        'hold_instruction_code': ObjectIdentifier,
         'invalidity_date': GeneralizedTime,
         'certificate_issuer': GeneralNames,
     }
