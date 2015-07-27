@@ -1194,6 +1194,7 @@ class PolicyConstraints(Sequence):
 
 class KeyPurposeId(ObjectIdentifier):
     _map = {
+        '2.5.29.37.0': 'any_extended_key_usage',
         '1.3.6.1.5.5.7.3.1': 'server_auth',
         '1.3.6.1.5.5.7.3.2': 'client_auth',
         '1.3.6.1.5.5.7.3.3': 'code_signing',
