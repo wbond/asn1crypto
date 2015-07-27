@@ -39,6 +39,27 @@ class CoreTests(unittest.TestCase):
 
     #pylint: disable=C0326
     @staticmethod
+    def integer_info():
+        return (
+            (0,                b'\x02\x01\x00'),
+            (255,              b'\x02\x02\x00\xFF'),
+            (128,              b'\x02\x02\x00\x80'),
+            (127,              b'\x02\x01\x7F'),
+            (-127,             b'\x02\x01\x81'),
+            (-127,             b'\x02\x01\x81'),
+            (32768,            b'\x02\x03\x00\x80\x00'),
+            (-32768,           b'\x02\x02\x80\x00'),
+            (-32769,           b'\x02\x03\xFF\x7F\xFF'),
+        )
+
+    @data('integer_info')
+    def integer(self, native, der_bytes):
+        i = core.Integer(native)
+        self.assertEqual(der_bytes, i.dump())
+        self.assertEqual(native, core.Integer.load(der_bytes).native)
+
+    #pylint: disable=C0326
+    @staticmethod
     def type_info():
         return (
             ('universal/object_identifier.der',    core.ObjectIdentifier,    '1.2.840.113549.1.1.1'),
