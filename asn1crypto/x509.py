@@ -51,7 +51,7 @@ from .core import (
 )
 from .algos import SignedDigestAlgorithm
 from .keys import PublicKeyInfo
-from ._int import int_to_bytes, int_from_bytes
+from .int import int_to_bytes, int_from_bytes
 
 if sys.version_info < (3,):
     str_cls = unicode  #pylint: disable=E0602

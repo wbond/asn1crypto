@@ -52,7 +52,8 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import sys
 import math
 
-from ._int import int_to_bytes, int_from_bytes, inverse_mod
+from ._int import inverse_mod
+from .int import int_to_bytes, int_from_bytes
 
 if sys.version_info < (3,):
     byte_cls = str
