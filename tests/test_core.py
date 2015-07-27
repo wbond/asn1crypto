@@ -33,9 +33,32 @@ class SequenceAny(core.SequenceOf):
     _child_spec = core.Any
 
 
+class Seq(core.Sequence):
+    _fields = [
+        ('id', core.ObjectIdentifier),
+        ('value', core.Any),
+    ]
+
+    _oid_pair = ('id', 'value')
+    _oid_specs = {
+        '1.2.3': core.Integer,
+        '2.3.4': core.OctetString,
+    }
+
 
 @DataDecorator
 class CoreTests(unittest.TestCase):
+
+    def test_sequence_spec(self):
+        seq = Seq()
+        seq['id'] = '1.2.3'
+        self.assertEqual(core.Integer, seq.spec('value'))
+        seq['id'] = '2.3.4'
+        self.assertEqual(core.OctetString, seq.spec('value'))
+
+    def test_sequence_of_spec(self):
+        seq = SequenceAny()
+        self.assertEqual(core.Any, seq.spec())
 
     #pylint: disable=C0326
     @staticmethod

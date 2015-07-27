@@ -2202,6 +2202,33 @@ class Sequence(Asn1Value):
             e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
             raise e
 
+    def spec(self, field_name):
+        """
+        Determines the spec to use for the field specified. Depending on how
+        the spec is determined (_oid_pair or _spec_callbacks), it may be
+        necessary to set preceeding field values before calling this. Usually
+        specs, if dynamic, are controlled by a preceeding ObjectIdentifier
+        field.
+
+        :param field_name:
+            A unicode string of the field name to get the spec for
+
+        :return:
+            A child class of asn1crypto.core.Asn1Value that the field must be
+            encoded using
+        """
+
+        if not isinstance(field_name, str_cls):
+            raise ValueError('field_name must be a unicode string, not %s' % field_name.__class__.__name__)
+
+        if self._fields is None:
+            raise ValueError('Unable to retrieve spec for field %s in the class %s because _fields has not been set' % (repr(field_name), self.__class__.__name__))
+
+        index = self._field_map[field_name]
+        info = self._determine_spec(index)
+
+        return info[2]
+
     @property
     def native(self):
         """
@@ -2518,6 +2545,17 @@ class SequenceOf(Asn1Value):
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
             raise e
+
+    def spec(self):
+        """
+        Determines the spec to use for child values.
+
+        :return:
+            A child class of asn1crypto.core.Asn1Value that child values must be
+            encoded using
+        """
+
+        return self._child_spec
 
     @property
     def native(self):
