@@ -292,10 +292,13 @@ class NameTypeAndValue(Sequence):
         # Map step
         string = re.sub('[\u00ad\u1806\u034f\u180b-\u180d\ufe0f-\uff00\ufffc]+', '', string)
         string = re.sub('[\u0009\u000a\u000b\u000c\u000d\u0085]', ' ', string)
-        # Some installs of Python 2.7 don't support 8-digit unicode escape
-        # ranges, so we have to break them into pieces
-        # Rriginal was: \U0001D173-\U0001D17A and \U000E0020-\U000E007F
-        string = re.sub('\ud834[\udd73-\udd7a]|\udb40[\udc20-\udc7f]|\U000e0001', '', string)
+        if sys.maxunicode == 0xffff:
+            # Some installs of Python 2.7 don't support 8-digit unicode escape
+            # ranges, so we have to break them into pieces
+            # Original was: \U0001D173-\U0001D17A and \U000E0020-\U000E007F
+            string = re.sub('\ud834[\udd73-\udd7a]|\udb40[\udc20-\udc7f]|\U000e0001', '', string)
+        else:
+            string = re.sub('[\U0001D173-\U0001D17A\U000E0020-\U000E007F\U000e0001]', '', string)
         string = re.sub('[\u0000-\u0008\u000e-\u001f\u007f-\u0084\u0086-\u009f\u06dd\u070f\u180e\u200c-\u200f\u202a-\u202e\u2060-\u2063\u206a-\u206f\ufeff\ufff9-\ufffb]+', '', string)
         string = string.replace('\u200b', '')
         string = re.sub('[\u00a0\u1680\u2000-\u200a\u2028-\u2029\u202f\u205f\u3000]', ' ', string)
