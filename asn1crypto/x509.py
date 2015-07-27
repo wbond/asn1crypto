@@ -255,6 +255,9 @@ class NameTypeAndValue(Sequence):
             self._prepped = self._ldap_string_prep(self['value'].native)
         return self._prepped
 
+    def __ne__(self, other):
+        return not self == other
+
     def __eq__(self, other):
         """
         Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.1
@@ -364,6 +367,9 @@ class RelativeDistinguishedName(SetOf):
         # or under_score_words
         return '\x1F'.join(output)
 
+    def __ne__(self, other):
+        return not self == other
+
     def __eq__(self, other):
         """
         Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.1
@@ -439,6 +445,9 @@ class RDNSequence(SequenceOf):
         # values moves any such character, and the keys are all dotted integers
         # or under_score_words
         return '\x1E'.join(rdn.hashable for rdn in self)
+
+    def __ne__(self, other):
+        return not self == other
 
     def __eq__(self, other):
         """
@@ -516,6 +525,9 @@ class Name(Choice):
         """
 
         return self.chosen.hashable
+
+    def __ne__(self, other):
+        return not self == other
 
     def __eq__(self, other):
         """
@@ -952,6 +964,9 @@ class GeneralName(Choice):
         ('ip_address', IPAddress, {'tag_type': 'implicit', 'tag': 7}),
         ('registered_id', ObjectIdentifier, {'tag_type': 'implicit', 'tag': 8}),
     ]
+
+    def __ne__(self, other):
+        return not self == other
 
     def __eq__(self, other):
         """
