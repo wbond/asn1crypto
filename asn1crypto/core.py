@@ -2066,7 +2066,7 @@ class Sequence(Asn1Value):
             # appropriate encoded value.
             if specs_different and not is_any:
                 wrapper = field_spec(value=new_value.dump(), **field_params)
-                wrapper._parsed = new_value  #pylint: disable=W0212
+                wrapper._parsed = (new_value, new_value.__class__, None)  #pylint: disable=W0212
                 new_value = wrapper
 
         if field_params and 'tag_type' in field_params and 'tag' in field_params:
