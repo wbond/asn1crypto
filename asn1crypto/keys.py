@@ -513,7 +513,7 @@ class PrivateKeyInfo(Sequence):
             params = self['private_key_algorithm']['parameters']
             return Integer(pow(
                 params['g'].native,
-                self['private_key'].native,
+                self['private_key'].parsed.native,
                 params['p'].native
             ))
 
