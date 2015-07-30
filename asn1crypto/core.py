@@ -198,44 +198,50 @@ class Asn1Value():
             ValueError - when tag_type, class_ or tag are invalid values
         """
 
-        if self.__class__ not in _SETUP_CLASSES:
-            cls = self.__class__
-            if hasattr(cls, '_setup'):
-                self._setup()
-            _SETUP_CLASSES[cls] = True
+        try:
+            if self.__class__ not in _SETUP_CLASSES:
+                cls = self.__class__
+                if hasattr(cls, '_setup'):
+                    self._setup()
+                _SETUP_CLASSES[cls] = True
 
-        if tag_type is not None:
-            if tag_type not in ('implicit', 'explicit'):
-                raise ValueError('tag_type must be one of "implicit", "explicit", not %s' % repr(tag_type))
-            self.tag_type = tag_type
+            if tag_type is not None:
+                if tag_type not in ('implicit', 'explicit'):
+                    raise ValueError('tag_type must be one of "implicit", "explicit", not %s' % repr(tag_type))
+                self.tag_type = tag_type
 
-            if class_ is None:
-                class_ = 'context'
-            if class_ not in CLASS_NAME_TO_NUM_MAP:
-                raise ValueError('class_ must be one of "universal", "application", "context", "private", not %s' % repr(class_))
-            class_ = CLASS_NAME_TO_NUM_MAP[class_]
-
-            if tag is not None:
-                if not isinstance(tag, int_types):
-                    raise ValueError('tag must be an integer, not %s' % tag.__class__.__name__)
-
-            if tag_type == 'implicit':
-                self.class_ = class_
-                self.tag = tag
-            else:
-                self.explicit_class = class_
-                self.explicit_tag = tag
-        else:
-            if class_ is not None:
-                if class_ not in CLASS_NUM_TO_NAME_MAP:
+                if class_ is None:
+                    class_ = 'context'
+                if class_ not in CLASS_NAME_TO_NUM_MAP:
                     raise ValueError('class_ must be one of "universal", "application", "context", "private", not %s' % repr(class_))
-                self.class_ = CLASS_NAME_TO_NUM_MAP[class_]
+                class_ = CLASS_NAME_TO_NUM_MAP[class_]
 
-            if tag is not None:
-                self.tag = tag
+                if tag is not None:
+                    if not isinstance(tag, int_types):
+                        raise ValueError('tag must be an integer, not %s' % tag.__class__.__name__)
 
-        if default is not None:
-            self.set(default)
+                if tag_type == 'implicit':
+                    self.class_ = class_
+                    self.tag = tag
+                else:
+                    self.explicit_class = class_
+                    self.explicit_tag = tag
+            else:
+                if class_ is not None:
+                    if class_ not in CLASS_NUM_TO_NAME_MAP:
+                        raise ValueError('class_ must be one of "universal", "application", "context", "private", not %s' % repr(class_))
+                    self.class_ = CLASS_NAME_TO_NUM_MAP[class_]
+
+                if tag is not None:
+                    self.tag = tag
+
+            if default is not None:
+                self.set(default)
+
+        except (ValueError) as e:
+            args = e.args[1:]
+            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            raise e
 
     def __str__(self):
         """
@@ -566,23 +572,30 @@ class Choice(Asn1Value):
             ValueError - when tag_type is "implicit"
         """
 
-        if tag_type == 'implicit':
-            raise ValueError('The Choice type can not be implicitly tagged even if in an implicit module - due to its nature any tagging must be explicit')
         kwargs['tag_type'] = tag_type
         Asn1Value.__init__(self, **kwargs)
 
-        if name is not None:
-            if name not in self._name_map:
-                raise ValueError('The name specified, "%s", is not a valid alternative for %s' % (name, self.__class__.__name__))
+        try:
+            if tag_type == 'implicit':
+                raise ValueError('The Choice type can not be implicitly tagged even if in an implicit module - due to its nature any tagging must be explicit')
 
-            self._choice = self._name_map[name]
-            info = self._alternatives[self._choice]
-            spec = info[1]
-            params = {} if len(info) < 3 else info[2]
+            if name is not None:
+                if name not in self._name_map:
+                    raise ValueError('The name specified, "%s", is not a valid alternative for %s' % (name, self.__class__.__name__))
 
-            if not isinstance(value, spec):
-                value = spec(value, **params)
-            self._parsed = value
+                self._choice = self._name_map[name]
+                info = self._alternatives[self._choice]
+                spec = info[1]
+                params = {} if len(info) < 3 else info[2]
+
+                if not isinstance(value, spec):
+                    value = spec(value, **params)
+                self._parsed = value
+
+        except (ValueError) as e:
+            args = e.args[1:]
+            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            raise e
 
     @property
     def name(self):
@@ -736,11 +749,16 @@ class Primitive(Asn1Value):
 
         Asn1Value.__init__(self, **kwargs)
 
-        if value is not None:
-            self.set(value)
+        try:
+            if value is not None:
+                self.set(value)
 
-        elif default is not None:
-            self.set(default)
+            elif default is not None:
+                self.set(default)
+        except (ValueError) as e:
+            args = e.args[1:]
+            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            raise e
 
     def set(self, value):
         """
@@ -1760,16 +1778,21 @@ class Sequence(Asn1Value):
             value = default
 
         if value is not None:
-            # Fields are iterated in definition order to allow things like
-            # OID-based specs. Otherwise sometimes the value would be processed
-            # before the OID field, resulting in invalid value object creation.
-            if self._fields:
-                keys = [info[0] for info in self._fields]
-            else:
-                keys = value.keys()
-            for key in keys:
-                if key in value:
-                    self.__setitem__(key, value[key])
+            try:
+                # Fields are iterated in definition order to allow things like
+                # OID-based specs. Otherwise sometimes the value would be processed
+                # before the OID field, resulting in invalid value object creation.
+                if self._fields:
+                    keys = [info[0] for info in self._fields]
+                else:
+                    keys = value.keys()
+                for key in keys:
+                    if key in value:
+                        self.__setitem__(key, value[key])
+            except (ValueError) as e:
+                args = e.args[1:]
+                e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+                raise e
 
     def _lazy_child(self, index):
         """
@@ -2317,12 +2340,17 @@ class SequenceOf(Asn1Value):
 
         Asn1Value.__init__(self, **kwargs)
 
-        if value is None and default is not None:
-            value = default
+        try:
+            if value is None and default is not None:
+                value = default
 
-        if value is not None:
-            for index, child in enumerate(value):
-                self.__setitem__(index, child)
+            if value is not None:
+                for index, child in enumerate(value):
+                    self.__setitem__(index, child)
+        except (ValueError) as e:
+            args = e.args[1:]
+            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            raise e
 
     def _lazy_child(self, index):
         """
