@@ -1192,6 +1192,34 @@ class OctetBitString(Primitive):
 
     _parsed = None
 
+    def __init__(self, value=None, default=None, parsed=None, **kwargs):
+        """
+        Allows providing a parsed object that will be serialized to get the
+        byte string value
+
+        :param value:
+            A native Python datatype to initialize the object value with
+
+        :param default:
+            The default value if no value is specified
+
+        :param parsed:
+            If value is None and this is an Asn1Value object, this will be
+            set as the parsed value, and the value will be obtained by calling
+            .dump() on this object.
+        """
+
+        set_parsed = False
+        if value is None and parsed is not None and isinstance(parsed, Asn1Value):
+            value = parsed.dump()
+            set_parsed = True
+
+        Primitive.__init__(self, value=value, default=default, **kwargs)
+
+        if set_parsed:
+            self._parsed = (parsed, parsed.__class__, None)
+            self._native = parsed.native
+
     def set(self, value):
         """
         Sets the value of the object
@@ -1363,6 +1391,34 @@ class OctetString(Primitive):
     tag = 4
 
     _parsed = None
+
+    def __init__(self, value=None, default=None, parsed=None, **kwargs):
+        """
+        Allows providing a parsed object that will be serialized to get the
+        byte string value
+
+        :param value:
+            A native Python datatype to initialize the object value with
+
+        :param default:
+            The default value if no value is specified
+
+        :param parsed:
+            If value is None and this is an Asn1Value object, this will be
+            set as the parsed value, and the value will be obtained by calling
+            .dump() on this object.
+        """
+
+        set_parsed = False
+        if value is None and parsed is not None and isinstance(parsed, Asn1Value):
+            value = parsed.dump()
+            set_parsed = True
+
+        Primitive.__init__(self, value=value, default=default, **kwargs)
+
+        if set_parsed:
+            self._parsed = (parsed, parsed.__class__, None)
+            self._native = parsed.native
 
     def parse(self, spec=None, spec_params=None):
         """
