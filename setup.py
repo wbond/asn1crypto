@@ -22,6 +22,13 @@ class CleanCommand(Command):
             full_path = os.path.join(folder, sub_folder)
             if os.path.exists(full_path):
                 shutil.rmtree(full_path)
+        for root, dirnames, filenames in os.walk(os.path.join(folder, 'asn1crypto')):
+            for filename in filenames:
+                if filename[-4:] == '.pyc':
+                    os.unlink(os.path.join(root, filename))
+            for dirname in list(dirnames):
+                if dirname == '__pycache__':
+                    shutil.rmtree(os.path.join(root, dirname))
 
 
 setup(
