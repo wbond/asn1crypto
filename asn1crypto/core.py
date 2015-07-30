@@ -655,7 +655,7 @@ class Choice(Asn1Value):
             The integer class_ from the encoded value header
 
         :param tag:
-            The interger tag from the encoded value header
+            The integer tag from the encoded value header
 
         :raises:
             ValueError - when value is not a valid alternative
