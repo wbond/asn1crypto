@@ -5,7 +5,7 @@ cffi interface for BN_mod_inverse() function from OpenSSL. Exports the
 following items:
 
  - libcrypto
-    - BN_bin2bin()
+    - BN_bn2bin()
     - BN_CTX_free()
     - BN_CTX_new()
     - BN_free()
