@@ -36,7 +36,7 @@ Python 2.7, 3.3, 3.4, pypy or pypy3. *No third-party packages required.*
 ## Installation
 
 ```bash
-pip install asn1crypto
+pip install git+git://github.com/wbond/asn1crypto.git@0.9.0
 ```
 
 ## Documentation
