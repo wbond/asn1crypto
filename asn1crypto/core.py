@@ -50,11 +50,11 @@ import math
 import sys
 import re
 from collections import OrderedDict
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime
 from pprint import pprint
 
 from . import _teletex_codec
-from .util import int_to_bytes, int_from_bytes
+from .util import int_to_bytes, int_from_bytes, timezone
 
 # Python 2
 if sys.version_info <= (3,):
@@ -64,21 +64,7 @@ if sys.version_info <= (3,):
     py2 = True
     chr_cls = chr
     range = xrange  #pylint: disable=E0602,W0622
-
-    class utc(tzinfo):
-
-        def tzname(self, _):
-            return 'UTC+00:00'
-
-        def utcoffset(self, _):
-            return timedelta(0)
-
-        def dst(self, _):
-            return None
-
-    class timezone():
-
-        utc = utc()
+    from datetime import timedelta
 
 # Python 3
 else:
@@ -89,8 +75,6 @@ else:
 
     def chr_cls(num):
         return bytes([num])
-
-    from datetime import timezone
 
 
 

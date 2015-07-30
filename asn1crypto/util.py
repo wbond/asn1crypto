@@ -1,11 +1,12 @@
 # coding: utf-8
 
 """
-Functions for converting integers to and from bytes. Exports the following
-items:
+Miscellaneous data helpers, including functions for converting integers to and
+from bytes and UTC timezone. Exports the following items:
 
  - int_from_bytes()
  - int_to_bytes()
+ - timezone.utc
 """
 
 from __future__ import unicode_literals, division, absolute_import, print_function
@@ -17,6 +18,9 @@ import math
 
 # Python 2
 if sys.version_info <= (3,):
+
+    from datetime import timedelta, tzinfo
+
 
     def int_to_bytes(value, signed=False, width=None):
         """
@@ -89,8 +93,29 @@ if sys.version_info <= (3,):
 
         return num
 
+
+    class utc(tzinfo):
+
+        def tzname(self, _):
+            return 'UTC+00:00'
+
+        def utcoffset(self, _):
+            return timedelta(0)
+
+        def dst(self, _):
+            return None
+
+
+    class timezone():
+
+        utc = utc()
+
+
 # Python 3
 else:
+
+    from datetime import timezone  #pylint: disable=W0611
+
 
     def int_to_bytes(value, signed=False, width=None):
         """

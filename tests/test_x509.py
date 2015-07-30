@@ -7,7 +7,7 @@ import os
 from collections import OrderedDict
 from datetime import datetime
 
-from asn1crypto import x509, core, pem
+from asn1crypto import x509, core, pem, util
 
 from .unittest_data import DataDecorator, data
 
@@ -1340,11 +1340,11 @@ class X509Tests(unittest.TestCase):
             issuer.native
         )
         self.assertEqual(
-            datetime(2015, 5, 6, 14, 37, 16, tzinfo=core.timezone.utc),
+            datetime(2015, 5, 6, 14, 37, 16, tzinfo=util.timezone.utc),
             validity['not_before'].native
         )
         self.assertEqual(
-            datetime(2025, 5, 3, 14, 37, 16, tzinfo=core.timezone.utc),
+            datetime(2025, 5, 3, 14, 37, 16, tzinfo=util.timezone.utc),
             validity['not_after'].native
         )
         self.assertEqual(
@@ -1487,11 +1487,11 @@ class X509Tests(unittest.TestCase):
             issuer.native
         )
         self.assertEqual(
-            datetime(2015, 5, 20, 13, 9, 2, tzinfo=core.timezone.utc),
+            datetime(2015, 5, 20, 13, 9, 2, tzinfo=util.timezone.utc),
             validity['not_before'].native
         )
         self.assertEqual(
-            datetime(2025, 5, 17, 13, 9, 2, tzinfo=core.timezone.utc),
+            datetime(2025, 5, 17, 13, 9, 2, tzinfo=util.timezone.utc),
             validity['not_after'].native
         )
         self.assertEqual(
@@ -1624,11 +1624,11 @@ class X509Tests(unittest.TestCase):
             issuer.native
         )
         self.assertEqual(
-            datetime(2015, 5, 20, 12, 56, 46, tzinfo=core.timezone.utc),
+            datetime(2015, 5, 20, 12, 56, 46, tzinfo=util.timezone.utc),
             validity['not_before'].native
         )
         self.assertEqual(
-            datetime(2025, 5, 17, 12, 56, 46, tzinfo=core.timezone.utc),
+            datetime(2025, 5, 17, 12, 56, 46, tzinfo=util.timezone.utc),
             validity['not_after'].native
         )
         self.assertEqual(

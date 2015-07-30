@@ -366,7 +366,7 @@ or a `datetime.datetime` instance. See the
 for details of the formats.
 
 When `.native` is accessed, it returns a `datetime.datetime` object with a
-`tzinfo` of `asn1crypto.core.timezone.utc`.
+`tzinfo` of `asn1crypto.util.timezone.utc`.
 
 ## GeneralizedTime
 
@@ -390,7 +390,7 @@ or a `datetime.datetime` instance. See the
 for details of the formats.
 
 When `.native` is accessed, it returns a `datetime.datetime` object with a
-`tzinfo` of `asn1crypto.core.timezone.utc`. For formats where the time has a
+`tzinfo` of `asn1crypto.util.timezone.utc`. For formats where the time has a
 timezone offset is specified (`[+-]\d{4}`), the time is converted to UTC. For
 times without a timezone, the time is assumed to be in UTC.
 

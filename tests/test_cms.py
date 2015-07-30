@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-from asn1crypto import cms, core
+from asn1crypto import cms, core, util
 
 
 tests_root = os.path.dirname(__file__)
@@ -315,7 +315,7 @@ class CMSTests(unittest.TestCase):
             signed_attrs[1]['type'].native
         )
         self.assertEqual(
-            datetime(2015, 5, 30, 13, 12, 38, tzinfo=core.timezone.utc),
+            datetime(2015, 5, 30, 13, 12, 38, tzinfo=util.timezone.utc),
             signed_attrs[1]['values'][0].native
         )
         self.assertEqual(
@@ -441,7 +441,7 @@ class CMSTests(unittest.TestCase):
             signed_attrs[1]['type'].native
         )
         self.assertEqual(
-            datetime(2015, 6, 3, 5, 55, 12, tzinfo=core.timezone.utc),
+            datetime(2015, 6, 3, 5, 55, 12, tzinfo=util.timezone.utc),
             signed_attrs[1]['values'][0].native
         )
         self.assertEqual(

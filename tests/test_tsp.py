@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-from asn1crypto import tsp, cms, core
+from asn1crypto import tsp, cms, core, util
 
 
 tests_root = os.path.dirname(__file__)
@@ -115,7 +115,7 @@ class TSPTests(unittest.TestCase):
             tst_info['serial_number'].native
         )
         self.assertEqual(
-            datetime(2015, 6, 1, 18, 39, 55, tzinfo=core.timezone.utc),
+            datetime(2015, 6, 1, 18, 39, 55, tzinfo=util.timezone.utc),
             tst_info['gen_time'].native
         )
         self.assertEqual(
@@ -207,7 +207,7 @@ class TSPTests(unittest.TestCase):
             signed_attrs[1]['type'].native
         )
         self.assertEqual(
-            datetime(2015, 6, 1, 18, 39, 55, tzinfo=core.timezone.utc),
+            datetime(2015, 6, 1, 18, 39, 55, tzinfo=util.timezone.utc),
             signed_attrs[1]['values'][0].native
         )
         self.assertEqual(

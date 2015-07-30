@@ -6,7 +6,7 @@ import sys
 import os
 from datetime import datetime
 
-from asn1crypto import ocsp, core
+from asn1crypto import ocsp, core, util
 
 if sys.version_info < (3,):
     byte_cls = str
@@ -100,7 +100,7 @@ class OCSPTests(unittest.TestCase):
             responder_id.name
         )
         self.assertEqual(
-            datetime(2015, 5, 22, 16, 24, 8, tzinfo=core.timezone.utc),
+            datetime(2015, 5, 22, 16, 24, 8, tzinfo=util.timezone.utc),
             tbs_response_data['produced_at'].native
         )
         self.assertEqual(
@@ -124,11 +124,11 @@ class OCSPTests(unittest.TestCase):
             cert_id['serial_number'].native
         )
         self.assertEqual(
-            datetime(2015, 5, 22, 16, 24, 8, tzinfo=core.timezone.utc),
+            datetime(2015, 5, 22, 16, 24, 8, tzinfo=util.timezone.utc),
             single_response['this_update'].native
         )
         self.assertEqual(
-            datetime(2015, 5, 29, 16, 24, 8, tzinfo=core.timezone.utc),
+            datetime(2015, 5, 29, 16, 24, 8, tzinfo=util.timezone.utc),
             single_response['next_update'].native
         )
         self.assertEqual(
