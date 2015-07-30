@@ -22,9 +22,8 @@ are all PrimePoint() objects.
 
 Some of the following source code is derived from
 http://webpages.charter.net/curryfans/peter/downloads.html, but has been heavily
-modified to fit into this projects lint settings, and to support loading and
-serializing to/from ECPrimePoint format. The original project license is listed
-below:
+modified to fit into this projects lint settings. The original project license
+is listed below:
 
 Copyright (c) 2014 Peter Pearson
 
@@ -50,10 +49,8 @@ THE SOFTWARE.
 from __future__ import unicode_literals, division, absolute_import, print_function
 
 import sys
-import math
 
 from ._int import inverse_mod
-from .int import int_to_bytes, int_from_bytes
 
 if sys.version_info < (3,):
     byte_cls = str
@@ -107,38 +104,6 @@ class PrimePoint():
     """
     A point on a prime-field elliptic curve
     """
-
-    @classmethod
-    def load(cls, curve, data):
-        """
-        Loads a Point from the ECPoint OctetString representation
-
-        :param curve:
-            A PrimeCurve object of the curve the point is on
-
-        :param data:
-            A byte string of the ECPoint representation of the point. This
-            representation uses the first byte as a compression indicator, and
-            then lists the X and Y as base256 byte string integers
-
-        :return:
-            A PrimePoint object
-        """
-
-        first_byte = data[0:1]
-
-        # Uncompressed
-        if first_byte == b'\x04':
-            remaining = data[1:]
-            field_len = len(remaining) // 2
-            x = int_from_bytes(remaining[0:field_len])
-            y = int_from_bytes(remaining[field_len:])
-            return cls(curve, x, y)
-
-        if first_byte not in (b'\x02', b'\x03'):
-            raise ValueError('Invalid ECPoint representation of a point - first byte is incorrect')
-
-        raise ValueError('Compressed ECPoint representations are not supported due to patent US6252960')
 
     def __init__(self, curve, x, y, order=None):
         """
@@ -282,27 +247,6 @@ class PrimePoint():
         y3 = (l * (self.x - x3) - self.y) % p
 
         return PrimePoint(self.curve, x3, y3)
-
-    def dump(self):
-        """
-        Dumps a PrimePoint to the ECPoint OctetString representation
-
-        :return:
-            A byte string of the ECPoint representation
-        """
-
-        field_len = int(math.ceil(math.log(self.curve.p, 2) / 8))
-
-        xb = int_to_bytes(self.x)
-        yb = int_to_bytes(self.y)
-
-        # Make sure the fields are full width, according to the spec
-        while len(xb) < field_len:
-            xb = b'\x00' + xb
-        while len(yb) < field_len:
-            yb = b'\x00' + yb
-
-        return b'\x04' + xb + yb
 
 
 # This one point is the Point At Infinity for all purposes:

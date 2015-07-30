@@ -117,7 +117,7 @@ else:
             except (OverflowError):
                 return value.to_bytes(width_ + 1, byteorder='big', signed=signed)
         else:
-            return value.to_bytes(width_, byteorder='big', signed=signed)
+            return value.to_bytes(width, byteorder='big', signed=signed)
 
     def int_from_bytes(value, signed=False):
         """

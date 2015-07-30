@@ -43,7 +43,7 @@ from ._elliptic_curve import (
     PrimeCurve,
     PrimePoint,
 )
-from .int import int_from_bytes
+from .int import int_from_bytes, int_to_bytes
 
 try:
     # Python 2
@@ -137,6 +137,77 @@ class DSAPrivateKey(Sequence):
         ('public_key', Integer),
         ('private_key', Integer),
     ]
+
+
+class _ECPoint():
+    """
+    In both PublicKeyInfo and PrivateKeyInfo, the EC public key is a byte
+    string that is encoded as a bit string. This class adds convenience
+    methods for converting to and from the byte string to a pair of integers
+    that are the X and Y coordinates.
+    """
+
+    @classmethod
+    def from_coords(cls, x, y):
+        """
+        Creates an ECPoint object from the X and Y integer coordinates of the
+        point
+
+        :param x:
+            The X coordinate, as an integer
+
+        :param y:
+            The Y coordinate, as an integer
+
+        :return:
+            An ECPoint object
+        """
+
+        x_bytes = int(math.ceil(math.log(x, 2) / 8.0))
+        y_bytes = int(math.ceil(math.log(y, 2) / 8.0))
+
+        num_bytes = max(x_bytes, y_bytes)
+
+        byte_string = b'\x04'
+        byte_string += int_to_bytes(x, width=num_bytes)
+        byte_string += int_to_bytes(y, width=num_bytes)
+
+        return cls(byte_string)
+
+    def to_coords(self):
+        """
+        Returns the X and Y coordinates for this EC point, as native Python
+        integers
+
+        :return:
+            A 2-element tuple containing integers (X, Y)
+        """
+
+        data = self.native
+        first_byte = data[0:1]
+
+        # Uncompressed
+        if first_byte == b'\x04':
+            remaining = data[1:]
+            field_len = len(remaining) // 2
+            x = int_from_bytes(remaining[0:field_len])
+            y = int_from_bytes(remaining[field_len:])
+            return (x, y)
+
+        if first_byte not in {b'\x02', b'\x03'}:
+            raise ValueError('Invalid EC public key - first byte is incorrect')
+
+        raise ValueError('Compressed representations of EC public keys are not supported due to patent US6252960')
+
+
+class ECPoint(OctetString, _ECPoint):
+
+    pass
+
+
+class ECPointBitString(OctetBitString, _ECPoint):
+
+    pass
 
 
 class SpecifiedECDomainVersion(Integer):
@@ -245,7 +316,7 @@ class SpecifiedECDomain(Sequence):
         ('version', SpecifiedECDomainVersion),
         ('field_id', FieldID),
         ('curve', Curve),
-        ('base', OctetString),
+        ('base', ECPoint),
         ('order', Integer),
         ('cofactor', Integer, {'optional': True}),
         ('hash', DigestAlgorithm, {'optional': True}),
@@ -339,7 +410,7 @@ class ECPrivateKey(Sequence):
         ('version', ECPrivateKeyVersion),
         ('private_key', IntegerOctetString),
         ('parameters', ECDomainParameters, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('public_key', OctetBitString, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
+        ('public_key', ECPointBitString, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
     ]
 
 
@@ -506,7 +577,7 @@ class PrivateKeyInfo(Sequence):
 
         :return:
             For RSA keys, an RSAPublicKey object. For DSA keys, an Integer
-            object. For EC keys, an OctetString.
+            object. For EC keys, an ECPointBitString.
         """
 
         if self.algorithm == 'dsa':
@@ -539,7 +610,8 @@ class PrivateKeyInfo(Sequence):
                     int_from_bytes(details['curve']['a']),
                     int_from_bytes(details['curve']['b'])
                 )
-                base_point = PrimePoint.load(curve, details['base'])
+                base_x, base_y = self['private_key_algorithm']['parameters'].chosen['base'].to_coords()
+                base_point = PrimePoint(curve, base_x, base_y)
 
             elif curve_type == 'named':
                 if details not in ('secp192r1', 'secp224r1', 'secp256r1', 'secp384r1', 'secp521r1'):
@@ -554,7 +626,7 @@ class PrivateKeyInfo(Sequence):
                 }[details]
 
             public_point = base_point * self['private_key'].parsed['private_key'].native
-            return OctetString(public_point.dump())
+            return ECPointBitString.from_coords(public_point.x, public_point.y)
 
     def unwrap(self):
         """
@@ -582,7 +654,7 @@ class PrivateKeyInfo(Sequence):
         if self.algorithm == 'ec':
             output = self['private_key'].parsed
             output['parameters'] = self['private_key_algorithm']['parameters']
-            output['public_key'] = OctetBitString(self.public_key.native)
+            output['public_key'] = self.public_key
             return output
 
     @property
@@ -676,14 +748,14 @@ class PrivateKeyInfo(Sequence):
         """
         :return:
             If an RSA key, an RSAPublicKey object. If a DSA key, an Integer
-            object. If an EC key, an OctetString object.
+            object. If an EC key, an ECPointBitString object.
         """
 
         if self._public_key is None:
             if self.algorithm == 'ec':
                 key = self['private_key'].parsed
                 if key['public_key']:
-                    self._public_key = OctetString(key['public_key'].native)
+                    self._public_key = key['public_key'].untag()
                 else:
                     self._public_key = self._compute_public_key()
             else:
@@ -816,9 +888,9 @@ class PublicKeyInfo(Sequence):
         return {
             'rsa': RSAPublicKey,
             'dsa': Integer,
-            # ECSDA's public key is an ECPoint, which is an OctetString. Since
-            # we are using OctetBitString here, we don't need further parsing.
-            'ec': None,
+            # We override the field spec with ECPoint so that users can easily
+            # decompose the byte string into the constituent X and Y coords
+            'ec': (ECPointBitString, None),
         }[algorithm]
 
     _spec_callbacks = {
