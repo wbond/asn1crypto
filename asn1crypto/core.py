@@ -52,6 +52,7 @@ import re
 from collections import OrderedDict
 from datetime import datetime
 from pprint import pprint
+import binascii
 
 from . import _teletex_codec
 from .util import int_to_bytes, int_from_bytes, timezone
@@ -110,6 +111,29 @@ METHOD_NUM_TO_NAME_MAP = {
 # definitions for child classes. Without such a construct, the child classes
 # would just see the parent class attributes and would use them.
 _SETUP_CLASSES = {}
+
+
+def _basic_debug(prefix, self):
+    print('%s%s Object #%s' % (prefix, self.__class__.__name__, id(self)))
+    if self.header:
+        print('%s  Header: 0x%s' % (prefix, binascii.hexlify(self.header or b'').decode('utf-8')))
+
+    has_header = self.method is not None and self.class_ is not None and self.tag is not None
+    if has_header:
+        method_name = METHOD_NUM_TO_NAME_MAP.get(self.method)
+        class_name = CLASS_NUM_TO_NAME_MAP.get(self.class_)
+
+    if self.tag_type == 'explicit':
+        print('%s    %s tag %s (explicitly tagged)' % (prefix, CLASS_NUM_TO_NAME_MAP.get(self.explicit_class), self.explicit_tag))
+        if has_header:
+            print('%s      %s %s %s' % (prefix, method_name, class_name, self.tag))
+    elif self.tag_type == 'implicit':
+        if has_header:
+            print('%s    %s %s tag %s (implicitly tagged)' % (prefix, method_name, class_name, self.tag))
+    elif has_header:
+        print('%s    %s %s tag %s' % (prefix, method_name, class_name, self.tag))
+
+    print('%s  Data: 0x%s' % (prefix, binascii.hexlify(self.contents or b'').decode('utf-8')))
 
 
 class Asn1Value():
@@ -262,7 +286,8 @@ class Asn1Value():
         :return:
             A unicode string
         """
-        return '<%s %s>' % (self.__class__.__name__, repr(self.contents))
+
+        return '<%s %s %s>' % (self.__class__.__name__, id(self), repr(self.contents or b''))
 
     def retag(self, tag_type, tag):
         """
@@ -310,6 +335,20 @@ class Asn1Value():
         self._native = other._native
         if hasattr(other, '_parsed'):
             self._parsed = other._parsed
+
+    def debug(self, nest_level=1):
+        """
+        Show the binary data and parsed data in a tree structure
+        """
+
+        prefix = '  ' * nest_level
+        _basic_debug(prefix, self)
+        if hasattr(self, 'parsed'):
+            self.parsed.debug(nest_level + 2)
+        elif hasattr(self, 'chosen'):
+            self.chosen.debug(nest_level + 2)
+        else:
+            print('%s    Native: %s' % (prefix, self.native))
 
     def dump(self, force=False):
         """
@@ -2360,6 +2399,19 @@ class Sequence(Asn1Value):
         self._native = other._native
         self.children = other.children
 
+    def debug(self, nest_level=1):
+        """
+        Show the binary data and parsed data in a tree structure
+        """
+
+        prefix = '  ' * nest_level
+        _basic_debug(prefix, self)
+        for field_name in self:
+            child = self._lazy_child(self._field_map[field_name])
+            if not isinstance(child, NoValue):
+                print('%s    Field "%s"' % (prefix, field_name))
+                child.debug(nest_level + 3)
+
     def dump(self, force=False):
         """
         Encodes the value using DER
@@ -2686,6 +2738,16 @@ class SequenceOf(Asn1Value):
         self.contents = other.contents
         self._native = other._native
         self.children = other.children
+
+    def debug(self, nest_level=1):
+        """
+        Show the binary data and parsed data in a tree structure
+        """
+
+        prefix = '  ' * nest_level
+        _basic_debug(prefix, self)
+        for child in self:
+            child.debug(nest_level + 1)
 
     def dump(self, force=False):
         """
