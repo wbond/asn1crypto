@@ -3406,12 +3406,18 @@ def _parse(encoded_data, pointer=0):
     if len(encoded_data) == 0:
         return ((None, None, None, None, None, None), 0)
 
+    encoded_length = len(encoded_data)
+    def _slice(start, end):
+        if end > encoded_length:
+            raise ValueError('Insufficient data - %s bytes requested but only %s available' % (end, encoded_length))
+        return encoded_data[start:end]
+
     start = pointer
 
     class_, method, tag, num_bytes = _parse_id(encoded_data, pointer)
     pointer += num_bytes
 
-    length_octet = ord(encoded_data[pointer:pointer+1])
+    length_octet = ord(_slice(pointer, pointer+1))
     pointer += 1
     length_type = length_octet >> 7
     if length_type == 1:
@@ -3419,22 +3425,22 @@ def _parse(encoded_data, pointer=0):
         remaining_length_octets = length_octet & 127
         while remaining_length_octets > 0:
             length *= 256
-            length += ord(encoded_data[pointer:pointer+1])
+            length += ord(_slice(pointer, pointer+1))
             pointer += 1
             remaining_length_octets -= 1
     else:
         length = length_octet & 127
 
-    header = encoded_data[start:pointer]
+    header = _slice(start, pointer)
 
     # Indefinite length
     if length_type == 1 and length == 0:
         end_token = encoded_data.find(b'\x00\x00', pointer)
-        contents = encoded_data[pointer:end_token]
+        contents = _slice(pointer, end_token)
         pointer = end_token + 2
         trailer = b'\x00\x00'
     else:
-        contents = encoded_data[pointer:pointer+length]
+        contents = _slice(pointer, pointer+length)
         pointer += length
         trailer = b''
 
