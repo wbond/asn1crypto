@@ -8,6 +8,26 @@ universal type classes.
 For a general overview of ASN.1 as used in cryptography, please see
 [A Layman's Guide to a Subset of ASN.1, BER, and DER](http://luca.ntop.org/Teaching/Appunti/asn1.html).
 
+This page contains the following sections:
+
+ - [Universal Types](#universal-types)
+ - [Basic Usage](#basic-usage)
+ - [Sequence](#sequence)
+ - [Set](#set)
+ - [SequenceOf](#sequenceof)
+ - [SetOf](#setof)
+ - [Integer](#integer)
+ - [Enumerated](#enumerated)
+ - [ObjectIdentifier](#objectidentifier)
+ - [BitString](#bitstring)
+ - [Strings](#strings)
+ - [UTCTime](#utctime)
+ - [GeneralizedTime](#generalizedtime)
+ - [Choice](#choice)
+ - [Any](#any)
+ - [Specification via OID](#specification-via-oid)
+ - [Explicit and Implicit Tagging](#explicit-and-implicit-tagging)
+
 ## Universal Types
 
 For general purpose ASN.1 parsing, the `asn1crypto.core` module is used. It
