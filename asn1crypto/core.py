@@ -2070,6 +2070,9 @@ class Sequence(Asn1Value):
                 # the override, for situations such as OctetString and parse_as
                 if isinstance(spec_override, tuple) and len(spec_override) == 2:
                     field_spec, value_spec = spec_override  #pylint: disable=W0633
+                    if value_spec is None:
+                        value_spec = field_spec
+                        spec_override = None
                 else:
                     value_spec = spec_override
 
