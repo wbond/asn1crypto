@@ -870,7 +870,7 @@ class EDIPartyName(Sequence):
 
 
 class IPAddress(OctetString):
-    def parse(self, spec=None, spec_params=None):
+    def parse(self, spec=None, spec_params=None):  #pylint: disable=W0613
         """
         This method is not applicable to IP addresses
         """

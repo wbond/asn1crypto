@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-from asn1crypto import tsp, cms, core, util
+from asn1crypto import tsp, cms, util
 
 
 tests_root = os.path.dirname(__file__)

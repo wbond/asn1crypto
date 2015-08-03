@@ -6,7 +6,7 @@ import sys
 import os
 from datetime import datetime
 
-from asn1crypto import ocsp, core, util
+from asn1crypto import ocsp, util
 
 if sys.version_info < (3,):
     byte_cls = str
