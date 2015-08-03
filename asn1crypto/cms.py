@@ -40,6 +40,7 @@ from .core import (
     ObjectIdentifier,
     OctetBitString,
     OctetString,
+    ParsableOctetString,
     Sequence,
     SequenceOf,
     SetOf,
@@ -290,7 +291,7 @@ class ContentInfo(Sequence):
 class EncapsulatedContentInfo(Sequence):
     _fields = [
         ('content_type', ContentType),
-        ('content', OctetString, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+        ('content', ParsableOctetString, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
     ]
 
     _oid_pair = ('content_type', 'content')

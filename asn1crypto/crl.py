@@ -19,7 +19,7 @@ from .core import (
     Integer,
     ObjectIdentifier,
     OctetBitString,
-    OctetString,
+    ParsableOctetString,
     Sequence,
     SequenceOf,
 )
@@ -74,7 +74,7 @@ class TBSCertListExtension(Sequence):
     _fields = [
         ('extn_id', TBSCertListExtensionId),
         ('critical', Boolean, {'default': False}),
-        ('extn_value', OctetString),
+        ('extn_value', ParsableOctetString),
     ]
 
     _oid_pair = ('extn_id', 'extn_value')
@@ -144,7 +144,7 @@ class CRLEntryExtension(Sequence):
     _fields = [
         ('extn_id', CRLEntryExtensionId),
         ('critical', Boolean, {'default': False}),
-        ('extn_value', OctetString),
+        ('extn_value', ParsableOctetString),
     ]
 
     _oid_pair = ('extn_id', 'extn_value')

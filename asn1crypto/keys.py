@@ -30,6 +30,8 @@ from .core import (
     ObjectIdentifier,
     OctetBitString,
     OctetString,
+    ParsableOctetString,
+    ParsableOctetBitString,
     Sequence,
     SequenceOf,
     SetOf,
@@ -494,7 +496,7 @@ class PrivateKeyInfo(Sequence):
     _fields = [
         ('version', Integer),
         ('private_key_algorithm', PrivateKeyAlgorithm),
-        ('private_key', OctetString),
+        ('private_key', ParsableOctetString),
         ('attributes', Attributes, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
     ]
 
@@ -562,7 +564,7 @@ class PrivateKeyInfo(Sequence):
         container._algorithm = algorithm  #pylint: disable=W0212
         container['version'] = Integer(0)
         container['private_key_algorithm'] = private_key_algo
-        container['private_key'] = OctetString(private_key.untag().dump())
+        container['private_key'] = private_key
 
         # Here we save the DSA public key if possible since it is not contained
         # within the PKCS#8 structure for a DSA key
@@ -880,7 +882,7 @@ class PublicKeyInfo(Sequence):
 
     _fields = [
         ('algorithm', PublicKeyAlgorithm),
-        ('public_key', OctetBitString),
+        ('public_key', ParsableOctetBitString),
     ]
 
     def _public_key_spec(self):
@@ -932,7 +934,7 @@ class PublicKeyInfo(Sequence):
         container['algorithm'] = algo
         if isinstance(public_key, Asn1Value):
             public_key = public_key.untag().dump()
-        container['public_key'] = OctetBitString(public_key)
+        container['public_key'] = ParsableOctetBitString(public_key)
 
         return container
 

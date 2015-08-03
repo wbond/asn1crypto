@@ -1190,36 +1190,6 @@ class OctetBitString(Primitive):
 
     tag = 3
 
-    _parsed = None
-
-    def __init__(self, value=None, default=None, parsed=None, **kwargs):
-        """
-        Allows providing a parsed object that will be serialized to get the
-        byte string value
-
-        :param value:
-            A native Python datatype to initialize the object value with
-
-        :param default:
-            The default value if no value is specified
-
-        :param parsed:
-            If value is None and this is an Asn1Value object, this will be
-            set as the parsed value, and the value will be obtained by calling
-            .dump() on this object.
-        """
-
-        set_parsed = False
-        if value is None and parsed is not None and isinstance(parsed, Asn1Value):
-            value = parsed.dump()
-            set_parsed = True
-
-        Primitive.__init__(self, value=value, default=default, **kwargs)
-
-        if set_parsed:
-            self._parsed = (parsed, parsed.__class__, None)
-            self._native = parsed.native
-
     def set(self, value):
         """
         Sets the value of the object
@@ -1240,29 +1210,6 @@ class OctetBitString(Primitive):
         self.header = None
         if self.trailer != b'':
             self.trailer = b''
-
-    def parse(self, spec=None, spec_params=None):
-        """
-        Parses the contents generically, or using a spec with optional params
-
-        :param spec:
-            A class derived from Asn1Value that defines what class_ and tag the
-            value should have, and the semantics of the encoded value. The
-            return value will be of this type. If omitted, the encoded value
-            will be decoded using the standard universal tag based on the
-            encoded tag number.
-
-        :param spec_params:
-            A dict of params to pass to the spec object
-
-        :return:
-            An object of the type spec, or if not present, a child of Asn1Value
-        """
-
-        if self._parsed is None or self._parsed[1:3] != (spec, spec_params):
-            parsed_value, _ = _parse_build(self.__bytes__(), spec=spec, spec_params=spec_params)
-            self._parsed = (parsed_value, spec, spec_params)
-        return self._parsed[0]
 
     def __bytes__(self):
         """
@@ -1289,47 +1236,8 @@ class OctetBitString(Primitive):
             return None
 
         if self._native is None:
-            if self._parsed is not None:
-                self._native = self._parsed[0].native
-            else:
-                self._native = self.__bytes__()
+            self._native = self.__bytes__()
         return self._native
-
-    @property
-    def parsed(self):
-        """
-        Returns the parsed object from .parse()
-
-        :return:
-            The object returned by .parse()
-        """
-
-        if self._parsed is None:
-            self.parse()
-
-        return self._parsed[0]
-
-    def dump(self, force=False):
-        """
-        Encodes the value using DER
-
-        :param force:
-            If the encoded contents already exist, clear them and regenerate
-            to ensure they are in DER format instead of BER format
-
-        :return:
-            A byte string of the DER-encoded value
-        """
-
-        if force:
-            if self._parsed is not None:
-                native = self.parsed.dump(force=force)
-            else:
-                native = self.native
-            self.contents = None
-            self.set(native)
-
-        return Asn1Value.dump(self)
 
 
 class IntegerBitString(Primitive):
@@ -1387,6 +1295,80 @@ class OctetString(Primitive):
     """
     Represents a byte string in both ASN.1 and Python
     """
+
+    tag = 4
+
+    def __bytes__(self):
+        """
+        :return:
+            A byte string
+        """
+
+        return self.contents
+
+    @property
+    def native(self):
+        """
+        The a native Python datatype representation of this value
+
+        :return:
+            A byte string or None
+        """
+
+        if self.contents is None:
+            return None
+
+        if self._native is None:
+            self._native = self.__bytes__()
+        return self._native
+
+
+class IntegerOctetString(Primitive):
+    """
+    Represents a byte string in ASN.1 as a Python integer
+    """
+
+    tag = 4
+
+    def set(self, value):
+        """
+        Sets the value of the object
+
+        :param value:
+            An integer
+
+        :raises:
+            ValueError - when an invalid value is passed
+        """
+
+        if not isinstance(value, int_types):
+            raise ValueError('%s value must be an integer, not %s' % (self.__class__.__name__, value.__class__.__name__))
+
+        self._native = value
+        # Set the unused bits to 0
+        self.contents = int_to_bytes(value, signed=True)
+        self.header = None
+        if self.trailer != b'':
+            self.trailer = b''
+
+    @property
+    def native(self):
+        """
+        The a native Python datatype representation of this value
+
+        :return:
+            An integer or None
+        """
+
+        if self.contents is None:
+            return None
+
+        if self._native is None:
+            self._native = int_from_bytes(self.contents)
+        return self._native
+
+
+class ParsableOctetString(Primitive):
 
     tag = 4
 
@@ -1448,6 +1430,7 @@ class OctetString(Primitive):
         :return:
             A byte string
         """
+
         return self.contents
 
     @property
@@ -1506,47 +1489,42 @@ class OctetString(Primitive):
         return Asn1Value.dump(self)
 
 
-class IntegerOctetString(OctetString):
-    """
-    Represents a byte string in ASN.1 as a Python integer
-    """
+class ParsableOctetBitString(ParsableOctetString):
+
+    tag = 3
 
     def set(self, value):
         """
         Sets the value of the object
 
         :param value:
-            An integer
+            A byte string
 
         :raises:
             ValueError - when an invalid value is passed
         """
 
-        if not isinstance(value, int_types):
-            raise ValueError('%s value must be an integer, not %s' % (self.__class__.__name__, value.__class__.__name__))
+        if not isinstance(value, byte_cls):
+            raise ValueError('%s value must be a byte string, not %s' % (self.__class__.__name__, value.__class__.__name__))
 
         self._native = value
         # Set the unused bits to 0
-        self.contents = int_to_bytes(value, signed=True)
+        self.contents = b'\x00' + value
         self.header = None
         if self.trailer != b'':
             self.trailer = b''
 
-    @property
-    def native(self):
+    def __bytes__(self):
         """
-        The a native Python datatype representation of this value
-
         :return:
-            An integer or None
+            A byte string
         """
 
-        if self.contents is None:
-            return None
-
-        if self._native is None:
-            self._native = int_from_bytes(self.contents)
-        return self._native
+        # Whenever dealing with octet-based bit strings, we really want the
+        # bytes, so we just ignore the unused bits portion since it isn't
+        # applicable to the current use case
+        # unused_bits = struct.unpack('>B', self.contents[0:1])[0]
+        return self.contents[1:]
 
 
 class Null(Primitive):

@@ -1592,7 +1592,7 @@ class X509Tests(unittest.TestCase):
         public_key_params = subject_public_key_info['algorithm']['parameters'].chosen
         field_id = public_key_params['field_id']
         curve = public_key_params['curve']
-        subject_public_key = subject_public_key_info['public_key'].parsed
+        subject_public_key = subject_public_key_info['public_key']
         extensions = tbs_certificate['extensions']
 
         self.assertEqual(
@@ -1688,7 +1688,7 @@ class X509Tests(unittest.TestCase):
             public_key_params['hash'].native
         )
         self.assertEqual(
-            b'G\x9f\xcbs$\x1d\xc9\xdd\xd1-\xf1:\x9f\xb7\x04\xde \xd0X\x00\x93T\xf6\x89\xc7/\x87+\xf7\xf9=;4\xed\x9e{\x0e=WB\xdfx\x03\x0b\xcc1\xc6\x03\xd7\x9f`\x01',
+            b'\x04\x8b]Lq\xf7\xd6\xc6\xa3IcB\\G\x9f\xcbs$\x1d\xc9\xdd\xd1-\xf1:\x9f\xb7\x04\xde \xd0X\x00\x93T\xf6\x89\xc7/\x87+\xf7\xf9=;4\xed\x9e{\x0e=WB\xdfx\x03\x0b\xcc1\xc6\x03\xd7\x9f`\x01',
             subject_public_key.native
         )
         self.assertEqual(

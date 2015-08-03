@@ -24,6 +24,7 @@ from .core import (
     ObjectIdentifier,
     OctetBitString,
     OctetString,
+    ParsableOctetString,
     Sequence,
     SequenceOf,
 )
@@ -68,7 +69,7 @@ class RequestExtension(Sequence):
     _fields = [
         ('extn_id', RequestExtensionId),
         ('critical', Boolean, {'default': False}),
-        ('extn_value', OctetString),
+        ('extn_value', ParsableOctetString),
     ]
 
     _oid_pair = ('extn_id', 'extn_value')
@@ -175,7 +176,7 @@ class TBSRequestExtension(Sequence):
     _fields = [
         ('extn_id', TBSRequestExtensionId),
         ('critical', Boolean, {'default': False}),
-        ('extn_value', OctetString),
+        ('extn_value', ParsableOctetString),
     ]
 
     _oid_pair = ('extn_id', 'extn_value')
@@ -358,7 +359,7 @@ class SingleResponseExtension(Sequence):
     _fields = [
         ('extn_id', SingleResponseExtensionId),
         ('critical', Boolean, {'default': False}),
-        ('extn_value', OctetString),
+        ('extn_value', ParsableOctetString),
     ]
 
     _oid_pair = ('extn_id', 'extn_value')
@@ -510,7 +511,7 @@ class ResponseDataExtension(Sequence):
     _fields = [
         ('extn_id', ResponseDataExtensionId),
         ('critical', Boolean, {'default': False}),
-        ('extn_value', OctetString),
+        ('extn_value', ParsableOctetString),
     ]
 
     _oid_pair = ('extn_id', 'extn_value')
@@ -546,7 +547,7 @@ class BasicOCSPResponse(Sequence):
 class ResponseBytes(Sequence):
     _fields = [
         ('response_type', ResponseType),
-        ('response', OctetString),
+        ('response', ParsableOctetString),
     ]
 
     _oid_pair = ('response_type', 'response')

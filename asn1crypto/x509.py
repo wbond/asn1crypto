@@ -38,6 +38,7 @@ from .core import (
     ObjectIdentifier,
     OctetBitString,
     OctetString,
+    ParsableOctetString,
     PrintableString,
     Sequence,
     SequenceOf,
@@ -1286,7 +1287,7 @@ class Extension(Sequence):
     _fields = [
         ('extn_id', ExtensionId),
         ('critical', Boolean, {'default': False}),
-        ('extn_value', OctetString),
+        ('extn_value', ParsableOctetString),
     ]
 
     _oid_pair = ('extn_id', 'extn_value')

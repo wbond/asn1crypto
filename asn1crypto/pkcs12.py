@@ -21,6 +21,7 @@ from .core import (
     Integer,
     ObjectIdentifier,
     OctetString,
+    ParsableOctetString,
     Sequence,
     SequenceOf,
     SetOf,
@@ -127,7 +128,7 @@ class CertId(ObjectIdentifier):
 class CertBag(Sequence):
     _fields = [
         ('cert_id', CertId),
-        ('cert_value', OctetString, {'tag_type': 'explicit', 'tag': 0}),
+        ('cert_value', ParsableOctetString, {'tag_type': 'explicit', 'tag': 0}),
     ]
 
     _oid_pair = ('cert_id', 'cert_value')
