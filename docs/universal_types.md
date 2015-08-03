@@ -610,3 +610,24 @@ As is shown above, the keys `tag_type` and `tag` are used for tagging, and are
 passed to a type class constructor via the optional third element of a field
 or alternative tuple. The `tag_type` may be the unicode strings `'implicit'` or
 `'explicit'` and the `tag` may be any integer.
+
+If a tagging value needs its tagging changed, the `.untag()` method can be used
+to create a copy of the object without explicit/implicit tagging. The `.retag()`
+method can be used to change the tagging. This method accepts two parameters:
+a unicode string `tag_type` and an integer `tag`.
+
+```python
+person = Person(name='email', value='will@wbond.net')
+
+# Will display "implicit"
+print(person.tag_type)
+
+# Will display nothing
+print(person.untag().tag_type)
+
+# Will display 0
+print(person.tag)
+
+# Will display 1
+print(person.retag('implicit', 1).tag)
+```
