@@ -429,6 +429,29 @@ class Any(Asn1Value):
     # The parsed value object
     _parsed = None
 
+    def __init__(self, value=None, **kwargs):
+        """
+        Sets the value of the object before passing to Asn1Value.__init__()
+
+        :param value:
+            An Asn1Value object that will be set as the parsed value
+        """
+
+        Asn1Value.__init__(self, **kwargs)
+
+        try:
+            if value is not None:
+                if not isinstance(value, Asn1Value):
+                    raise ValueError('value must be an instance of Ans1Value, not %s' % value.__class__.__name__)
+
+                self._parsed = (value, value.__class__, None)
+                self.contents = value.dump()
+
+        except (ValueError) as e:
+            args = e.args[1:]
+            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            raise e
+
     @property
     def native(self):
         """
@@ -1906,8 +1929,15 @@ class Sequence(Asn1Value):
 
         new_value = self._make_value(field_name, field_spec, value_spec, field_params, value)
 
-        is_choice = isinstance(new_value, Choice)
-        if (is_choice and new_value.chosen.contents is None) or (not is_choice and new_value.contents is None):
+        invalid_value = False
+        if isinstance(new_value, Any):
+            invalid_value = new_value.parsed is None
+        elif isinstance(new_value, Choice):
+            invalid_value = new_value.chosen.contents is None
+        else:
+            invalid_value = new_value.contents is None
+
+        if invalid_value:
             raise ValueError('Value for field "%s" of %s is not set' % (field_name, self.__class__.__name__))
 
         self.children[key] = new_value
