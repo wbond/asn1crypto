@@ -2440,23 +2440,18 @@ class Sequence(Asn1Value):
             return None
 
         if self._native is None:
-            try:
-                if self.children is None:
-                    self._parse_children(recurse=True)
-                self._native = OrderedDict()
-                for index, child in enumerate(self.children):
-                    if isinstance(child, tuple):
-                        child = _build(*child)
-                        self.children[index] = child
-                    try:
-                        name = self._fields[index][0]
-                    except (IndexError):
-                        name = str_cls(index)
-                    self._native[name] = child.native
-            except (ValueError) as e:
-                args = e.args[1:]
-                e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
-                raise e
+            if self.children is None:
+                self._parse_children(recurse=True)
+            self._native = OrderedDict()
+            for index, child in enumerate(self.children):
+                if isinstance(child, tuple):
+                    child = _build(*child)
+                    self.children[index] = child
+                try:
+                    name = self._fields[index][0]
+                except (IndexError):
+                    name = str_cls(index)
+                self._native[name] = child.native
         return self._native
 
     #pylint: disable=W0212
