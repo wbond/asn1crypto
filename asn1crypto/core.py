@@ -51,7 +51,6 @@ import sys
 import re
 from collections import OrderedDict
 from datetime import datetime
-from pprint import pprint
 import binascii
 
 from . import _teletex_codec
@@ -381,13 +380,6 @@ class Asn1Value():
             self.trailer = trailer
 
         return self.header + self.contents + self.trailer
-
-    def pprint(self):
-        """
-        Pretty prints the native representation of the value
-        """
-
-        pprint(self.native)
 
 
 class ValueMap():
