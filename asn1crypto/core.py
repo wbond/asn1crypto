@@ -65,6 +65,7 @@ if sys.version_info <= (3,):
     chr_cls = chr
     range = xrange  #pylint: disable=E0602,W0622
     from datetime import timedelta
+    from cStringIO import StringIO as BytesIO  #pylint: disable=F0401
 
 # Python 3
 else:
@@ -72,6 +73,7 @@ else:
     byte_cls = bytes
     int_types = int
     py2 = False
+    from io import BytesIO
 
     def chr_cls(num):
         return bytes([num])
@@ -288,6 +290,22 @@ class Asn1Value():
 
         return '<%s %s %s>' % (self.__class__.__name__, id(self), repr(self.contents or b''))
 
+    def copy(self):
+        """
+        Copies the object, preserving any special tagging from it
+
+        :return:
+            An Asn1Value object
+        """
+
+        new_obj = self.__class__()
+        new_obj.tag_type = self.tag_type
+        new_obj.tag = self.tag
+        new_obj.explicit_class = self.explicit_class
+        new_obj.explicit_tag = self.explicit_tag
+        new_obj._copy(self)  #pylint: disable=W0212
+        return new_obj
+
     def retag(self, tag_type, tag):
         """
         Copies the object, applying a new tagging to it
@@ -361,6 +379,8 @@ class Asn1Value():
             A byte string of the DER-encoded value
         """
 
+        contents = self.contents
+
         if self._header is None:
             header = _dump_header(self.class_, self.method, self.tag, self.contents)
             trailer = b''
@@ -379,7 +399,7 @@ class Asn1Value():
             self._header = header
             self._trailer = trailer
 
-        return self._header + self.contents + self._trailer
+        return self._header + contents + self._trailer
 
 
 class ValueMap():
@@ -1520,6 +1540,22 @@ class ParsableOctetString(Primitive):
 
         return self._parsed[0]
 
+    #pylint: disable=W0212
+    def _copy(self, other):
+        """
+        Copies the contents of another ParsableOctetString object to itself
+
+        :param object:
+            Another instance of the same class
+        """
+
+        if self.__class__ != other.__class__:
+            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+
+        self.contents = other.contents
+        self._native = other._native
+        self._parsed = other._parsed
+
     def dump(self, force=False):
         """
         Encodes the value using DER
@@ -1815,6 +1851,13 @@ class Sequence(Asn1Value):
     # A list of child objects, in order of _fields
     children = None
 
+    # Sequence overrides .contents to be a property so that the mutated state
+    # of child objects can be checked to ensure everything is up-to-date
+    _contents = None
+
+    # Variable to track if the object has been mutated
+    _mutated = False
+
     # A list of tuples in one of the following forms.
     #
     # Option 1, a unicode string field name and a value class
@@ -1881,6 +1924,45 @@ class Sequence(Asn1Value):
                 args = e.args[1:]
                 e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
                 raise e
+
+    @property
+    def contents(self):
+        """
+        :return:
+            A byte string of the DER-encoded contents of the sequence
+        """
+
+        if self.children is None:
+            return self._contents
+
+        if self._is_mutated():
+            self._set_contents()
+
+        return self._contents
+
+    @contents.setter
+    def contents(self, value):
+        """
+        :param value:
+            A byte string of the DER-encoded contents of the sequence
+        """
+
+        self._contents = value
+
+    def _is_mutated(self):
+        """
+        :return:
+            A boolean - if the sequence or any children (recursively) have been
+            mutated
+        """
+
+        mutated = self._mutated
+        if self.children is not None:
+            for child in self.children:
+                if isinstance(child, Sequence) or isinstance(child, SequenceOf):
+                    mutated = mutated or child._is_mutated()  #pylint: disable=W0212
+
+        return mutated
 
     def _lazy_child(self, index):
         """
@@ -1975,7 +2057,7 @@ class Sequence(Asn1Value):
 
         if self._native is not None:
             self._native[self._fields[key][0]] = self.children[key].native
-        self._set_contents()
+        self._mutated = True
 
     def __delitem__(self, key):
         """
@@ -2007,7 +2089,7 @@ class Sequence(Asn1Value):
                 self._native[info[0]] = None
         else:
             self.__setitem__(key, None)
-        self._set_contents()
+        self._mutated = True
 
     def __iter__(self):  #pylint: disable=W0234
         """
@@ -2031,7 +2113,7 @@ class Sequence(Asn1Value):
         if self.children is None:
             self._parse_children()
 
-        self.contents = b''
+        contents = BytesIO()
         for index, info in enumerate(self._fields):
             child = self.children[index]
             if child is None:
@@ -2048,7 +2130,9 @@ class Sequence(Asn1Value):
                 default_value = info[1](**info[2])
                 if default_value.dump() == child_dump:
                     continue
-            self.contents += child_dump
+            contents.write(child_dump)
+        self._contents = contents.getvalue()
+
         self._header = None
         if self._trailer != b'':
             self._trailer = b''
@@ -2201,7 +2285,7 @@ class Sequence(Asn1Value):
             ValueError - when an error occurs parsing child objects
         """
 
-        if self.contents is None:
+        if self._contents is None:
             if self._fields:
                 self.children = [NoValue()] * len(self._fields)
                 for index, info in enumerate(self._fields):
@@ -2212,12 +2296,12 @@ class Sequence(Asn1Value):
 
         try:
             self.children = []
-            contents_length = len(self.contents)
+            contents_length = len(self._contents)
             child_pointer = 0
             field = 0
             seen_field = 1
             while child_pointer < contents_length:
-                parts, num_bytes = _parse(self.contents, pointer=child_pointer)
+                parts, num_bytes = _parse(self._contents, pointer=child_pointer)
 
                 if field < len(self._fields):
                     _, field_spec, value_spec, field_params, spec_override = self._determine_spec(field)
@@ -2389,12 +2473,21 @@ class Sequence(Asn1Value):
 
         self.contents = other.contents
         self._native = other._native
-        self.children = other.children
+        if self.children is not None:
+            self.children = []
+            for child in other.children:
+                if isinstance(child, tuple):
+                    self.children.append(child)
+                else:
+                    self.children.append(child.copy())
 
     def debug(self, nest_level=1):
         """
         Show the binary data and parsed data in a tree structure
         """
+
+        if self.children is None:
+            self._parse_children()
 
         prefix = '  ' * nest_level
         _basic_debug(prefix, self)
@@ -2436,6 +2529,13 @@ class SequenceOf(Asn1Value):
     # A list of child objects
     children = None
 
+    # SequenceOf overrides .contents to be a property so that the mutated state
+    # of child objects can be checked to ensure everything is up-to-date
+    _contents = None
+
+    # Variable to track if the object has been mutated
+    _mutated = False
+
     # An Asn1Value class to use when parsing children
     _child_spec = None
 
@@ -2470,6 +2570,45 @@ class SequenceOf(Asn1Value):
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
             raise e
+
+    @property
+    def contents(self):
+        """
+        :return:
+            A byte string of the DER-encoded contents of the sequence
+        """
+
+        if self.children is None:
+            return self._contents
+
+        if self._is_mutated():
+            self._set_contents()
+
+        return self._contents
+
+    @contents.setter
+    def contents(self, value):
+        """
+        :param value:
+            A byte string of the DER-encoded contents of the sequence
+        """
+
+        self._contents = value
+
+    def _is_mutated(self):
+        """
+        :return:
+            A boolean - if the sequence or any children (recursively) have been
+            mutated
+        """
+
+        mutated = self._mutated
+        if self.children is not None:
+            for child in self.children:
+                if isinstance(child, Sequence) or isinstance(child, SequenceOf):
+                    mutated = mutated or child._is_mutated()  #pylint: disable=W0212
+
+        return mutated
 
     def _lazy_child(self, index):
         """
@@ -2578,7 +2717,7 @@ class SequenceOf(Asn1Value):
         if self._native is not None:
             self._native[key] = self.children[key].native
 
-        self._set_contents()
+        self._mutated = True
 
     def __delitem__(self, key):
         """
@@ -2595,7 +2734,8 @@ class SequenceOf(Asn1Value):
         self.children.pop(key)
         if self._native is not None:
             self._native.pop(key)
-        self._set_contents()
+
+        self._mutated = True
 
     def __iter__(self):  #pylint: disable=W0234
         """
@@ -2627,7 +2767,8 @@ class SequenceOf(Asn1Value):
 
         if self._native is not None:
             self._native.append(self.children[-1].native)
-        self._set_contents()
+
+        self._mutated = True
 
     def _set_contents(self, force=False):
         """
@@ -2641,10 +2782,10 @@ class SequenceOf(Asn1Value):
         if self.children is None:
             self._parse_children()
 
-        self.contents = b''
+        contents = BytesIO()
         for child in self:
-            child_dump = child.dump(force=force)
-            self.contents += child_dump
+            contents.write(child.dump(force=force))
+        self._contents = contents.getvalue()
         self._header = None
         if self._trailer != b'':
             self._trailer = b''
@@ -2664,12 +2805,12 @@ class SequenceOf(Asn1Value):
 
         try:
             self.children = []
-            if self.contents is None:
+            if self._contents is None:
                 return
-            contents_length = len(self.contents)
+            contents_length = len(self._contents)
             child_pointer = 0
             while child_pointer < contents_length:
-                parts, num_bytes = _parse(self.contents, pointer=child_pointer)
+                parts, num_bytes = _parse(self._contents, pointer=child_pointer)
                 if self._child_spec:
                     child = parts + (self._child_spec,)
                 else:
@@ -2729,12 +2870,21 @@ class SequenceOf(Asn1Value):
 
         self.contents = other.contents
         self._native = other._native
-        self.children = other.children
+        if self.children is not None:
+            self.children = []
+            for child in other.children:
+                if isinstance(child, tuple):
+                    self.children.append(child)
+                else:
+                    self.children.append(child.copy())
 
     def debug(self, nest_level=1):
         """
         Show the binary data and parsed data in a tree structure
         """
+
+        if self.children is None:
+            self._parse_children()
 
         prefix = '  ' * nest_level
         _basic_debug(prefix, self)

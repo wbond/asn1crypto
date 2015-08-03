@@ -46,6 +46,13 @@ class Seq(core.Sequence):
     }
 
 
+class CopySeq(core.Sequence):
+    _fields = [
+        ('name', core.UTF8String),
+        ('pair', Seq),
+    ]
+
+
 @DataDecorator
 class CoreTests(unittest.TestCase):
 
@@ -203,3 +210,39 @@ class CoreTests(unittest.TestCase):
         seq = SequenceAny()
         with self.assertRaises(ValueError):
             seq.append(5)
+
+    def test_copy(self):
+        a = core.Integer(200)
+        b = a.copy()
+        self.assertNotEqual(id(a), id(b))
+        self.assertEqual(a.contents, b.contents)
+        self.assertEqual(a.dump(), b.dump())
+
+    def test_copy_mutable(self):
+        a = CopySeq({'name': 'foo', 'pair': {'id': '1.2.3', 'value': 5}})
+        b = a.copy()
+        self.assertNotEqual(id(a), id(b))
+        self.assertNotEqual(id(a['pair']), id(b['pair']))
+        self.assertEqual(a.contents, b.contents)
+        self.assertEqual(a.dump(), b.dump())
+
+        self.assertEqual(a['pair']['value'].native, b['pair']['value'].native)
+        a['pair']['value'] = 6
+        self.assertNotEqual(a['pair']['value'].native, b['pair']['value'].native)
+
+        self.assertNotEqual(a.contents, b.contents)
+        self.assertNotEqual(a.dump(), b.dump())
+
+    def test_retag(self):
+        a = core.Integer(200)
+        b = a.retag('explicit', 0)
+        self.assertNotEqual(id(a), id(b))
+        self.assertEqual(a.contents, b.contents)
+        self.assertNotEqual(a.dump(), b.dump())
+
+    def test_untag(self):
+        a = core.Integer(200, tag_type='explicit', tag=0)
+        b = a.untag()
+        self.assertNotEqual(id(a), id(b))
+        self.assertEqual(a.contents, b.contents)
+        self.assertNotEqual(a.dump(), b.dump())
