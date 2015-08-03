@@ -2143,9 +2143,17 @@ class Sequence(Asn1Value):
                 wrapper._parsed = (new_value, new_value.__class__, None)  #pylint: disable=W0212
                 new_value = wrapper
 
+        # If the new value has an incorrect tagging, it needs to be fixed. It
+        # could either be that a special tagging is required that is not
+        # present:
         if field_params and 'tag_type' in field_params and 'tag' in field_params:
             if field_params['tag_type'] != new_value.tag_type or field_params['tag'] != new_value.tag:
                 new_value = new_value.retag(tag_type=field_params['tag_type'], tag=field_params['tag'])
+
+        # Or the issue could be that special tagging is present, but the field
+        # is a plain field
+        elif new_value.tag_type is not None:
+            new_value = new_value.untag()
 
         return new_value
 
@@ -2443,11 +2451,11 @@ class SequenceOf(Asn1Value):
         """
 
         if isinstance(value, self._child_spec):
-            return value
+            new_value = value
 
         elif issubclass(self._child_spec, Any):
             if isinstance(value, Asn1Value):
-                return value
+                new_value = value
             else:
                 raise ValueError('Can not set a native python value to %s where the _child_spec is Any – value must be an instance of Asn1Value' % self.__class__.__name__)
 
@@ -2459,10 +2467,18 @@ class SequenceOf(Asn1Value):
                 wrapper.validate(value.class_, value.tag)
                 wrapper._parsed = value  #pylint: disable=W0212
                 value = wrapper
-            return value
+            new_value = value
 
         else:
             return self._child_spec(value=value)
+
+        if self._child_spec.tag_type is not None:
+            if new_value.tag_type != self._child_spec.tag_type:
+                new_value = new_value.retag(self._child_spec.tag_type, self._child_spec.tag)
+        elif new_value.tag_type is not None:
+            new_value = new_value.untag()
+
+        return new_value
 
     def __len__(self):
         """
