@@ -114,8 +114,8 @@ _SETUP_CLASSES = {}
 
 def _basic_debug(prefix, self):
     print('%s%s Object #%s' % (prefix, self.__class__.__name__, id(self)))
-    if self.header:
-        print('%s  Header: 0x%s' % (prefix, binascii.hexlify(self.header or b'').decode('utf-8')))
+    if self._header:  #pylint: disable=W0212
+        print('%s  Header: 0x%s' % (prefix, binascii.hexlify(self._header or b'').decode('utf-8')))  #pylint: disable=W0212
 
     has_header = self.method is not None and self.class_ is not None and self.tag is not None
     if has_header:
@@ -158,13 +158,13 @@ class Asn1Value():
     explicit_tag = None
 
     # The BER/DER header bytes
-    header = None
+    _header = None
 
     # Raw encoded value bytes not including class, method, tag, length header
     contents = None
 
     # The BER/DER trailer bytes
-    trailer = b''
+    _trailer = b''
 
     # The native python representation of the value
     _native = None
@@ -361,7 +361,7 @@ class Asn1Value():
             A byte string of the DER-encoded value
         """
 
-        if self.header is None:
+        if self._header is None:
             header = _dump_header(self.class_, self.method, self.tag, self.contents)
             trailer = b''
 
@@ -373,13 +373,13 @@ class Asn1Value():
                 container.contents = header + self.contents + trailer
                 # Force the container to generate the header and footer
                 container.dump()
-                header = container.header + header
-                trailer += container.trailer
+                header = container._header + header
+                trailer += container._trailer
 
-            self.header = header
-            self.trailer = trailer
+            self._header = header
+            self._trailer = trailer
 
-        return self.header + self.contents + self.trailer
+        return self._header + self.contents + self._trailer
 
 
 class ValueMap():
@@ -536,7 +536,7 @@ class Any(Asn1Value):
                     passed_params = {} if not spec_params else spec_params.copy()
                     passed_params['tag_type'] = self.tag_type
                     passed_params['tag'] = self.tag
-                parsed_value, _ = _parse_build(self.header + self.contents + self.trailer, spec=spec, spec_params=passed_params)
+                parsed_value, _ = _parse_build(self._header + self.contents + self._trailer, spec=spec, spec_params=passed_params)
                 self._parsed = (parsed_value, spec, spec_params)
             except (ValueError) as e:
                 args = e.args[1:]
@@ -773,12 +773,12 @@ class Choice(Asn1Value):
         """
 
         self.contents = self.chosen.dump(force=force)
-        if self.header is None:
+        if self._header is None:
             if self.tag_type == 'explicit':
-                self.header = _dump_header(self.explicit_class, 1, self.explicit_tag, self.contents)
+                self._header = _dump_header(self.explicit_class, 1, self.explicit_tag, self.contents)
             else:
-                self.header = b''
-        return self.header + self.contents
+                self._header = b''
+        return self._header + self.contents
 
 
 class Primitive(Asn1Value):
@@ -827,9 +827,9 @@ class Primitive(Asn1Value):
 
         self._native = value
         self.contents = value
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     def dump(self, force=False):
         """
@@ -874,9 +874,9 @@ class AbstractString(Primitive):
 
         self._native = value
         self.contents = value.encode(self._encoding)
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     def __unicode__(self):
         """
@@ -919,9 +919,9 @@ class Boolean(Primitive):
 
         self._native = bool(value)
         self.contents = b'\x00' if not value else b'\xff'
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     # Python 2
     def __nonzero__(self):
@@ -988,9 +988,9 @@ class Integer(Primitive, ValueMap):
         self._native = self._map[value] if self._map and value in self._map else value
 
         self.contents = int_to_bytes(value, signed=True)
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     def __int__(self):
         """
@@ -1108,9 +1108,9 @@ class BitString(Primitive, ValueMap, object):
             value_bytes = (b'\x00' * (size_in_bytes - len(value_bytes))) + value_bytes
 
         self.contents = extra_bits_byte + value_bytes
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     def __getitem__(self, key):
         """
@@ -1261,9 +1261,9 @@ class OctetBitString(Primitive):
         self._native = value
         # Set the unused bits to 0
         self.contents = b'\x00' + value
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     def __bytes__(self):
         """
@@ -1318,9 +1318,9 @@ class IntegerBitString(Primitive):
         self._native = value
         # Set the unused bits to 0
         self.contents = b'\x00' + int_to_bytes(value, signed=True)
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     @property
     def native(self):
@@ -1401,9 +1401,9 @@ class IntegerOctetString(Primitive):
         self._native = value
         # Set the unused bits to 0
         self.contents = int_to_bytes(value, signed=True)
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     @property
     def native(self):
@@ -1564,9 +1564,9 @@ class ParsableOctetBitString(ParsableOctetString):
         self._native = value
         # Set the unused bits to 0
         self.contents = b'\x00' + value
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     def __bytes__(self):
         """
@@ -1660,9 +1660,9 @@ class ObjectIdentifier(Primitive, ValueMap):
                 part = part >> 7
             self.contents += encoded_part
 
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     def __unicode__(self):
         """
@@ -2049,9 +2049,9 @@ class Sequence(Asn1Value):
                 if default_value.dump() == child_dump:
                     continue
             self.contents += child_dump
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     #pylint: disable=W0212
     def _setup(self):
@@ -2645,9 +2645,9 @@ class SequenceOf(Asn1Value):
         for child in self:
             child_dump = child.dump(force=force)
             self.contents += child_dump
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     def _parse_children(self, recurse=False):
         """
@@ -3404,10 +3404,10 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
 
         value = spec(class_=class_)
 
-    value.header = header
+    value._header = header  #pylint: disable=W0212
     value.contents = contents
     if trailer is not None and trailer != b'':
-        value.trailer = trailer
+        value._trailer = trailer  #pylint: disable=W0212
 
     # Destroy any default value that our contents have overwritten
     value._native = None  #pylint: disable=W0212
@@ -3417,14 +3417,14 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         original_value = value
         (class_, method, tag, header, contents, trailer), _ = _parse(value.contents)
         value = _build(class_, method, tag, header, contents, trailer, spec=spec)
-        value.header = original_value.header + header
-        value.trailer += original_value.trailer
+        value._header = original_value._header + header  #pylint: disable=W0212
+        value._trailer += original_value._trailer  #pylint: disable=W0212
         value.tag_type = 'explicit'
         value.explicit_class = original_value.explicit_class
         value.explicit_tag = original_value.explicit_tag
     elif isinstance(value, Choice):
-        value.contents = value.header + value.contents
-        value.header = b''
+        value.contents = value._header + value.contents  #pylint: disable=W0212
+        value._header = b''  #pylint: disable=W0212
 
     try:
         # Force parsing the Choice now

@@ -920,9 +920,9 @@ class IPAddress(OctetString):
 
         self._native = original_value
         self.contents = inet_pton(family, value) + cidr_bytes
-        self.header = None
-        if self.trailer != b'':
-            self.trailer = b''
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
     @property
     def native(self):
