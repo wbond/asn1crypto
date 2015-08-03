@@ -191,7 +191,7 @@ class Asn1Value():
         return value
 
     #pylint: disable=W0613
-    def __init__(self, tag_type=None, class_=None, tag=None, optional=None, default=None):
+    def __init__(self, tag_type=None, class_=None, tag=None, optional=None, default=None, contents=None):
         """
         The optional parameter is not used, but rather included so we don't
         have to delete it from the parameter dictionary when passing as keyword
@@ -218,6 +218,9 @@ class Asn1Value():
 
         :param default:
             The default value to use if the value is currently None
+
+        :param contents:
+            A byte string of the encoded contents of the value
 
         :raises:
             ValueError - when tag_type, class_ or tag are invalid values
@@ -260,7 +263,10 @@ class Asn1Value():
                 if tag is not None:
                     self.tag = tag
 
-            if default is not None:
+            if contents is not None:
+                self.contents = contents
+
+            elif default is not None:
                 self.set(default)
 
         except (ValueError) as e:
@@ -810,7 +816,7 @@ class Primitive(Asn1Value):
 
     method = 0
 
-    def __init__(self, value=None, default=None, **kwargs):
+    def __init__(self, value=None, default=None, contents=None, **kwargs):
         """
         Sets the value of the object before passing to Asn1Value.__init__()
 
@@ -819,16 +825,23 @@ class Primitive(Asn1Value):
 
         :param default:
             The default value if no value is specified
+
+        :param contents:
+            A byte string of the encoded contents of the value
         """
 
         Asn1Value.__init__(self, **kwargs)
 
         try:
-            if value is not None:
+            if contents is not None:
+                self.contents = contents
+
+            elif value is not None:
                 self.set(value)
 
             elif default is not None:
                 self.set(default)
+
         except (ValueError) as e:
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
@@ -1448,16 +1461,13 @@ class ParsableOctetString(Primitive):
 
     _parsed = None
 
-    def __init__(self, value=None, default=None, parsed=None, **kwargs):
+    def __init__(self, value=None, parsed=None, **kwargs):
         """
         Allows providing a parsed object that will be serialized to get the
         byte string value
 
         :param value:
             A native Python datatype to initialize the object value with
-
-        :param default:
-            The default value if no value is specified
 
         :param parsed:
             If value is None and this is an Asn1Value object, this will be
@@ -1470,7 +1480,7 @@ class ParsableOctetString(Primitive):
             value = parsed.dump()
             set_parsed = True
 
-        Primitive.__init__(self, value=value, default=default, **kwargs)
+        Primitive.__init__(self, value=value, **kwargs)
 
         if set_parsed:
             self._parsed = (parsed, parsed.__class__, None)
@@ -1905,7 +1915,14 @@ class Sequence(Asn1Value):
 
         Asn1Value.__init__(self, **kwargs)
 
+        check_existing = False
         if value is None and default is not None:
+            check_existing = True
+            if self.children is None:
+                if self.contents is None:
+                    check_existing = False
+                else:
+                    self._parse_children()
             value = default
 
         if value is not None:
@@ -1917,9 +1934,18 @@ class Sequence(Asn1Value):
                     keys = [info[0] for info in self._fields]
                 else:
                     keys = value.keys()
+
                 for key in keys:
+                    # If we are setting defaults, but a real value has already
+                    # been set for the field, then skip it
+                    if check_existing:
+                        index = self._field_map[key]
+                        if index < len(self.children) and not isinstance(self.children[index], NoValue):
+                            continue
+
                     if key in value:
                         self.__setitem__(key, value[key])
+
             except (ValueError) as e:
                 args = e.args[1:]
                 e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
@@ -2534,7 +2560,7 @@ class SequenceOf(Asn1Value):
     # An Asn1Value class to use when parsing children
     _child_spec = None
 
-    def __init__(self, value=None, default=None, spec=None, **kwargs):
+    def __init__(self, value=None, default=None, contents=None, spec=None, **kwargs):
         """
         Allows setting child objects and the _child_spec via the spec parameter
         before passing everything else along to Asn1Value.__init__()
@@ -2544,6 +2570,9 @@ class SequenceOf(Asn1Value):
 
         :param default:
             The default value if no value is specified
+
+        :param contents:
+            A byte string of the encoded contents of the value
 
         :param spec:
             A class derived from Asn1Value to use to parse children
@@ -2555,12 +2584,15 @@ class SequenceOf(Asn1Value):
         Asn1Value.__init__(self, **kwargs)
 
         try:
-            if value is None and default is not None:
-                value = default
+            if contents is not None:
+                self.contents = contents
+            else:
+                if value is None and default is not None:
+                    value = default
 
-            if value is not None:
-                for index, child in enumerate(value):
-                    self.__setitem__(index, child)
+                if value is not None:
+                    for index, child in enumerate(value):
+                        self.__setitem__(index, child)
         except (ValueError) as e:
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
@@ -3428,9 +3460,9 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     # If an explicit specification was passed in, make sure it matches
     if spec is not None:
         if spec_params:
-            value = spec(**spec_params)
+            value = spec(contents=contents, **spec_params)
         else:
-            value = spec()
+            value = spec(contents=contents)
 
         if isinstance(value, Any):
             pass
@@ -3500,7 +3532,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     # since we will be parsing the contents and discarding the outer object
     # anyway a little further on
     elif spec_params and 'tag_type' in spec_params and spec_params['tag_type'] == 'explicit':
-        value = Asn1Value(**spec_params)
+        value = Asn1Value(contents=contents, **spec_params)
 
     # If no spec was specified, allow anything and just process what
     # is in the input data
@@ -3547,10 +3579,9 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
 
         spec = universal_specs[tag]
 
-        value = spec(class_=class_)
+        value = spec(contents=contents, class_=class_)
 
     value._header = header  #pylint: disable=W0212
-    value.contents = contents
     if trailer is not None and trailer != b'':
         value._trailer = trailer  #pylint: disable=W0212
 
