@@ -86,6 +86,12 @@ include:
 | `IntegerBitString`   | `int`               | may be `long` on Python 2       |
 | `IntegerOctetString` | `int`               | may be `long` on Python 2       |
 
+For situations where the DER encoded bytes from one type is embedded in another,
+the `ParsableOctetString` and `ParsableOctetBitString` classes exist. These
+function the same as `OctetString` and `OctetBitString`, however they also
+have an attribute `.parsed` and a method `.parse()` that allows for
+parsing the content as ASN.1 structures.
+
 ## Basic Usage
 
 All of the universal types implement two methods, the class method `.load()` for
@@ -474,14 +480,17 @@ class MySequence(Sequence):
 Throughout the usage of ASN.1 in cryptography, a pattern is present where an
 `ObjectIdenfitier` is used to determine what specification should be used to
 interpret another field in a `Sequence`. Usually the other field is an instance
-of `Any`, however ocassionally it is an `OctetString`.
+of `Any`, however ocassionally it is an `OctetString` or `OctetBitString`.
 
 *asn1crypto* provides the `_oid_pair` and `_oid_specs` properties of the
 `Sequence` class to allow handling these situations.
 
 The `_oid_pair` is a tuple with two unicode string elements. The first is the
 name of the field that is an `ObjectIdentifier` and the second if the name of
-the field that has a variable specification based on the first field.
+the field that has a variable specification based on the first field. *In
+situations where the value field should be an `OctetString` or `OctetBitString`,
+`ParsableOctetString` and `ParsableOctetBitString` will need to be used instead
+to allow for the sub-parsing of the contents.*
 
 The `_oid_specs` property is a `dict` object with `ObjectIdentifier` values as
 the keys (either dotted or mapped notation) and a type class as the value. When
@@ -510,10 +519,6 @@ class MySequence(Sequence):
         'iterations': Integer,
     }
 ```
-
-In some situations, the second field in `_oid_pair` is not an instance of `Any`,
-but instead is an instance of `OctetString`. This is dictated by the ASN.1
-specification of the data structures being worked with.
 
 ## Explicit and Implicit Tagging
 
