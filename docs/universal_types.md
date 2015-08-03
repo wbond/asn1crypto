@@ -94,8 +94,12 @@ parsing the content as ASN.1 structures.
 
 ## Basic Usage
 
-All of the universal types implement two methods, the class method `.load()` for
-parsing and the instance method `.dump()` for serialization.
+All of the universal types implement four methods, a class method `.load()` and
+the instance methods `.dump()`, `.copy()` and `.debug()`.
+
+`.load()` accepts a byte string of DER or BER encoded data and returns an
+object of the class it was called on. `.dump()` returns the serialization of
+an object into DER encoding.
 
 ```python
 from asn1crypto.core import Sequence
@@ -104,7 +108,44 @@ parsed = Sequence.load(der_byte_string)
 serialized = parsed.dump()
 ```
 
-In addition to the two primary methods, every instance has a `.native` property
+By default, *asn1crypto* tries to be efficient and caches serialized data for
+better performance. If the input data is possibly BER encoded, but the output
+must be DER encoded, the `force` parameter may be used with `.dump()`.
+
+```python
+from asn1crypto.core import Sequence
+
+parsed = Sequence.load(der_byte_string)
+der_serialized = parsed.dump(force=True)
+```
+
+The `.copy()` method creates a deep copy of an object, allowing child fields to
+be modified without affecting the original.
+
+```python
+from asn1crypto.core import Sequence
+
+seq1 = Sequence.load(der_byte_string)
+seq2 = seq1.copy()
+seq2[0] = seq1[0] + 1
+if seq1[0] != seq2[0]:
+    print('Copies have distinct contents')
+```
+
+The `.debug()` method is available to help in situations where interaction with
+another ASN.1 serializer or parsing is not functioning as expected. Calling
+this method will print a tree structure with information about the header bytes,
+class, method, tag, special tagging, content bytes, native Python value, child
+fields and any sub-parsed values.
+
+```python
+from asn1crypto.core import Sequence
+
+parsed = Sequence.load(der_byte_string)
+parsed.debug()
+```
+
+In addition to the available methods, every instance has a `.native` property
 that converts the data into a native Python data type.
 
 ```python
