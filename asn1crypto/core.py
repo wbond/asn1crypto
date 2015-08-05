@@ -3105,7 +3105,7 @@ class IA5String(AbstractString):
     """
 
     tag = 22
-    _encoding = 'latin1'
+    _encoding = 'ascii'
 
 
 class AbstractTime(AbstractString):
