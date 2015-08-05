@@ -1,5 +1,9 @@
 # changelog
 
+## 0.10.1
+
+ - Fixed bug in `core.Sequence` affecting Python 2.7 and pypy
+
 ## 0.10.0
 
  - Added PEM encoding/decoding functionality
