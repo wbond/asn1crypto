@@ -137,7 +137,7 @@ def _basic_debug(prefix, self):
     print('%s  Data: 0x%s' % (prefix, binascii.hexlify(self.contents or b'').decode('utf-8')))
 
 
-class Asn1Value():
+class Asn1Value(object):
     """
     The basis of all ASN.1 values
     """
