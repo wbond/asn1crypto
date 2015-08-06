@@ -103,7 +103,7 @@ if sys.version_info <= (3,):
             return timedelta(0)
 
         def dst(self, _):
-            return None
+            return timedelta(0)
 
 
     class timezone():

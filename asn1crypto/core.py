@@ -3174,6 +3174,8 @@ class UTCTime(AbstractTime):
 
         if isinstance(value, datetime):
             value = value.strftime('%y%m%d%H%M%SZ')
+            if py2:
+                value = value.decode('ascii')
 
         AbstractString.set(self, value)
         # Set it to None and let the class take care of converting the next
@@ -3222,6 +3224,8 @@ class GeneralizedTime(AbstractTime):
 
         if isinstance(value, datetime):
             value = value.strftime('%Y%m%d%H%M%SZ')
+            if py2:
+                value = value.decode('ascii')
 
         AbstractString.set(self, value)
         # Set it to None and let the class take care of converting the next
