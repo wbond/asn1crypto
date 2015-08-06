@@ -53,6 +53,14 @@ class CopySeq(core.Sequence):
     ]
 
 
+class NumChoice(core.Choice):
+    _alternatives = [
+        ('one', core.Integer, {'tag_type': 'explicit', 'tag': 0}),
+        ('two', core.Integer, {'tag_type': 'implicit', 'tag': 1}),
+        ('three', core.Integer, {'tag_type': 'explicit', 'tag': 2}),
+    ]
+
+
 @DataDecorator
 class CoreTests(unittest.TestCase):
 
@@ -246,3 +254,13 @@ class CoreTests(unittest.TestCase):
         self.assertNotEqual(id(a), id(b))
         self.assertEqual(a.contents, b.contents)
         self.assertNotEqual(a.dump(), b.dump())
+
+    def test_fix_tagging_choice(self):
+        correct = core.Integer(200, tag_type='explicit', tag=2)
+        choice = NumChoice(
+            name='three',
+            value=core.Integer(200, tag_type='explicit', tag=1)
+        )
+        self.assertEqual(correct.dump(), choice.dump())
+        self.assertEqual(correct.tag_type, choice.chosen.tag_type)
+        self.assertEqual(correct.explicit_tag, choice.chosen.explicit_tag)

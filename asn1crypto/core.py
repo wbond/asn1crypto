@@ -670,6 +670,8 @@ class Choice(Asn1Value):
 
                 if not isinstance(value, spec):
                     value = spec(value, **params)
+                else:
+                    value = _fix_tagging(value, params)
                 self._parsed = value
 
         except (ValueError) as e:
@@ -2284,17 +2286,7 @@ class Sequence(Asn1Value):
                 wrapper._parsed = (new_value, new_value.__class__, None)  #pylint: disable=W0212
                 new_value = wrapper
 
-        # If the new value has an incorrect tagging, it needs to be fixed. It
-        # could either be that a special tagging is required that is not
-        # present:
-        if field_params and 'tag_type' in field_params and 'tag' in field_params:
-            if field_params['tag_type'] != new_value.tag_type or field_params['tag'] != new_value.tag:
-                new_value = new_value.retag(tag_type=field_params['tag_type'], tag=field_params['tag'])
-
-        # Or the issue could be that special tagging is present, but the field
-        # is a plain field
-        elif new_value.tag_type is not None:
-            new_value = new_value.untag()
+        new_value = _fix_tagging(new_value, field_params)
 
         return new_value
 
@@ -2682,13 +2674,15 @@ class SequenceOf(Asn1Value):
         else:
             return self._child_spec(value=value)
 
+        params = {}
         if self._child_spec.tag_type is not None:
-            if new_value.tag_type != self._child_spec.tag_type:
-                new_value = new_value.retag(self._child_spec.tag_type, self._child_spec.tag)
-        elif new_value.tag_type is not None:
-            new_value = new_value.untag()
+            params['tag_type'] = self._child_spec.tag_type
+            if params['tag_type'] == 'explicit':
+                params['tag'] = self._child_spec.explicit_tag
+            else:
+                params['tag'] = self._child_spec.tag
 
-        return new_value
+        return _fix_tagging(new_value, params)
 
     def __len__(self):
         """
@@ -3315,6 +3309,44 @@ class BMPString(AbstractString):
 
     tag = 30
     _encoding = 'utf-16-be'
+
+
+def _fix_tagging(value, params):
+    """
+    Checks if a value is properly tagged based on the spec, and re/untags as
+    necessary
+
+    :param value:
+        An Asn1Value object
+
+    :param params:
+        A dict of spec params
+
+    :return:
+        An Asn1Value that is properly tagged
+    """
+
+    if 'tag_type' in params:
+        required_tag_type = params['tag_type']
+        retag = False
+
+        if required_tag_type != value.tag_type:
+            retag = True
+
+        elif required_tag_type == 'explicit' and value.explicit_tag != params['tag']:
+            retag = True
+
+        elif required_tag_type == 'implicit' and value.tag != params['tag']:
+            retag = True
+
+        if retag:
+            return value.retag(params['tag_type'], params['tag'])
+        return value
+
+    if value.tag_type:
+        return value.untag()
+
+    return value
 
 
 def _dump_header(class_, method, tag, contents):
