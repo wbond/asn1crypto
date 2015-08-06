@@ -114,28 +114,6 @@ METHOD_NUM_TO_NAME_MAP = {
 _SETUP_CLASSES = {}
 
 
-def _basic_debug(prefix, self):
-    print('%s%s Object #%s' % (prefix, self.__class__.__name__, id(self)))
-    if self._header:  #pylint: disable=W0212
-        print('%s  Header: 0x%s' % (prefix, binascii.hexlify(self._header or b'').decode('utf-8')))  #pylint: disable=W0212
-
-    has_header = self.method is not None and self.class_ is not None and self.tag is not None
-    if has_header:
-        method_name = METHOD_NUM_TO_NAME_MAP.get(self.method)
-        class_name = CLASS_NUM_TO_NAME_MAP.get(self.class_)
-
-    if self.tag_type == 'explicit':
-        print('%s    %s tag %s (explicitly tagged)' % (prefix, CLASS_NUM_TO_NAME_MAP.get(self.explicit_class), self.explicit_tag))
-        if has_header:
-            print('%s      %s %s %s' % (prefix, method_name, class_name, self.tag))
-    elif self.tag_type == 'implicit':
-        if has_header:
-            print('%s    %s %s tag %s (implicitly tagged)' % (prefix, method_name, class_name, self.tag))
-    elif has_header:
-        print('%s    %s %s tag %s' % (prefix, method_name, class_name, self.tag))
-
-    print('%s  Data: 0x%s' % (prefix, binascii.hexlify(self.contents or b'').decode('utf-8')))
-
 
 class Asn1Value(object):
     """
@@ -3309,6 +3287,40 @@ class BMPString(AbstractString):
 
     tag = 30
     _encoding = 'utf-16-be'
+
+
+def _basic_debug(prefix, self):
+    """
+    Prints out basic information about an Asn1Value object. Extracted for reuse
+    among different classes that customize the debug information.
+
+    :param prefix:
+        A unicode string of spaces to prefix output line with
+
+    :param self:
+        The object to print the debugging information about
+    """
+
+    print('%s%s Object #%s' % (prefix, self.__class__.__name__, id(self)))
+    if self._header:  #pylint: disable=W0212
+        print('%s  Header: 0x%s' % (prefix, binascii.hexlify(self._header or b'').decode('utf-8')))  #pylint: disable=W0212
+
+    has_header = self.method is not None and self.class_ is not None and self.tag is not None
+    if has_header:
+        method_name = METHOD_NUM_TO_NAME_MAP.get(self.method)
+        class_name = CLASS_NUM_TO_NAME_MAP.get(self.class_)
+
+    if self.tag_type == 'explicit':
+        print('%s    %s tag %s (explicitly tagged)' % (prefix, CLASS_NUM_TO_NAME_MAP.get(self.explicit_class), self.explicit_tag))
+        if has_header:
+            print('%s      %s %s %s' % (prefix, method_name, class_name, self.tag))
+    elif self.tag_type == 'implicit':
+        if has_header:
+            print('%s    %s %s tag %s (implicitly tagged)' % (prefix, method_name, class_name, self.tag))
+    elif has_header:
+        print('%s    %s %s tag %s' % (prefix, method_name, class_name, self.tag))
+
+    print('%s  Data: 0x%s' % (prefix, binascii.hexlify(self.contents or b'').decode('utf-8')))
 
 
 def _fix_tagging(value, params):
