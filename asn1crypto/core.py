@@ -3418,22 +3418,22 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     Builds an Asn1Value object generically, or using a spec with optional params
 
     :param class_:
-        An integer representing the ASN1 class
+        An integer representing the ASN.1 class
 
     :param method:
-        An integer representing the ASN1 method
+        An integer representing the ASN.1 method
 
     :param tag:
-        An integer representing the ASN1 tag
+        An integer representing the ASN.1 tag
 
     :param header:
-        A byte string of the ASN1 header (class, method, tag, length)
+        A byte string of the ASN.1 header (class, method, tag, length)
 
     :param contents:
-        A byte string of the ASN1 value
+        A byte string of the ASN.1 value
 
     :param trailer:
-        A byte string of any ASN1 trailer (only used by indefinite length encodings)
+        A byte string of any ASN.1 trailer (only used by indefinite length encodings)
 
     :param spec:
         A class derived from Asn1Value that defines what class_ and tag the

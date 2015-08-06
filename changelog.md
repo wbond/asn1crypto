@@ -20,7 +20,7 @@
  - Added `core.Sequence.spec()` and `core.SequenceOf.spec()` methods
  - Added correct IP address parsing to `x509.GeneralName`
  - `x509.Name` and `x509.GeneralName` are now compared according to rules in
-   RFC5280
+   RFC 5280
  - Added convenience attributes to:
    - `algos.SignedDigestAlgorithm`
    - `crl.CertificateList`

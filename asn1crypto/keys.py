@@ -123,7 +123,7 @@ class RSAPublicKey(Sequence):
 
 class DSAPrivateKey(Sequence):
     """
-    The ASN1 structure that OpenSSL uses to store a DSA private key that is
+    The ASN.1 structure that OpenSSL uses to store a DSA private key that is
     not part of a PKCS#8 structure. Reversed engineered from english-language
     description on linked OpenSSL documentation page.
 

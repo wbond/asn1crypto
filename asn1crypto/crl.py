@@ -459,7 +459,7 @@ class CertificateList(Sequence):
         """
         :return:
             A list of unicode strings that are URLs that should contain either
-            an individual DER-encoded X509 certificate, or a DER-encoded CMS
+            an individual DER-encoded X.509 certificate, or a DER-encoded CMS
             message containing multiple certificates
         """
 
@@ -491,7 +491,7 @@ class CertificateList(Sequence):
             if self.freshest_crl_value is not None:
                 for distribution_point in self.freshest_crl_value:
                     distribution_point_name = distribution_point['distribution_point']
-                    # RFC5280 indicates conforming CA should not use the relative form
+                    # RFC 5280 indicates conforming CA should not use the relative form
                     if distribution_point_name.name == 'name_relative_to_crl_issuer':
                         continue
                     # This library is currently only concerned with HTTP-based CRLs

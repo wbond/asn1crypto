@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-ASN.1 type classes for X509 certificates. Exports the following items:
+ASN.1 type classes for X.509 certificates. Exports the following items:
 
  - Attributes()
  - Certificate()
@@ -246,7 +246,7 @@ class NameTypeAndValue(Sequence):
     def prepped_value(self):
         """
         Returns the value after being processed by the internationalized string
-        preparation as specified by RFC5280
+        preparation as specified by RFC 5280
 
         :return:
             A unicode string
@@ -312,22 +312,22 @@ class NameTypeAndValue(Sequence):
         # Prohibit step
         for char in string:
             if stringprep.in_table_a1(char):
-                raise ValueError('X509 Name objects may not contain unassigned code points')
+                raise ValueError('X.509 Name objects may not contain unassigned code points')
 
             if stringprep.in_table_c8(char):
-                raise ValueError('X509 Name objects may not contain change display or deprecated characters')
+                raise ValueError('X.509 Name objects may not contain change display or deprecated characters')
 
             if stringprep.in_table_c3(char):
-                raise ValueError('X509 Name objects may not contain private use characters')
+                raise ValueError('X.509 Name objects may not contain private use characters')
 
             if stringprep.in_table_c4(char):
-                raise ValueError('X509 Name objects may not contain non-character code points')
+                raise ValueError('X.509 Name objects may not contain non-character code points')
 
             if stringprep.in_table_c5(char):
-                raise ValueError('X509 Name objects may not contain surrogate code points')
+                raise ValueError('X.509 Name objects may not contain surrogate code points')
 
             if char == '\ufffd':
-                raise ValueError('X509 Name objects may not contain the replacement character')
+                raise ValueError('X.509 Name objects may not contain the replacement character')
 
         # Check bidirectional step - here we ensure that we are not mixing
         # left-to-right and right-to-left text in the string
@@ -344,7 +344,7 @@ class NameTypeAndValue(Sequence):
             last_is_r_and_al = stringprep.in_table_d1(string[-1])
 
             if has_l_cat or not first_is_r_and_al or not last_is_r_and_al:
-                raise ValueError('X509 Name object contains a malformed bidirectional sequence')
+                raise ValueError('X.509 Name object contains a malformed bidirectional sequence')
 
         # Insignificant space handling step
         string = ' ' + re.sub(' +', '  ', string).strip() + ' '
@@ -1839,7 +1839,7 @@ class Certificate(Sequence):
 
         for distribution_point in crl_distribution_points:
             distribution_point_name = distribution_point['distribution_point']
-            # RFC5280 indicates conforming CA should not use the relative form
+            # RFC 5280 indicates conforming CA should not use the relative form
             if distribution_point_name.name == 'name_relative_to_crl_issuer':
                 continue
             # This library is currently only concerned with HTTP-based CRLs
@@ -1942,7 +1942,8 @@ class Certificate(Sequence):
     def self_issued(self):
         """
         :return:
-            A boolean - if the certificate is self-issued, as defined by RFC5280
+            A boolean - if the certificate is self-issued, as defined by RFC
+            5280
         """
 
         if self._self_issued is None:
