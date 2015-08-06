@@ -363,7 +363,7 @@ class RelativeDistinguishedName(SetOf):
         """
 
         output = []
-        values = self._get_values()
+        values = self._get_values(self)
         for key in sorted(values.keys()):
             output.append('%s: %s' % (key, values[key]))
         # Unit separator is used here since the normalization process for
