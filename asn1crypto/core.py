@@ -2563,6 +2563,11 @@ class SequenceOf(Asn1Value):
                 if value is not None:
                     for index, child in enumerate(value):
                         self.__setitem__(index, child)
+
+                    # Make sure a blank list is serialized
+                    if self.contents is None:
+                        self._set_contents()
+
         except (ValueError) as e:
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
