@@ -53,6 +53,13 @@ class CopySeq(core.Sequence):
     ]
 
 
+class Enum(core.Enumerated):
+    _map = {
+        0: 'a',
+        1: 'b',
+    }
+
+
 class NumChoice(core.Choice):
     _alternatives = [
         ('one', core.Integer, {'tag_type': 'explicit', 'tag': 0}),
@@ -74,6 +81,32 @@ class CoreTests(unittest.TestCase):
     def test_sequence_of_spec(self):
         seq = SequenceAny()
         self.assertEqual(core.Any, seq.spec())
+
+    #pylint: disable=C0326
+    @staticmethod
+    def compare_primitive_info():
+        return (
+            (core.ObjectIdentifier('1.2.3'),       core.ObjectIdentifier('1.2.3'),                   True),
+            (core.Integer(1),                      Enum(1),                                          False),
+            (core.Integer(1),                      core.Integer(1, tag_type='implicit', tag=5),      True),
+            (core.Integer(1),                      core.Integer(1, tag_type='explicit', tag=5),      True),
+            (core.Integer(1),                      core.Integer(2),                                  False),
+            (core.OctetString(b''),                core.OctetString(b''),                            True),
+            (core.OctetString(b''),                core.OctetString(b'1'),                           False),
+            (core.OctetString(b''),                core.OctetBitString(b''),                         False),
+            (core.ParsableOctetString(b'12'),      core.OctetString(b'12'),                          True),
+            (core.ParsableOctetBitString(b'12'),   core.OctetBitString(b'12'),                       True),
+            (core.UTF8String('12'),                core.UTF8String('12'),                            True),
+            (core.UTF8String('12'),                core.UTF8String('1'),                             False),
+            (core.UTF8String('12'),                core.IA5String('12'),                             False),
+        )
+
+    @data('compare_primitive_info')
+    def compare_primitive(self, one, two, equal):
+        if equal:
+            self.assertEqual(one, two)
+        else:
+            self.assertNotEqual(one, two)
 
     #pylint: disable=C0326
     @staticmethod

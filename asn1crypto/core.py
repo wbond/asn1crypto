@@ -863,6 +863,46 @@ class Primitive(Asn1Value):
 
         return Asn1Value.dump(self)
 
+    def __ne__(self, other):
+        return not self == other
+
+    def __eq__(self, other):
+        """
+        :param other:
+            The other Primitive to compare to
+
+        :return:
+            A boolean
+        """
+
+        if not isinstance(other, Primitive):
+            return False
+
+        if self.contents != other.contents:
+            return False
+
+        # We compare class tag numbers since object tag numbers could be
+        # different due to implicit or explicit tagging
+        if self.__class__.tag != other.__class__.tag:
+            return False
+
+        if self.__class__ == other.__class__ and self.contents == other.contents:
+            return True
+
+        # If the objects share a common base class that is not too low-level
+        # then we can compare the contents
+        self_bases = (set(self.__class__.__bases__) | {self.__class__}) - {Asn1Value, Primitive, ValueMap}
+        other_bases = (set(other.__class__.__bases__) | {other.__class__}) - {Asn1Value, Primitive, ValueMap}
+        if self_bases | other_bases:
+            return self.contents == other.contents
+
+        # When tagging is going on, do the extra work of constructing new
+        # objects to see if the dumped representation are the same
+        if self.tag_type is not None or other.tag_type is not None:
+            return self.untag().dump() == other.untag().dump()
+
+        return self.dump() == other.dump()
+
 
 class AbstractString(Primitive):
     """
@@ -896,6 +936,7 @@ class AbstractString(Primitive):
         :return:
             A unicode string
         """
+
         return self.contents.decode(self._encoding)
 
     @property
