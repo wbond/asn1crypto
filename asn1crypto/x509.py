@@ -22,6 +22,8 @@ import stringprep
 import unicodedata
 import socket
 from collections import OrderedDict
+from encodings import idna  #pylint: disable=W0611
+import codecs
 
 from .core import (
     Any,
@@ -56,8 +58,16 @@ from .util import int_to_bytes, int_from_bytes
 
 if sys.version_info < (3,):
     str_cls = unicode  #pylint: disable=E0602
+    byte_cls = str
+    from urlparse import urlsplit, urlunsplit  #pylint: disable=F0401
+    from urllib import quote as urlquote, unquote as unquote_to_bytes  #pylint: disable=E0611
+    bytes_to_list = lambda byte_string: [ord(b) for b in byte_string]
+
 else:
     str_cls = str
+    byte_cls = bytes
+    bytes_to_list = list
+    from urllib.parse import urlsplit, urlunsplit, quote as urlquote, unquote_to_bytes
 
 if sys.platform == 'win32':
     from ._win._ws2_32 import inet_ntop, inet_pton
@@ -69,6 +79,359 @@ else:
 # The structures in this file are taken from https://tools.ietf.org/html/rfc5280
 # and a few other supplementary sources, mostly due to extra supported
 # extension and name OIDs
+
+
+class DNSName(IA5String):
+
+    _encoding = 'idna'
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __eq__(self, other):
+        """
+        Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.2
+
+        :param other:
+            Another DNSName object
+
+        :return:
+            A boolean
+        """
+
+        if not isinstance(other, DNSName):
+            return False
+
+        return self.contents.lower() == other.contents.lower()
+
+
+class URI(IA5String):
+
+    def set(self, value):
+        """
+        Sets the value of the string
+
+        :param value:
+            A unicode string
+        """
+
+        if not isinstance(value, str_cls):
+            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+
+        self._normalized = True
+        self._native = value
+        self.contents = self._normalize(value)
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
+
+    def _normalize(self, value):
+        """
+        Normalizes and encodes a unicode IRI into an ASCII byte string
+
+        :param value:
+
+        """
+
+        parsed = urlsplit(value)
+
+        scheme = _urlquote(parsed.scheme)
+        hostname = parsed.hostname
+        if hostname is not None:
+            hostname = hostname.encode('idna')
+        username = _urlquote(parsed.username)
+        password = _urlquote(parsed.password)
+        port = parsed.port
+        if port is not None:
+            port = str_cls(port).encode('ascii')
+
+        netloc = b''
+        if username is not None:
+            netloc += username
+            if password:
+                netloc += b':' + password
+            netloc += b'@'
+        if hostname is not None:
+            netloc += hostname
+        if port is not None:
+            default_http = scheme == b'http' and port == b'80'
+            default_https = scheme == b'https' and port == b'443'
+            if not default_http and not default_https:
+                netloc += b':' + port
+
+        path = _urlquote(parsed.path, safe='/')
+        query = _urlquote(parsed.query, safe='&=')
+        fragment = _urlquote(parsed.fragment)
+
+        if query is None and fragment is None and path == b'/':
+            path = None
+
+        # Python 2.7 compat
+        if path is None:
+            path = ''
+
+        return urlunsplit((scheme, netloc, path, query, fragment))
+
+    def __unicode__(self):
+        """
+        :return:
+            A unicode string
+        """
+
+        parsed = urlsplit(self.contents)
+
+        scheme = parsed.scheme
+        if scheme is not None:
+            scheme = scheme.decode('ascii')
+
+        username = _urlunquote(parsed.username, remap=[':', '@'])
+        password = _urlunquote(parsed.password, remap=[':', '@'])
+        hostname = parsed.hostname
+        if hostname:
+            hostname = hostname.decode('idna')
+        port = parsed.port
+        if port:
+            port = port.decode('ascii')
+
+        netloc = ''
+        if username is not None:
+            netloc += username
+            if password:
+                netloc += ':' + password
+            netloc += '@'
+        if hostname is not None:
+            netloc += hostname
+        if port is not None:
+            netloc += ':' + port
+
+        path = _urlunquote(parsed.path, remap=['/'], preserve=True)
+        query = _urlunquote(parsed.query, remap=['&', '='], preserve=True)
+        fragment = _urlunquote(parsed.fragment)
+
+        return urlunsplit((scheme, netloc, path, query, fragment))
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __eq__(self, other):
+        """
+        Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.4
+
+        :param other:
+            Another URI object
+
+        :return:
+            A boolean
+        """
+
+        if not isinstance(other, URI):
+            return False
+
+        return self._normalize(self.native) == self._normalize(other.native)
+
+
+class EmailAddress(IA5String):
+
+    _contents = None
+
+    # If the value has gone through the .set() method, thus normalizing it
+    _normalized = False
+
+    @property
+    def contents(self):
+        """
+        :return:
+            A byte string of the DER-encoded contents of the sequence
+        """
+
+        return self._contents
+
+    @contents.setter
+    def contents(self, value):
+        """
+        :param value:
+            A byte string of the DER-encoded contents of the sequence
+        """
+
+        self._normalized = False
+        self._contents = value
+
+    def set(self, value):
+        """
+        Sets the value of the string
+
+        :param value:
+            A unicode string
+        """
+
+        if not isinstance(value, str_cls):
+            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+
+        if value.find('@') != -1:
+            mailbox, hostname = value.rsplit('@', 1)
+            encoded_value = mailbox.encode('ascii') + b'@' + hostname.encode('idna')
+        else:
+            encoded_value = value.encode('ascii')
+
+        self._native = value
+        self.contents = encoded_value
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
+
+    def __unicode__(self):
+        """
+        :return:
+            A unicode string
+        """
+
+        if self.contents.find(b'@') == -1:
+            return self.contents.decode('ascii')
+
+        mailbox, hostname = self.contents.rsplit(b'@', 1)
+
+        return mailbox.decode('ascii') + '@' + hostname.decode('idna')
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __eq__(self, other):
+        """
+        Equality as defined by https://tools.ietf.org/html/rfc5280#section-7.5
+
+        :param other:
+            Another EmailAddress object
+
+        :return:
+            A boolean
+        """
+
+        if not isinstance(other, EmailAddress):
+            return False
+
+        if not self._normalized:
+            self.set(self.native)
+        if not other._normalized:  #pylint: disable=W0212
+            other.set(other.native)
+
+        if self._contents.find(b'@') == -1 or other._contents.find(b'@') == -1:  #pylint: disable=W0212
+            return self._contents == other._contents  #pylint: disable=W0212
+
+        other_mailbox, other_hostname = other._contents.rsplit(b'@', 1)  #pylint: disable=W0212
+        mailbox, hostname = self._contents.rsplit(b'@', 1)
+
+        if mailbox != other_mailbox:
+            return False
+
+        if hostname.lower() != other_hostname.lower():
+            return False
+
+        return True
+
+
+class IPAddress(OctetString):
+    def parse(self, spec=None, spec_params=None):  #pylint: disable=W0613
+        """
+        This method is not applicable to IP addresses
+        """
+
+        raise ValueError('IP address values can not be parsed')
+
+    def set(self, value):
+        """
+        Sets the value of the object
+
+        :param value:
+            A unicode string containing an IPv4 address, IPv4 address with CIDR,
+            an IPv6 address or IPv6 address with CIDR
+        """
+
+        if not isinstance(value, str_cls):
+            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+
+        original_value = value
+
+        has_cidr = value.find('/') != -1
+        cidr = 0
+        if has_cidr:
+            parts = value.split('/', 1)
+            value = parts[0]
+            cidr = int(parts[1])
+            if cidr < 0:
+                raise ValueError('%s value contains a CIDR range less than 0' % self.__class__.__name__)
+
+        if value.find(':') != -1:
+            family = socket.AF_INET6
+            if cidr > 128:
+                raise ValueError('%s value contains a CIDR range bigger than 128, the maximum value for an IPv6 address' % self.__class__.__name__)
+            cidr_size = 128
+        else:
+            family = socket.AF_INET
+            if cidr > 32:
+                raise ValueError('%s value contains a CIDR range bigger than 32, the maximum value for an IPv4 address' % self.__class__.__name__)
+            cidr_size = 32
+
+        cidr_bytes = b''
+        if has_cidr:
+            cidr_mask = '1' * cidr
+            cidr_mask += '0' * (cidr_size - len(cidr_mask))
+            cidr_bytes = int_to_bytes(int(cidr_mask, 2))
+            cidr_bytes = (b'\x00' * ((cidr_size // 8) - len(cidr_bytes))) + cidr_bytes
+
+        self._native = original_value
+        self.contents = inet_pton(family, value) + cidr_bytes
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
+
+    @property
+    def native(self):
+        """
+        The a native Python datatype representation of this value
+
+        :return:
+            A unicode string or None
+        """
+
+        if self.contents is None:
+            return None
+
+        if self._native is None:
+            byte_string = self.__bytes__()
+            byte_len = len(byte_string)
+            cidr_int = None
+            if byte_len in {32, 16}:
+                value = inet_ntop(socket.AF_INET6, byte_string[0:16])
+                if byte_len > 16:
+                    cidr_int = int_from_bytes(byte_string[16:])
+            elif byte_len in {8, 4}:
+                value = inet_ntop(socket.AF_INET, byte_string[0:4])
+                if byte_len > 4:
+                    cidr_int = int_from_bytes(byte_string[4:])
+            if cidr_int is not None:
+                cidr_bits = '{0:b}'.format(cidr_int)
+                cidr = len(cidr_bits.rstrip('0'))
+                value = value + '/' + str_cls(cidr)
+            self._native = value
+        return self._native
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __eq__(self, other):
+        """
+        :param other:
+            Another IPAddress object
+
+        :return:
+            A boolean
+        """
+
+        if not isinstance(other, IPAddress):
+            return False
+
+        return self.contents == other.contents
+
 
 class Attribute(Sequence):
     _fields = [
@@ -232,12 +595,12 @@ class NameTypeAndValue(Sequence):
         'dn_qualifier': DirectoryString,
         'pseudonym': DirectoryString,
         # https://tools.ietf.org/html/rfc2985#page-26
-        'email_address': IA5String,
+        'email_address': EmailAddress,
         # Page 10 of https://cabforum.org/wp-content/uploads/EV-V1_5_5.pdf
         'incorporation_locality': DirectoryString,
         'incorporation_state_or_province': DirectoryString,
         'incorporation_country': DirectoryString,
-        'domain_component': IA5String,
+        'domain_component': DNSName,
     }
 
     _prepped = None
@@ -869,102 +1232,15 @@ class EDIPartyName(Sequence):
     ]
 
 
-class IPAddress(OctetString):
-    def parse(self, spec=None, spec_params=None):  #pylint: disable=W0613
-        """
-        This method is not applicable to IP addresses
-        """
-
-        raise ValueError('IP address values can not be parsed')
-
-    def set(self, value):
-        """
-        Sets the value of the object
-
-        :param value:
-            A unicode string containing an IPv4 address, IPv4 address with CIDR,
-            an IPv6 address or IPv6 address with CIDR
-        """
-
-        if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
-
-        original_value = value
-
-        has_cidr = value.find('/') != -1
-        cidr = 0
-        if has_cidr:
-            parts = value.split('/', 1)
-            value = parts[0]
-            cidr = int(parts[1])
-            if cidr < 0:
-                raise ValueError('%s value contains a CIDR range less than 0' % self.__class__.__name__)
-
-        if value.find(':') != -1:
-            family = socket.AF_INET6
-            if cidr > 128:
-                raise ValueError('%s value contains a CIDR range bigger than 128, the maximum value for an IPv6 address' % self.__class__.__name__)
-            cidr_size = 128
-        else:
-            family = socket.AF_INET
-            if cidr > 32:
-                raise ValueError('%s value contains a CIDR range bigger than 32, the maximum value for an IPv4 address' % self.__class__.__name__)
-            cidr_size = 32
-
-        cidr_bytes = b''
-        if has_cidr:
-            cidr_mask = '1' * cidr
-            cidr_mask += '0' * (cidr_size - len(cidr_mask))
-            cidr_bytes = int_to_bytes(int(cidr_mask, 2))
-            cidr_bytes = (b'\x00' * ((cidr_size // 8) - len(cidr_bytes))) + cidr_bytes
-
-        self._native = original_value
-        self.contents = inet_pton(family, value) + cidr_bytes
-        self._header = None
-        if self._trailer != b'':
-            self._trailer = b''
-
-    @property
-    def native(self):
-        """
-        The a native Python datatype representation of this value
-
-        :return:
-            A unicode string or None
-        """
-
-        if self.contents is None:
-            return None
-
-        if self._native is None:
-            byte_string = self.__bytes__()
-            byte_len = len(byte_string)
-            cidr_int = None
-            if byte_len in {32, 16}:
-                value = inet_ntop(socket.AF_INET6, byte_string[0:16])
-                if byte_len > 16:
-                    cidr_int = int_from_bytes(byte_string[16:])
-            elif byte_len in {8, 4}:
-                value = inet_ntop(socket.AF_INET, byte_string[0:4])
-                if byte_len > 4:
-                    cidr_int = int_from_bytes(byte_string[4:])
-            if cidr_int is not None:
-                cidr_bits = '{0:b}'.format(cidr_int)
-                cidr = len(cidr_bits.rstrip('0'))
-                value = value + '/' + str_cls(cidr)
-            self._native = value
-        return self._native
-
-
 class GeneralName(Choice):
     _alternatives = [
         ('other_name', AnotherName, {'tag_type': 'implicit', 'tag': 0}),
-        ('rfc822_name', IA5String, {'tag_type': 'implicit', 'tag': 1}),
-        ('dns_name', IA5String, {'tag_type': 'implicit', 'tag': 2}),
+        ('rfc822_name', EmailAddress, {'tag_type': 'implicit', 'tag': 1}),
+        ('dns_name', DNSName, {'tag_type': 'implicit', 'tag': 2}),
         ('x400_address', ORAddress, {'tag_type': 'implicit', 'tag': 3}),
         ('directory_name', Name, {'tag_type': 'explicit', 'tag': 4}),
         ('edi_party_name', EDIPartyName, {'tag_type': 'implicit', 'tag': 5}),
-        ('uniform_resource_identifier', IA5String, {'tag_type': 'implicit', 'tag': 6}),
+        ('uniform_resource_identifier', URI, {'tag_type': 'implicit', 'tag': 6}),
         ('ip_address', IPAddress, {'tag_type': 'implicit', 'tag': 7}),
         ('registered_id', ObjectIdentifier, {'tag_type': 'implicit', 'tag': 8}),
     ]
@@ -992,10 +1268,7 @@ class GeneralName(Choice):
         if self.name != other.name:
             return False
 
-        if self.name == 'directory_name':
-            return self.chosen == other.chosen
-
-        return self.native == other.native
+        return self.chosen == other.chosen
 
 
 class GeneralNames(SequenceOf):
@@ -1974,3 +2247,122 @@ class Certificate(Sequence):
                 else:
                     self._self_signed = 'maybe'
         return self._self_signed
+
+
+def _iri_utf8_errors_handler(exc):
+    """
+    Error handler for decoding UTF-8 parts of a URI into an IRI. Leaves byte
+    sequences encoded in %XX format, but as part of a unicode string.
+
+    :param exc:
+        The UnicodeDecodeError exception
+
+    :return:
+        A 2-element tuple of (replacement unicode string, integer index to
+        resume at)
+    """
+
+    bytes_as_ints = bytes_to_list(exc.object[exc.start:exc.end])
+    replacements = ['%%%02x' % num for num in bytes_as_ints]
+    return (''.join(replacements), exc.end)
+
+
+codecs.register_error('iriutf8', _iri_utf8_errors_handler)
+
+
+def _urlquote(string, safe=''):
+    """
+    Quotes a unicode string for use in a URL
+
+    :param string:
+        A unicode string
+
+    :param safe:
+        A unicode string of character to not encode
+
+    :return:
+        None (if string is None) or an ASCII byte string of the quoted string
+    """
+
+    if string is None or string == '':
+        return None
+
+    # Anything already hex quoted is pulled out of the URL and unquoted if
+    # possible
+    escapes = []
+    if re.search('%[0-9a-fA-F]{2}', string):
+        # Try to unquote any percent values, restoring them if they are not
+        # valid UTF-8. Also, requote any safe chars since encoded versions of
+        # those are functionally different than the unquoted ones.
+        def _try_unescape(match):
+            byte_string = unquote_to_bytes(match.group(0))
+            unicode_string = byte_string.decode('utf-8', errors='iriutf8')
+            for safe_char in list(safe):
+                unicode_string = unicode_string.replace(safe_char, '%%%02x' % ord(safe_char))
+            return unicode_string
+        string = re.sub('(?:%[0-9a-fA-F]{2})+', _try_unescape, string)
+
+        # Once we have the minimal set of hex quoted values, removed them from
+        # the string so that they are not double quoted
+        def _extract_escape(match):
+            escapes.append(match.group(0).encode('ascii'))
+            return '\x00'
+        string = re.sub('%[0-9a-fA-F]{2}', _extract_escape, string)
+
+    output = urlquote(string.encode('utf-8'), safe=safe)
+    if not isinstance(output, byte_cls):
+        output = output.encode('ascii')
+
+    # Restore the existing quoted values that we extracted
+    if len(escapes) > 0:
+        def _return_escape(_):
+            return escapes.pop(0)
+        output = re.sub(b'%00', _return_escape, output)
+
+    return output
+
+
+def _urlunquote(byte_string, remap=None, preserve=None):
+    """
+    Unquotes a URI portion from a byte string into unicode using UTF-8
+
+    :param byte_string:
+        A byte string of the data to unquote
+
+    :param remap:
+        A list of characters (as unicode) that should be re-mapped to a
+        %XX encoding. This is used when characters are not valid in part of a
+        URL.
+
+    :param preserve:
+        A bool - indicates that the chars to be remapped if they occur in
+        non-hex form, should be preserved. E.g. / for URL path.
+
+    :return:
+        A unicode string
+    """
+
+    if byte_string is None:
+        return byte_string
+
+    byte_string = unquote_to_bytes(byte_string)
+
+    if preserve:
+        replacements = ['\x1A', '\x1C', '\x1D', '\x1E', '\x1F']
+        preserve_unmap = {}
+        for char in remap:
+            replacement = replacements.pop(0)
+            preserve_unmap[replacement] = char
+            byte_string = byte_string.replace(char.encode('ascii'), replacement.encode('ascii'))
+
+    if remap:
+        for char in remap:
+            byte_string = byte_string.replace(char.encode('ascii'), ('%%%02x' % ord(char)).encode('ascii'))
+
+    output = byte_string.decode('utf-8', errors='iriutf8')
+
+    if preserve:
+        for replacement, original in preserve_unmap.items():
+            output = output.replace(replacement, original)
+
+    return output

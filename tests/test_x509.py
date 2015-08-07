@@ -51,6 +51,103 @@ class X509Tests(unittest.TestCase):
 
     #pylint: disable=C0326
     @staticmethod
+    def compare_dnsname_info():
+        return (
+            ('google.com',   'google.com', True),
+            ('google.com',   'Google.com', True),
+            ('Bücher.ch',    b'\x16\x10xn--bcher-kva.ch', True),
+            ('google.com',    b'\x16\x0AGoogle.com', True),
+            ('google.com',    b'\x16\x09Google.co', False),
+        )
+
+    @data('compare_dnsname_info')
+    def compare_dnsname(self, domain_one, domain_two, equal):
+        one = x509.DNSName(domain_one)
+        if isinstance(domain_two, byte_cls):
+            two = x509.DNSName.load(domain_two)
+        else:
+            two = x509.DNSName(domain_two)
+        if equal:
+            self.assertEqual(one, two)
+        else:
+            self.assertNotEqual(one, two)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def compare_uri_info():
+        return (
+            ('http://google.com',    'http://google.com', True),
+            ('http://google.com/',   'http://Google.com', True),
+            ('http://google.com:80', 'http://google.com', True),
+            ('https://google.com', 'https://google.com:443/', True),
+            ('http://google.com/%41%42%43', 'http://google.com/ABC', True),
+            ('http://google.com/%41%42%43', 'http://google.com/abc', False),
+            ('http://google.com/%41%42%43/', 'http://google.com/ABC%2F', False),
+        )
+
+    @data('compare_uri_info')
+    def compare_uri(self, uri_one, uri_two, equal):
+        one = x509.URI(uri_one)
+        if isinstance(uri_two, byte_cls):
+            two = x509.URI.load(uri_two)
+        else:
+            two = x509.URI(uri_two)
+        if equal:
+            self.assertEqual(one, two)
+        else:
+            self.assertNotEqual(one, two)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def compare_email_address_info():
+        return (
+            ('john@google.com',   'john@google.com', True),
+            ('john@google.com',   'john@Google.com', True),
+            ('john@google.com',   'John@google.com', False),
+            ('john@Bücher.ch',    b'\x16\x15john@xn--bcher-kva.ch', True),
+            ('John@Bücher.ch',    b'\x16\x15john@xn--bcher-kva.ch', False),
+            ('john@google.com',   b'\x16\x0Fjohn@Google.com', True),
+            ('john@google.com',   b'\x16\x0FJohn@google.com', False),
+            ('john@google.com',   b'\x16\x0Ejohn@Google.co', False),
+        )
+
+    @data('compare_email_address_info')
+    def compare_email_address(self, email_one, email_two, equal):
+        one = x509.EmailAddress(email_one)
+        if isinstance(email_two, byte_cls):
+            two = x509.EmailAddress.load(email_two)
+        else:
+            two = x509.EmailAddress(email_two)
+        if equal:
+            self.assertEqual(one, two)
+        else:
+            self.assertNotEqual(one, two)
+
+    #pylint: disable=C0326
+    @staticmethod
+    def compare_ip_address_info():
+        return (
+            ('127.0.0.1',                  '127.0.0.1', True),
+            ('127.0.0.1',                  '127.0.0.2', False),
+            ('127.0.0.1',                  '127.0.0.1/32', False),
+            ('127.0.0.1/32',               b'\x04\x08\x7F\x00\x00\x01\xFF\xFF\xFF\xFF', True),
+            ('127.0.0.1',                  b'\x04\x08\x7F\x00\x00\x01\xFF\xFF\xFF\xFF', False),
+        )
+
+    @data('compare_ip_address_info')
+    def compare_ip_address(self, email_one, email_two, equal):
+        one = x509.IPAddress(email_one)
+        if isinstance(email_two, byte_cls):
+            two = x509.IPAddress.load(email_two)
+        else:
+            two = x509.IPAddress(email_two)
+        if equal:
+            self.assertEqual(one, two)
+        else:
+            self.assertNotEqual(one, two)
+
+    #pylint: disable=C0326
+    @staticmethod
     def compare_name_info():
         return (
             (
