@@ -55,6 +55,7 @@ from .core import (
 from .algos import SignedDigestAlgorithm
 from .keys import PublicKeyInfo
 from .util import int_to_bytes, int_from_bytes
+from ._errors import object_name
 
 if sys.version_info < (3,):
     str_cls = unicode  #pylint: disable=E0602
@@ -116,7 +117,7 @@ class URI(IA5String):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be a unicode string, not %s' % (object_name(self), object_name(value)))
 
         self._normalized = True
         self._native = value
@@ -265,7 +266,7 @@ class EmailAddress(IA5String):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be a unicode string, not %s' % (object_name(self), object_name(value)))
 
         if value.find('@') != -1:
             mailbox, hostname = value.rsplit('@', 1)
@@ -347,7 +348,7 @@ class IPAddress(OctetString):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be a unicode string, not %s' % (object_name(self), object_name(value)))
 
         original_value = value
 
@@ -358,17 +359,17 @@ class IPAddress(OctetString):
             value = parts[0]
             cidr = int(parts[1])
             if cidr < 0:
-                raise ValueError('%s value contains a CIDR range less than 0' % self.__class__.__name__)
+                raise ValueError('%s value contains a CIDR range less than 0' % object_name(self))
 
         if value.find(':') != -1:
             family = socket.AF_INET6
             if cidr > 128:
-                raise ValueError('%s value contains a CIDR range bigger than 128, the maximum value for an IPv6 address' % self.__class__.__name__)
+                raise ValueError('%s value contains a CIDR range bigger than 128, the maximum value for an IPv6 address' % object_name(self))
             cidr_size = 128
         else:
             family = socket.AF_INET
             if cidr > 32:
-                raise ValueError('%s value contains a CIDR range bigger than 32, the maximum value for an IPv4 address' % self.__class__.__name__)
+                raise ValueError('%s value contains a CIDR range bigger than 32, the maximum value for an IPv4 address' % object_name(self))
             cidr_size = 32
 
         cidr_bytes = b''

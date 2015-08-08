@@ -15,6 +15,8 @@ import sys
 import base64
 import re
 
+from ._errors import object_name
+
 if sys.version_info < (3,):
     str_cls = unicode  #pylint: disable=E0602
     byte_cls = str
@@ -39,7 +41,7 @@ def detect(byte_string):
     """
 
     if not isinstance(byte_string, byte_cls):
-        raise ValueError('byte_string must be a byte string, not %s' % byte_string.__class__.__name__)
+        raise ValueError('byte_string must be a byte string, not %s' % object_name(byte_string))
 
     return byte_string.find(b'-----BEGIN') != -1 or byte_string.find(b'---- BEGIN') != -1
 
@@ -65,10 +67,10 @@ def armor(type_name, der_bytes, headers=None):
     """
 
     if not isinstance(der_bytes, byte_cls):
-        raise ValueError('der_bytes must be a byte string, not %s' % der_bytes.__class__.__name__)
+        raise ValueError('der_bytes must be a byte string, not %s' % object_name(der_bytes))
 
     if not isinstance(type_name, str_cls):
-        raise ValueError('type_name must be a unicode string, not %s' % type_name.__class__.__name__)
+        raise ValueError('type_name must be a unicode string, not %s' % object_name(type_name))
 
     type_name = type_name.upper().encode('ascii')
 
@@ -116,7 +118,7 @@ def _unarmor(pem_bytes):
     """
 
     if not isinstance(pem_bytes, byte_cls):
-        raise ValueError('pem_bytes must be a byte string, not %s' % pem_bytes.__class__.__name__)
+        raise ValueError('pem_bytes must be a byte string, not %s' % object_name(pem_bytes))
 
     # Valid states include: "trash", "headers", "body"
     state = 'trash'

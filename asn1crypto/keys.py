@@ -46,6 +46,7 @@ from ._elliptic_curve import (
     PrimePoint,
 )
 from .util import int_from_bytes, int_to_bytes
+from ._errors import object_name
 
 try:
     # Python 2
@@ -533,7 +534,7 @@ class PrivateKeyInfo(Sequence):
         """
 
         if not isinstance(private_key, byte_cls) and not isinstance(private_key, Asn1Value):
-            raise ValueError('private_key must be a byte string or Asn1Value, not %s' % private_key.__class__.__name__)
+            raise ValueError('private_key must be a byte string or Asn1Value, not %s' % object_name(private_key))
 
         if algorithm == 'rsa':
             if not isinstance(private_key, RSAPrivateKey):
@@ -921,7 +922,7 @@ class PublicKeyInfo(Sequence):
         """
 
         if not isinstance(public_key, byte_cls) and not isinstance(public_key, Asn1Value):
-            raise ValueError('public_key must be a byte string or Asn1Value, not %s' % public_key.__class__.__name__)
+            raise ValueError('public_key must be a byte string or Asn1Value, not %s' % object_name(public_key))
 
         if algorithm != 'rsa':
             raise ValueError('algorithm must "rsa", not %s' % repr(algorithm))

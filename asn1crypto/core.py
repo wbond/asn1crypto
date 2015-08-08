@@ -55,6 +55,7 @@ import binascii
 
 from . import _teletex_codec
 from .util import int_to_bytes, int_from_bytes, timezone
+from ._errors import object_name
 
 # Python 2
 if sys.version_info <= (3,):
@@ -224,7 +225,7 @@ class Asn1Value(object):
 
                 if tag is not None:
                     if not isinstance(tag, int_types):
-                        raise ValueError('tag must be an integer, not %s' % tag.__class__.__name__)
+                        raise ValueError('tag must be an integer, not %s' % object_name(tag))
 
                 if tag_type == 'implicit':
                     self.class_ = class_
@@ -249,7 +250,7 @@ class Asn1Value(object):
 
         except (ValueError) as e:
             args = e.args[1:]
-            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            e.args = (e.args[0] + '\n    while constructing %s' % object_name(self),) + args
             raise e
 
     def __str__(self):
@@ -272,7 +273,7 @@ class Asn1Value(object):
             A unicode string
         """
 
-        return '<%s %s %s>' % (self.__class__.__name__, id(self), repr(self.contents or b''))
+        return '<%s %s %s>' % (object_name(self), id(self), repr(self.contents or b''))
 
     def copy(self):
         """
@@ -330,7 +331,7 @@ class Asn1Value(object):
         """
 
         if self.__class__ != other.__class__:
-            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+            raise ValueError('Can not copy values from %s object to %s object' % (object_name(other), object_name(self)))
 
         self.contents = other.contents
         self._native = other._native
@@ -477,14 +478,14 @@ class Any(Asn1Value):
         try:
             if value is not None:
                 if not isinstance(value, Asn1Value):
-                    raise ValueError('value must be an instance of Ans1Value, not %s' % value.__class__.__name__)
+                    raise ValueError('value must be an instance of Ans1Value, not %s' % object_name(value))
 
                 self._parsed = (value, value.__class__, None)
                 self.contents = value.dump()
 
         except (ValueError) as e:
             args = e.args[1:]
-            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            e.args = (e.args[0] + '\n    while constructing %s' % object_name(self),) + args
             raise e
 
     @property
@@ -544,7 +545,7 @@ class Any(Asn1Value):
                 self._parsed = (parsed_value, spec, spec_params)
             except (ValueError) as e:
                 args = e.args[1:]
-                e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
+                e.args = (e.args[0] + '\n    while parsing %s' % object_name(self),) + args
                 raise e
         return self._parsed[0]
 
@@ -639,7 +640,7 @@ class Choice(Asn1Value):
 
             if name is not None:
                 if name not in self._name_map:
-                    raise ValueError('The name specified, "%s", is not a valid alternative for %s' % (name, self.__class__.__name__))
+                    raise ValueError('The name specified, "%s", is not a valid alternative for %s' % (name, object_name(self)))
 
                 self._choice = self._name_map[name]
                 info = self._alternatives[self._choice]
@@ -654,7 +655,7 @@ class Choice(Asn1Value):
 
         except (ValueError) as e:
             args = e.args[1:]
-            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            e.args = (e.args[0] + '\n    while constructing %s' % object_name(self),) + args
             raise e
 
     @property
@@ -684,7 +685,7 @@ class Choice(Asn1Value):
             self._parsed, _ = _parse_build(self.contents, spec=info[1], spec_params=params)
         except (ValueError) as e:
             args = e.args[1:]
-            e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
+            e.args = (e.args[0] + '\n    while parsing %s' % object_name(self),) + args
             raise e
 
     @property
@@ -730,7 +731,7 @@ class Choice(Asn1Value):
         # This means the Choice was implicitly tagged
         if self.class_ is not None and self.tag is not None:
             if len(self._alternatives) > 1:
-                raise ValueError('%s was implicitly tagged, but more than one alternative exists' % self.__class__.__name__)
+                raise ValueError('%s was implicitly tagged, but more than one alternative exists' % object_name(self))
             if id_ == (self.class_, self.tag):
                 self._choice = 0
                 return
@@ -738,7 +739,7 @@ class Choice(Asn1Value):
         asn1 = self._format_class_tag(class_, tag)
         asn1s = [self._format_class_tag(id_[0], id_[1]) for id_ in self._id_map]
 
-        raise ValueError('Value %s did not match the class and tag of any of the alternatives in %s: %s' % (asn1, self.__class__.__name__, '. '.join(asn1s)))
+        raise ValueError('Value %s did not match the class and tag of any of the alternatives in %s: %s' % (asn1, object_name(self), '. '.join(asn1s)))
 
     def _format_class_tag(self, class_, tag):
         """
@@ -758,7 +759,7 @@ class Choice(Asn1Value):
         """
 
         if self.__class__ != other.__class__:
-            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+            raise ValueError('Can not copy values from %s object to %s object' % (object_name(other), object_name(self)))
 
         self.contents = other.contents
         self._native = other._native
@@ -824,7 +825,7 @@ class Primitive(Asn1Value):
 
         except (ValueError) as e:
             args = e.args[1:]
-            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            e.args = (e.args[0] + '\n    while constructing %s' % object_name(self),) + args
             raise e
 
     def set(self, value):
@@ -836,7 +837,7 @@ class Primitive(Asn1Value):
         """
 
         if not isinstance(value, byte_cls):
-            raise ValueError('%s value must be a byte string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be a byte string, not %s' % (object_name(self), object_name(value)))
 
         self._native = value
         self.contents = value
@@ -923,7 +924,7 @@ class AbstractString(Primitive):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be a unicode string, not %s' % (object_name(self), object_name(value)))
 
         self._native = value
         self.contents = value.encode(self._encoding)
@@ -1029,15 +1030,15 @@ class Integer(Primitive, ValueMap):
 
         if isinstance(value, str_cls):
             if self._map is None:
-                raise ValueError('%s value is a unicode string, but no _map provided' % self.__class__.__name__)
+                raise ValueError('%s value is a unicode string, but no _map provided' % object_name(self))
 
             if value not in self._reverse_map:
-                raise ValueError('%s value, %s, is not present in the _map' % (self.__class__.__name__, value))
+                raise ValueError('%s value, %s, is not present in the _map' % (object_name(self), value))
 
             value = self._reverse_map[value]
 
         elif not isinstance(value, int_types):
-            raise ValueError('%s value must be an integer or unicode string when a name_map is provided, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be an integer or unicode string when a name_map is provided, not %s' % (object_name(self), object_name(value)))
 
         self._native = self._map[value] if self._map and value in self._map else value
 
@@ -1106,7 +1107,7 @@ class BitString(Primitive, ValueMap, object):
 
         if isinstance(value, set):
             if self._map is None:
-                raise ValueError('%s _map has not been defined' % self.__class__.__name__)
+                raise ValueError('%s _map has not been defined' % object_name(self))
 
             bits = [0] * self._size
             self._native = value
@@ -1131,12 +1132,12 @@ class BitString(Primitive, ValueMap, object):
             value = ''.join(map(str_cls, value))
 
         else:
-            raise ValueError('%s value must be a tuple of ones and zeros or a set of unicode strings, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be a tuple of ones and zeros or a set of unicode strings, not %s' % (object_name(self), object_name(value)))
 
         if self._map is not None:
             size = self._size
             if len(value) > size:
-                raise ValueError('%s value must be at most %s bits long, specified was %s long' % (self.__class__.__name__, size, len(value)))
+                raise ValueError('%s value must be at most %s bits long, specified was %s long' % (object_name(self), size, len(value)))
             value += '0' * (size - len(value))
         else:
             size = len(value)
@@ -1184,10 +1185,10 @@ class BitString(Primitive, ValueMap, object):
         is_int = isinstance(key, int_types)
         if not is_int:
             if not isinstance(self._map, dict):
-                raise ValueError('%s _map has not been defined' % self.__class__.__name__)
+                raise ValueError('%s _map has not been defined' % object_name(self))
 
             if key not in self._reverse_map:
-                raise ValueError('%s _map does not contain an entry for "%s"' % (self.__class__.__name__, key))
+                raise ValueError('%s _map does not contain an entry for "%s"' % (object_name(self), key))
 
         if self._native is None:
             _ = self.native
@@ -1219,10 +1220,10 @@ class BitString(Primitive, ValueMap, object):
         is_int = isinstance(key, int_types)
         if not is_int:
             if self._map is None:
-                raise ValueError('%s _map has not been defined' % self.__class__.__name__)
+                raise ValueError('%s _map has not been defined' % object_name(self))
 
             if key not in self._reverse_map:
-                raise ValueError('%s _map does not contain an entry for "%s"' % (self.__class__.__name__, key))
+                raise ValueError('%s _map does not contain an entry for "%s"' % (object_name(self), key))
 
         if self._native is None:
             _ = self.native
@@ -1310,7 +1311,7 @@ class OctetBitString(Primitive):
         """
 
         if not isinstance(value, byte_cls):
-            raise ValueError('%s value must be a byte string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be a byte string, not %s' % (object_name(self), object_name(value)))
 
         self._native = value
         # Set the unused bits to 0
@@ -1367,7 +1368,7 @@ class IntegerBitString(Primitive):
         """
 
         if not isinstance(value, int_types):
-            raise ValueError('%s value must be an integer, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be an integer, not %s' % (object_name(self), object_name(value)))
 
         self._native = value
         # Set the unused bits to 0
@@ -1450,7 +1451,7 @@ class IntegerOctetString(Primitive):
         """
 
         if not isinstance(value, int_types):
-            raise ValueError('%s value must be an integer, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be an integer, not %s' % (object_name(self), object_name(value)))
 
         self._native = value
         # Set the unused bits to 0
@@ -1581,7 +1582,7 @@ class ParsableOctetString(Primitive):
         """
 
         if self.__class__ != other.__class__:
-            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+            raise ValueError('Can not copy values from %s object to %s object' % (object_name(other), object_name(self)))
 
         self.contents = other.contents
         self._native = other._native
@@ -1626,7 +1627,7 @@ class ParsableOctetBitString(ParsableOctetString):
         """
 
         if not isinstance(value, byte_cls):
-            raise ValueError('%s value must be a byte string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be a byte string, not %s' % (object_name(self), object_name(value)))
 
         self._native = value
         # Set the unused bits to 0
@@ -1700,7 +1701,7 @@ class ObjectIdentifier(Primitive, ValueMap):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be a unicode string, not %s' % (object_name(self), object_name(value)))
 
         self._native = value
 
@@ -1820,16 +1821,16 @@ class Enumerated(Integer):
         """
 
         if not isinstance(value, int_types) and not isinstance(value, str_cls):
-            raise ValueError('%s value must be an integer or a unicode string, not %s' % (self.__class__.__name__, value.__class__.__name__))
+            raise ValueError('%s value must be an integer or a unicode string, not %s' % (object_name(self), object_name(value)))
 
         if isinstance(value, str_cls):
             if value not in self._reverse_map:
-                raise ValueError('%s value "%s" is not a valid value' % (self.__class__.__name__, value))
+                raise ValueError('%s value "%s" is not a valid value' % (object_name(self), value))
 
             value = self._reverse_map[value]
 
         elif value not in self._map:
-            raise ValueError('%s value %s is not a valid value' % (self.__class__.__name__, value))
+            raise ValueError('%s value %s is not a valid value' % (object_name(self), value))
 
         Integer.set(self, value)
 
@@ -1969,7 +1970,7 @@ class Sequence(Asn1Value):
 
             except (ValueError) as e:
                 args = e.args[1:]
-                e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+                e.args = (e.args[0] + '\n    while constructing %s' % object_name(self),) + args
                 raise e
 
     @property
@@ -2053,11 +2054,11 @@ class Sequence(Asn1Value):
 
         if not isinstance(key, int_types):
             if key not in self._field_map:
-                raise KeyError('No field named "%s" defined for %s' % (key, self.__class__.__name__))
+                raise KeyError('No field named "%s" defined for %s' % (key, object_name(self)))
             key = self._field_map[key]
 
         if key >= len(self.children):
-            raise KeyError('No field numbered %s is present in this %s' % (key, self.__class__.__name__))
+            raise KeyError('No field numbered %s is present in this %s' % (key, object_name(self)))
 
         return self._lazy_child(key)
 
@@ -2082,7 +2083,7 @@ class Sequence(Asn1Value):
 
         if not isinstance(key, int_types):
             if key not in self._field_map:
-                raise KeyError('No field named "%s" defined for %s' % (key, self.__class__.__name__))
+                raise KeyError('No field named "%s" defined for %s' % (key, object_name(self)))
             key = self._field_map[key]
 
         field_name, field_spec, value_spec, field_params, _ = self._determine_spec(key)
@@ -2098,7 +2099,7 @@ class Sequence(Asn1Value):
             invalid_value = new_value.contents is None
 
         if invalid_value:
-            raise ValueError('Value for field "%s" of %s is not set' % (field_name, self.__class__.__name__))
+            raise ValueError('Value for field "%s" of %s is not set' % (field_name, object_name(self)))
 
         self.children[key] = new_value
 
@@ -2123,12 +2124,12 @@ class Sequence(Asn1Value):
 
         if not isinstance(key, int_types):
             if key not in self._field_map:
-                raise KeyError('No field named "%s" defined for %s' % (key, self.__class__.__name__))
+                raise KeyError('No field named "%s" defined for %s' % (key, object_name(self)))
             key = self._field_map[key]
 
         info = self._fields[key]
         if len(info) < 3 or ('default' not in info[2] and 'optional' not in info[2]):
-            raise ValueError('Can not delete the value for the field "%s" of %s since it is not optional or defaulted' % (info[0], self.__class__.__name__))
+            raise ValueError('Can not delete the value for the field "%s" of %s since it is not optional or defaulted' % (info[0], object_name(self)))
 
         if 'optional' in info[2]:
             self.children[key] = NoValue()
@@ -2433,7 +2434,7 @@ class Sequence(Asn1Value):
 
         except (ValueError) as e:
             args = e.args[1:]
-            e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
+            e.args = (e.args[0] + '\n    while parsing %s' % object_name(self),) + args
             raise e
 
     def spec(self, field_name):
@@ -2453,10 +2454,10 @@ class Sequence(Asn1Value):
         """
 
         if not isinstance(field_name, str_cls):
-            raise ValueError('field_name must be a unicode string, not %s' % field_name.__class__.__name__)
+            raise ValueError('field_name must be a unicode string, not %s' % object_name(field_name))
 
         if self._fields is None:
-            raise ValueError('Unable to retrieve spec for field %s in the class %s because _fields has not been set' % (repr(field_name), self.__class__.__name__))
+            raise ValueError('Unable to retrieve spec for field %s in the class %s because _fields has not been set' % (repr(field_name), object_name(self)))
 
         index = self._field_map[field_name]
         info = self._determine_spec(index)
@@ -2501,7 +2502,7 @@ class Sequence(Asn1Value):
         """
 
         if self.__class__ != other.__class__:
-            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+            raise ValueError('Can not copy values from %s object to %s object' % (object_name(other), object_name(self)))
 
         self.contents = other.contents
         self._native = other._native
@@ -2611,7 +2612,7 @@ class SequenceOf(Asn1Value):
 
         except (ValueError) as e:
             args = e.args[1:]
-            e.args = (e.args[0] + '\n    while constructing %s' % self.__class__.__name__,) + args
+            e.args = (e.args[0] + '\n    while constructing %s' % object_name(self),) + args
             raise e
 
     @property
@@ -2683,11 +2684,11 @@ class SequenceOf(Asn1Value):
             if isinstance(value, Asn1Value):
                 new_value = value
             else:
-                raise ValueError('Can not set a native python value to %s where the _child_spec is Any – value must be an instance of Asn1Value' % self.__class__.__name__)
+                raise ValueError('Can not set a native python value to %s where the _child_spec is Any – value must be an instance of Asn1Value' % object_name(self))
 
         elif issubclass(self._child_spec, Choice):
             if not isinstance(value, Asn1Value):
-                raise ValueError('Can not set a native python value to %s where the _child_spec is the choice type %s – value must be an instance of Asn1Value' % (self.__class__.__name__, self._child_spec.__name__))
+                raise ValueError('Can not set a native python value to %s where the _child_spec is the choice type %s – value must be an instance of Asn1Value' % (object_name(self), self._child_spec.__name__))
             if not isinstance(value, self._child_spec):
                 wrapper = self._child_spec()
                 wrapper.validate(value.class_, value.tag)
@@ -2868,7 +2869,7 @@ class SequenceOf(Asn1Value):
                 child_pointer += num_bytes
         except (ValueError) as e:
             args = e.args[1:]
-            e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
+            e.args = (e.args[0] + '\n    while parsing %s' % object_name(self),) + args
             raise e
 
     def spec(self):
@@ -2911,7 +2912,7 @@ class SequenceOf(Asn1Value):
         """
 
         if self.__class__ != other.__class__:
-            raise ValueError('Can not copy values from %s object to %s object' % (other.__class__.__name__, self.__class__.__name__))
+            raise ValueError('Can not copy values from %s object to %s object' % (object_name(other), object_name(self)))
 
         self.contents = other.contents
         self._native = other._native
@@ -3053,7 +3054,7 @@ class Set(Sequence):
                     child_map[index] = field_info[1](**field_info[2])
 
                 if missing:
-                    raise ValueError('Missing required field "%s" from %s' % (field_info[0], self.__class__.__name__))
+                    raise ValueError('Missing required field "%s" from %s' % (field_info[0], object_name(self)))
 
             self.children = []
             for index in range(0, total_fields):
@@ -3061,7 +3062,7 @@ class Set(Sequence):
 
         except (ValueError) as e:
             args = e.args[1:]
-            e.args = (e.args[0] + '\n    while parsing %s' % self.__class__.__name__,) + args
+            e.args = (e.args[0] + '\n    while parsing %s' % object_name(self),) + args
             raise e
 
 
@@ -3347,7 +3348,7 @@ def _basic_debug(prefix, self):
         The object to print the debugging information about
     """
 
-    print('%s%s Object #%s' % (prefix, self.__class__.__name__, id(self)))
+    print('%s%s Object #%s' % (prefix, object_name(self), id(self)))
     if self._header:  #pylint: disable=W0212
         print('%s  Header: 0x%s' % (prefix, binascii.hexlify(self._header or b'').decode('utf-8')))  #pylint: disable=W0212
 
@@ -3566,7 +3567,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 raise ValueError(
                     'Error parsing %s - explicitly-tagged class should have been %s, but %s was found' %
                     (
-                        value.__class__.__name__,
+                        object_name(value),
                         CLASS_NUM_TO_NAME_MAP.get(value.explicit_class),
                         CLASS_NUM_TO_NAME_MAP.get(class_, class_)
                     )
@@ -3575,7 +3576,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 raise ValueError(
                     'Error parsing %s - explicitly-tagged method should have been %s, but %s was found' %
                     (
-                        value.__class__.__name__,
+                        object_name(value),
                         METHOD_NUM_TO_NAME_MAP.get(1),
                         METHOD_NUM_TO_NAME_MAP.get(method, method)
                     )
@@ -3584,7 +3585,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 raise ValueError(
                     'Error parsing %s - explicitly-tagged tag should have been %s, but %s was found' %
                     (
-                        value.__class__.__name__,
+                        object_name(value),
                         value.explicit_tag,
                         tag
                     )
@@ -3598,7 +3599,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 raise ValueError(
                     'Error parsing %s - class should have been %s, but %s was found' %
                     (
-                        value.__class__.__name__,
+                        object_name(value),
                         CLASS_NUM_TO_NAME_MAP.get(value.class_),
                         CLASS_NUM_TO_NAME_MAP.get(class_, class_)
                     )
@@ -3607,7 +3608,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 raise ValueError(
                     'Error parsing %s - method should have been %s, but %s was found' %
                     (
-                        value.__class__.__name__,
+                        object_name(value),
                         METHOD_NUM_TO_NAME_MAP.get(value.method),
                         METHOD_NUM_TO_NAME_MAP.get(method, method)
                     )
@@ -3616,7 +3617,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 raise ValueError(
                     'Error parsing %s - tag should have been %s, but %s was found' %
                     (
-                        value.__class__.__name__,
+                        object_name(value),
                         value.tag,
                         tag
                     )
@@ -3705,7 +3706,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
             value.parse(nested_spec)
     except (ValueError) as e:
         args = e.args[1:]
-        e.args = (e.args[0] + '\n    while parsing %s' % value.__class__.__name__,) + args
+        e.args = (e.args[0] + '\n    while parsing %s' % object_name(value),) + args
         raise e
 
     return value
