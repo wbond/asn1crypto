@@ -20,6 +20,13 @@ a bunch of ASN.1 structures for use with various common cryptography standards:
 | TSP                    | [`asn1crypto.tsp`](asn1crypto/tsp.py)       | [RFC 3161](https://tools.ietf.org/html/rfc3161)                                                                         |
 | PDF signatures         | [`asn1crypto.pdf`](asn1crypto/pdf.py)       | [PDF 1.7](http://wwwimages.adobe.com/content/dam/Adobe/en/devnet/pdf/pdfs/PDF32000_2008.pdf)                           |
 
+*asn1crypto* is part of the modularcrypto family of Python packages:
+
+ - [asn1crypto](https://github.com/wbond/asn1crypto)
+ - [oscrypto](https://github.com/wbond/oscrypto)
+ - [certbuilder](https://github.com/wbond/certbuilder)
+ - [crlbuilder](https://github.com/wbond/crlbuilder)
+
 ## License
 
 *asn1crypto* is licensed under the terms of the MIT license. See the
