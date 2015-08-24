@@ -6,6 +6,9 @@ import sys
 import os
 
 from asn1crypto import csr, util
+from ._unittest_compat import patch
+
+patch()
 
 if sys.version_info < (3,):
     byte_cls = str

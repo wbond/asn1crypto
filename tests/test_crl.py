@@ -7,6 +7,10 @@ import os
 
 from asn1crypto import crl
 
+from ._unittest_compat import patch
+
+patch()
+
 if sys.version_info < (3,):
     byte_cls = str
     num_cls = long  #pylint: disable=E0602

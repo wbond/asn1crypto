@@ -7,6 +7,9 @@ import os
 from datetime import datetime
 
 from asn1crypto import ocsp, util
+from ._unittest_compat import patch
+
+patch()
 
 if sys.version_info < (3,):
     byte_cls = str

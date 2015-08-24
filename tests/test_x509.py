@@ -9,6 +9,9 @@ from datetime import datetime
 from asn1crypto import x509, core, pem, util
 
 from .unittest_data import DataDecorator, data
+from ._unittest_compat import patch
+
+patch()
 
 if sys.version_info < (3,):
     byte_cls = str

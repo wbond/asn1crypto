@@ -7,7 +7,9 @@ import os
 from asn1crypto import core
 
 from .unittest_data import DataDecorator, data
+from ._unittest_compat import patch
 
+patch()
 
 tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')

@@ -6,7 +6,9 @@ import os
 from datetime import datetime
 
 from asn1crypto import tsp, cms, util
+from ._unittest_compat import patch
 
+patch()
 
 tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
