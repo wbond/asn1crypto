@@ -2299,7 +2299,7 @@ def _urlquote(string, safe=''):
         # those are functionally different than the unquoted ones.
         def _try_unescape(match):
             byte_string = unquote_to_bytes(match.group(0))
-            unicode_string = byte_string.decode('utf-8', errors='iriutf8')
+            unicode_string = byte_string.decode('utf-8', 'iriutf8')
             for safe_char in list(safe):
                 unicode_string = unicode_string.replace(safe_char, '%%%02x' % ord(safe_char))
             return unicode_string
@@ -2312,7 +2312,7 @@ def _urlquote(string, safe=''):
             return '\x00'
         string = re.sub('%[0-9a-fA-F]{2}', _extract_escape, string)
 
-    output = urlquote(string.encode('utf-8'), safe=safe)
+    output = urlquote(string.encode('utf-8'), safe=safe.encode('utf-8'))
     if not isinstance(output, byte_cls):
         output = output.encode('ascii')
 
@@ -2362,7 +2362,7 @@ def _urlunquote(byte_string, remap=None, preserve=None):
         for char in remap:
             byte_string = byte_string.replace(char.encode('ascii'), ('%%%02x' % ord(char)).encode('ascii'))
 
-    output = byte_string.decode('utf-8', errors='iriutf8')
+    output = byte_string.decode('utf-8', 'iriutf8')
 
     if preserve:
         for replacement, original in preserve_unmap.items():
