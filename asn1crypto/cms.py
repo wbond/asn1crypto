@@ -175,7 +175,7 @@ class AttCertValidityPeriod(Sequence):
 
 class AttributeCertificateInfoV1(Sequence):
     _fields = [
-        ('version', AttCertVersion, {'default', 'v1'}),
+        ('version', AttCertVersion, {'default': 'v1'}),
         ('subject', AttCertSubject),
         ('issuer', GeneralNames),
         ('signature', SignedDigestAlgorithm),
