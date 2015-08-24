@@ -21,10 +21,10 @@ import hashlib
 import stringprep
 import unicodedata
 import socket
-from collections import OrderedDict
 from encodings import idna  #pylint: disable=W0611
 import codecs
 
+from ._ordereddict import OrderedDict
 from .core import (
     Any,
     BitString,

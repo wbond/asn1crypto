@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import unittest
 import sys
 import os
-from collections import OrderedDict
 from datetime import datetime
 
 from asn1crypto import x509, core, pem, util
@@ -340,7 +339,7 @@ class X509Tests(unittest.TestCase):
             ('keys/test-third-der.crt',                    None),
             ('geotrust_certs/GeoTrust_Universal_CA.crt',   None),
             ('geotrust_certs/GeoTrust_Primary_CA.crt',     None),
-            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', [OrderedDict([('common_name', 'SymantecPKI-1-538')])]),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', [util.OrderedDict([('common_name', 'SymantecPKI-1-538')])]),
             ('geotrust_certs/codex.crt',                   ['dev.codexns.io', 'rc.codexns.io', 'packagecontrol.io', 'wbond.net', 'codexns.io']),
             ('lets_encrypt/isrgrootx1.pem',                None),
             ('lets_encrypt/letsencryptauthorityx1.pem',    None),
@@ -401,19 +400,19 @@ class X509Tests(unittest.TestCase):
             ('lets_encrypt/letsencryptauthorityx2.pem',    None),
             (
                 'globalsign_example_keys/IssuingCA-der.cer',
-                OrderedDict([
+                util.OrderedDict([
                     (
                         'permitted_subtrees',
                         [
-                            OrderedDict([
+                            util.OrderedDict([
                                 ('base', 'onlythis.com'),
                                 ('minimum', 0),
                                 ('maximum', None)
                             ]),
-                            OrderedDict([
+                            util.OrderedDict([
                                 (
                                     'base',
-                                    OrderedDict([
+                                    util.OrderedDict([
                                         ('country_name', 'US'),
                                         ('state_or_province_name', 'MA'),
                                         ('locality_name', 'Boston'),
@@ -428,12 +427,12 @@ class X509Tests(unittest.TestCase):
                     (
                         'excluded_subtrees',
                         [
-                            OrderedDict([
+                            util.OrderedDict([
                                 ('base', '0.0.0.0/0'),
                                 ('minimum', 0),
                                 ('maximum', None)
                             ]),
-                            OrderedDict([
+                            util.OrderedDict([
                                 ('base', '::/0'),
                                 ('minimum', 0),
                                 ('maximum', None)
@@ -466,7 +465,7 @@ class X509Tests(unittest.TestCase):
             (
                 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://g1.symcb.com/GeoTrustPCA.crl']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -476,7 +475,7 @@ class X509Tests(unittest.TestCase):
             (
                 'geotrust_certs/codex.crt',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://gm.symcb.com/gm.crl']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -487,7 +486,7 @@ class X509Tests(unittest.TestCase):
             (
                 'lets_encrypt/letsencryptauthorityx1.pem',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://crl.root-x1.letsencrypt.org']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -497,7 +496,7 @@ class X509Tests(unittest.TestCase):
             (
                 'lets_encrypt/letsencryptauthorityx2.pem',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://crl.root-x1.letsencrypt.org']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -507,7 +506,7 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/IssuingCA-der.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -516,7 +515,7 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/rootCA.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -545,12 +544,12 @@ class X509Tests(unittest.TestCase):
             (
                 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', 'any_policy'),
                         (
                             'policy_qualifiers',
                             [
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('policy_qualifier_id', 'certification_practice_statement'),
                                     ('qualifier', 'https://www.geotrust.com/resources/cps')
                                 ])
@@ -562,20 +561,20 @@ class X509Tests(unittest.TestCase):
             (
                 'geotrust_certs/codex.crt',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', '1.3.6.1.4.1.14370.1.6'),
                         (
                             'policy_qualifiers',
                             [
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('policy_qualifier_id', 'certification_practice_statement'),
                                     ('qualifier', 'https://www.geotrust.com/resources/repository/legal')
                                 ]),
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('policy_qualifier_id', 'user_notice'),
                                     (
                                         'qualifier',
-                                        OrderedDict([
+                                        util.OrderedDict([
                                             ('notice_ref', None),
                                             ('explicit_text', 'https://www.geotrust.com/resources/repository/legal')
                                         ])
@@ -590,16 +589,16 @@ class X509Tests(unittest.TestCase):
             (
                 'lets_encrypt/letsencryptauthorityx1.pem',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', '2.23.140.1.2.1'),
                         ('policy_qualifiers', None)
                     ]),
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', '1.3.6.1.4.1.44947.1.1.1'),
                         (
                             'policy_qualifiers',
                             [
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('policy_qualifier_id', 'certification_practice_statement'),
                                     ('qualifier', 'http://cps.root-x1.letsencrypt.org')
                                 ])
@@ -611,16 +610,16 @@ class X509Tests(unittest.TestCase):
             (
                 'lets_encrypt/letsencryptauthorityx2.pem',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', '2.23.140.1.2.1'),
                         ('policy_qualifiers', None)
                     ]),
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', '1.3.6.1.4.1.44947.1.1.1'),
                         (
                             'policy_qualifiers',
                             [
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('policy_qualifier_id', 'certification_practice_statement'),
                                     ('qualifier', 'http://cps.root-x1.letsencrypt.org')
                                 ])
@@ -632,12 +631,12 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/IssuingCA-der.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', '1.3.6.1.4.1.4146.1.60'),
                         (
                             'policy_qualifiers',
                             [
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('policy_qualifier_id', 'certification_practice_statement'),
                                     ('qualifier', 'https://www.globalsign.com/repository/')
                                 ])
@@ -650,12 +649,12 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/SSL1.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', '1.3.6.1.4.1.4146.1.60'),
                         (
                             'policy_qualifiers',
                             [
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('policy_qualifier_id', 'certification_practice_statement'),
                                     ('qualifier', 'https://www.globalsign.com/repository/')
                                 ])
@@ -667,12 +666,12 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/SSL2.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', '1.3.6.1.4.1.4146.1.60'),
                         (
                             'policy_qualifiers',
                             [
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('policy_qualifier_id', 'certification_practice_statement'),
                                     ('qualifier', 'https://www.globalsign.com/repository/')
                                 ])
@@ -684,12 +683,12 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/SSL3.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('policy_identifier', '1.3.6.1.4.1.4146.1.60'),
                         (
                             'policy_qualifiers',
                             [
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('policy_qualifier_id', 'certification_practice_statement'),
                                     ('qualifier', 'https://www.globalsign.com/repository/')
                                 ])
@@ -739,12 +738,12 @@ class X509Tests(unittest.TestCase):
         return (
             (
                 'keys/test-der.crt',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK'),
                     (
                         'authority_cert_issuer',
                         [
-                            OrderedDict([
+                            util.OrderedDict([
                                 ('country_name', 'US'),
                                 ('state_or_province_name', 'Massachusetts'),
                                 ('locality_name', 'Newbury'),
@@ -760,7 +759,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'keys/test-inter-der.crt',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b'\xbeB\x85=\xcc\xff\xe3\xf9(\x02\x8f~XV\xb4\xfd\x03\\\xeaK'),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -768,7 +767,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'keys/test-third-der.crt',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b'\xd2\n\xfd.%\xd1\xb7!\xd7P~\xbb\xa4}\xbf4\xefR^\x02'),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -776,7 +775,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'geotrust_certs/GeoTrust_Universal_CA.crt',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b'\xda\xbb.\xaa\xb0\x0c\xb8\x88&Qt\\m\x03\xd3\xc0\xd8\x8fz\xd6'),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -788,7 +787,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b',\xd5PA\x97\x15\x8b\xf0\x8f6a[J\xfbk\xd9\x99\xc93\x92'),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -796,7 +795,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'geotrust_certs/codex.crt',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b'\xde\xcf\\P\xb7\xae\x02\x1f\x15\x17\xaa\x16\xe8\r\xb5(\x9djZ\xf3'),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -808,7 +807,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'lets_encrypt/letsencryptauthorityx1.pem',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b'y\xb4Y\xe6{\xb6\xe5\xe4\x01s\x80\x08\x88\xc8\x1aX\xf6\xe9\x9bn'),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -816,7 +815,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'lets_encrypt/letsencryptauthorityx2.pem',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b'y\xb4Y\xe6{\xb6\xe5\xe4\x01s\x80\x08\x88\xc8\x1aX\xf6\xe9\x9bn'),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -824,7 +823,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'globalsign_example_keys/IssuingCA-der.cer',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b'd|\\\xe1\xe0`8NH\x9f\x05\xbcUc~?\xaeM\xf7\x1e'),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -836,7 +835,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'globalsign_example_keys/SSL1.cer',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -844,7 +843,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'globalsign_example_keys/SSL2.cer',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -852,7 +851,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'globalsign_example_keys/SSL3.cer',
-                OrderedDict([
+                util.OrderedDict([
                     ('key_identifier', b"'\xf8/\xe9]\xd7\r\xf4\xa8\xea\x87\x99=\xfd\x8e\xb3\x9e@\xd0\x91"),
                     ('authority_cert_issuer', None),
                     ('authority_cert_serial_number', None)
@@ -932,7 +931,7 @@ class X509Tests(unittest.TestCase):
             (
                 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ocsp'),
                         ('access_location', 'http://g2.symcb.com')
                     ])
@@ -941,11 +940,11 @@ class X509Tests(unittest.TestCase):
             (
                 'geotrust_certs/codex.crt',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ocsp'),
                         ('access_location', 'http://gm.symcd.com')
                     ]),
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ca_issuers'),
                         ('access_location', 'http://gm.symcb.com/gm.crt')
                     ]),
@@ -955,11 +954,11 @@ class X509Tests(unittest.TestCase):
             (
                 'lets_encrypt/letsencryptauthorityx1.pem',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ocsp'),
                         ('access_location', 'http://ocsp.root-x1.letsencrypt.org/')
                     ]),
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ca_issuers'),
                         ('access_location', 'http://cert.root-x1.letsencrypt.org/')
                     ])
@@ -968,11 +967,11 @@ class X509Tests(unittest.TestCase):
             (
                 'lets_encrypt/letsencryptauthorityx2.pem',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ocsp'),
                         ('access_location', 'http://ocsp.root-x1.letsencrypt.org/')
                     ]),
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ca_issuers'),
                         ('access_location', 'http://cert.root-x1.letsencrypt.org/')
                     ])
@@ -983,11 +982,11 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/SSL1.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ocsp'),
                         ('access_location', 'http://ocsp.exampleovca.com/')
                     ]),
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ca_issuers'),
                         ('access_location', 'http://secure.globalsign.com/cacert/trustrootcatg2.crt')
                     ])
@@ -996,11 +995,11 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/SSL2.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ocsp'),
                         ('access_location', 'http://ocsp.exampleovca.com/')
                     ]),
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ca_issuers'),
                         ('access_location', 'http://secure.globalsign.com/cacert/trustrootcatg2.crt')
                     ])
@@ -1009,11 +1008,11 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/SSL3.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ocsp'),
                         ('access_location', 'http://ocsp.exampleovca.com/')
                     ]),
-                    OrderedDict([
+                    util.OrderedDict([
                         ('access_method', 'ca_issuers'),
                         ('access_location', 'http://secure.globalsign.com/cacert/trustrootcatg2.crt')
                     ])
@@ -1222,7 +1221,7 @@ class X509Tests(unittest.TestCase):
             (
                 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://g1.symcb.com/GeoTrustPCA.crl']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -1232,7 +1231,7 @@ class X509Tests(unittest.TestCase):
             (
                 'geotrust_certs/codex.crt',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://gm.symcb.com/gm.crl']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -1243,7 +1242,7 @@ class X509Tests(unittest.TestCase):
             (
                 'lets_encrypt/letsencryptauthorityx1.pem',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://crl.root-x1.letsencrypt.org']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -1253,7 +1252,7 @@ class X509Tests(unittest.TestCase):
             (
                 'lets_encrypt/letsencryptauthorityx2.pem',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://crl.root-x1.letsencrypt.org']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -1263,7 +1262,7 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/IssuingCA-der.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -1273,7 +1272,7 @@ class X509Tests(unittest.TestCase):
             (
                 'globalsign_example_keys/rootCA.cer',
                 [
-                    OrderedDict([
+                    util.OrderedDict([
                         ('distribution_point', ['http://crl.globalsign.com/gs/trustrootcatg2.crl']),
                         ('reasons', None),
                         ('crl_issuer', None)
@@ -1425,7 +1424,7 @@ class X509Tests(unittest.TestCase):
             signature['parameters'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('country_name', 'US'),
                 ('state_or_province_name', 'Massachusetts'),
                 ('locality_name', 'Newbury'),
@@ -1445,7 +1444,7 @@ class X509Tests(unittest.TestCase):
             validity['not_after'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('country_name', 'US'),
                 ('state_or_province_name', 'Massachusetts'),
                 ('locality_name', 'Newbury'),
@@ -1497,22 +1496,22 @@ class X509Tests(unittest.TestCase):
             )
         self.assertEqual(
             [
-                OrderedDict([
+                util.OrderedDict([
                     ('extn_id', 'key_identifier'),
                     ('critical', False),
                     ('extn_value', b'\xBE\x42\x85\x3D\xCC\xFF\xE3\xF9\x28\x02\x8F\x7E\x58\x56\xB4\xFD\x03\x5C\xEA\x4B'),
                 ]),
-                OrderedDict([
+                util.OrderedDict([
                     ('extn_id', 'authority_key_identifier'),
                     ('critical', False),
                     (
                         'extn_value',
-                        OrderedDict([
+                        util.OrderedDict([
                             ('key_identifier', b'\xBE\x42\x85\x3D\xCC\xFF\xE3\xF9\x28\x02\x8F\x7E\x58\x56\xB4\xFD\x03\x5C\xEA\x4B'),
                             (
                                 'authority_cert_issuer',
                                 [
-                                    OrderedDict([
+                                    util.OrderedDict([
                                         ('country_name', 'US'),
                                         ('state_or_province_name', 'Massachusetts'),
                                         ('locality_name', 'Newbury'),
@@ -1527,12 +1526,12 @@ class X509Tests(unittest.TestCase):
                         ])
                     ),
                 ]),
-                OrderedDict([
+                util.OrderedDict([
                     ('extn_id', 'basic_constraints'),
                     ('critical', False),
                     (
                         'extn_value',
-                        OrderedDict([
+                        util.OrderedDict([
                             ('ca', True),
                             ('path_len_constraint', None)
                         ])
@@ -1572,7 +1571,7 @@ class X509Tests(unittest.TestCase):
             signature['parameters'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('country_name', 'US'),
                 ('state_or_province_name', 'Massachusetts'),
                 ('locality_name', 'Newbury'),
@@ -1592,7 +1591,7 @@ class X509Tests(unittest.TestCase):
             validity['not_after'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('country_name', 'US'),
                 ('state_or_province_name', 'Massachusetts'),
                 ('locality_name', 'Newbury'),
@@ -1608,7 +1607,7 @@ class X509Tests(unittest.TestCase):
             subject_public_key_algorithm['algorithm'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('p', 4511743893397705393934377497936985478231822206263141826261443300639402520800626925517264115785551703273809312112372693877437137848393530691841757974971843334497076835630893064661599193178307024379015589119302113551197423138934242435710226975119594589912289060014025377813473273600967729027125618396732574594753039493158066887433778053086408525146692226448554390096911703556213619406958876388642882534250747780313634767409586007581976273681005928967585750017105562145167146445061803488570714706090280814293902464230717946651489964409785146803791743658888866280873858000476717727810363942159874283767926511678640730707887895260274767195555813448140889391762755466967436731106514029224490921857229134393798015954890071206959203407845438863870686180087606429828973298318856683615900474921310376145478859687052812749087809700610549251964102790514588562086548577933609968589710807989944739877028770343142449461177732058649962678857),
                 ('q', 71587850165936478337655415373676526523562874562337607790945426056266440596923),
                 ('g', 761437146067908309288345767887973163494473925243194806582679580640442238588269326525839153095505341738937595419375068472941615006110237832663093084973431440436421580371384720052414080562019831325744042316268714195397974084616335082272743706567701546951285088540646372701485690904535540223121118329044403681933304838754517522024738251994717369464179515923093116622352823578284891812676662979104509631349201801577889230316128523885862472086364717411346341249139971907827526291913249445756671582283459372536334490171231311487207683108274785825764378203622999309355578169139646003751751448501475767709869676880946562283552431757983801739671783678927397420797147373441051876558068212062253171347849380506793433921881336652424898488378657239798694995315456959568806256079056461448199493507273882763491729787817044805150879660784158902456811649964987582162907020243296662602990514615480712948126671999033658064244112238138589732202),
@@ -1644,29 +1643,29 @@ class X509Tests(unittest.TestCase):
             )
         self.assertEqual(
             [
-                OrderedDict([
+                util.OrderedDict([
                     ('extn_id', 'key_identifier'),
                     ('critical', False),
                     ('extn_value', b'\x81\xA3\x37\x86\xF9\x99\x28\xF2\x74\x70\x60\x87\xF2\xD3\x7E\x8D\x19\x61\xA8\xBE'),
                 ]),
-                OrderedDict([
+                util.OrderedDict([
                     ('extn_id', 'authority_key_identifier'),
                     ('critical', False),
                     (
                         'extn_value',
-                        OrderedDict([
+                        util.OrderedDict([
                             ('key_identifier', b'\x81\xA3\x37\x86\xF9\x99\x28\xF2\x74\x70\x60\x87\xF2\xD3\x7E\x8D\x19\x61\xA8\xBE'),
                             ('authority_cert_issuer', None),
                             ('authority_cert_serial_number', None),
                         ])
                     ),
                 ]),
-                OrderedDict([
+                util.OrderedDict([
                     ('extn_id', 'basic_constraints'),
                     ('critical', False),
                     (
                         'extn_value',
-                        OrderedDict([
+                        util.OrderedDict([
                             ('ca', True),
                             ('path_len_constraint', None)
                         ])
@@ -1709,7 +1708,7 @@ class X509Tests(unittest.TestCase):
             signature['parameters'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('country_name', 'US'),
                 ('state_or_province_name', 'Massachusetts'),
                 ('locality_name', 'Newbury'),
@@ -1729,7 +1728,7 @@ class X509Tests(unittest.TestCase):
             validity['not_after'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('country_name', 'US'),
                 ('state_or_province_name', 'Massachusetts'),
                 ('locality_name', 'Newbury'),
@@ -1813,29 +1812,29 @@ class X509Tests(unittest.TestCase):
             )
         self.assertEqual(
             [
-                OrderedDict([
+                util.OrderedDict([
                     ('extn_id', 'key_identifier'),
                     ('critical', False),
                     ('extn_value', b'\x54\xAA\x54\x70\x6C\x34\x1A\x6D\xEB\x5D\x97\xD7\x1E\xFC\xD5\x24\x3C\x8A\x0E\xD7'),
                 ]),
-                OrderedDict([
+                util.OrderedDict([
                     ('extn_id', 'authority_key_identifier'),
                     ('critical', False),
                     (
                         'extn_value',
-                        OrderedDict([
+                        util.OrderedDict([
                             ('key_identifier', b'\x54\xAA\x54\x70\x6C\x34\x1A\x6D\xEB\x5D\x97\xD7\x1E\xFC\xD5\x24\x3C\x8A\x0E\xD7'),
                             ('authority_cert_issuer', None),
                             ('authority_cert_serial_number', None),
                         ])
                     ),
                 ]),
-                OrderedDict([
+                util.OrderedDict([
                     ('extn_id', 'basic_constraints'),
                     ('critical', False),
                     (
                         'extn_value',
-                        OrderedDict([
+                        util.OrderedDict([
                             ('ca', True),
                             ('path_len_constraint', None)
                         ])

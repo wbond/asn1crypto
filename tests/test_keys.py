@@ -3,9 +3,8 @@ from __future__ import unicode_literals
 
 import unittest
 import os
-from collections import OrderedDict
 
-from asn1crypto import keys, core
+from asn1crypto import keys, core, util
 
 from .unittest_data import DataDecorator, data
 
@@ -148,18 +147,18 @@ class KeysTests(unittest.TestCase):
             key['private_key'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('version', 'ecdpVer1'),
                 (
                     'field_id',
-                    OrderedDict([
+                    util.OrderedDict([
                         ('field_type', 'prime_field'),
                         ('parameters', 115792089210356248762697446949407573530086143415290314195533631308867097853951)
                     ])
                 ),
                 (
                     'curve',
-                    OrderedDict([
+                    util.OrderedDict([
                         ('a', b'\xFF\xFF\xFF\xFF\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFC'),
                         ('b', b'\x5A\xC6\x35\xD8\xAA\x3A\x93\xE7\xB3\xEB\xBD\x55\x76\x98\x86\xBC\x65\x1D\x06\xB0\xCC\x53\xB0\xF6\x3B\xCE\x3C\x3E\x27\xD2\x60\x4B'),
                         ('seed', b'\xC4\x9D\x36\x08\x86\xE7\x04\x93\x6A\x66\x78\xE1\x13\x9D\x26\xB7\x81\x9F\x7E\x90'),
@@ -426,18 +425,18 @@ class KeysTests(unittest.TestCase):
 
         curve = (
             'specified',
-            OrderedDict([
+            util.OrderedDict([
                 ('version', 'ecdpVer1'),
                 (
                     'field_id',
-                    OrderedDict([
+                    util.OrderedDict([
                         ('field_type', 'prime_field'),
                         ('parameters', 115792089210356248762697446949407573530086143415290314195533631308867097853951)
                     ])
                 ),
                 (
                     'curve',
-                    OrderedDict([
+                    util.OrderedDict([
                         ('a', b'\xFF\xFF\xFF\xFF\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFC'),
                         ('b', b'\x5A\xC6\x35\xD8\xAA\x3A\x93\xE7\xB3\xEB\xBD\x55\x76\x98\x86\xBC\x65\x1D\x06\xB0\xCC\x53\xB0\xF6\x3B\xCE\x3C\x3E\x27\xD2\x60\x4B'),
                         ('seed', b'\xC4\x9D\x36\x08\x86\xE7\x04\x93\x6A\x66\x78\xE1\x13\x9D\x26\xB7\x81\x9F\x7E\x90'),

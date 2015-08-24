@@ -49,11 +49,11 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import math
 import sys
 import re
-from collections import OrderedDict
 from datetime import datetime
 import binascii
 
 from . import _teletex_codec
+from ._ordereddict import OrderedDict
 from .util import int_to_bytes, int_from_bytes, timezone
 from ._errors import object_name
 

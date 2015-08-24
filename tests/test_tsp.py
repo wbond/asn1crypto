@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import unittest
 import os
 from datetime import datetime
-from collections import OrderedDict
 
 from asn1crypto import tsp, cms, util
 
@@ -139,7 +138,7 @@ class TSPTests(unittest.TestCase):
             tst_info['nonce'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('country_name', 'US'),
                 ('organization_name', 'GeoTrust Inc'),
                 ('common_name', 'GeoTrust Timestamping Signer 1'),
@@ -167,10 +166,10 @@ class TSPTests(unittest.TestCase):
             signer_info['version'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 (
                     'issuer',
-                    OrderedDict([
+                    util.OrderedDict([
                         ('country_name', 'ZA'),
                         ('state_or_province_name', 'Western Cape'),
                         ('locality_name', 'Durbanville'),
@@ -223,11 +222,11 @@ class TSPTests(unittest.TestCase):
             signed_attrs[3]['type'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 (
                     'certs',
                     [
-                        OrderedDict([
+                        util.OrderedDict([
                             ('cert_hash', b'\x22\x3C\xDA\x27\x07\x96\x73\x81\x6B\x60\x8A\x1B\x8C\xB0\xAB\x02\x30\x10\x7F\xCC'),
                             ('issuer_serial', None),
                         ])

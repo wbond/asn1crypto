@@ -4,9 +4,8 @@ from __future__ import unicode_literals
 import unittest
 import sys
 import os
-from collections import OrderedDict
 
-from asn1crypto import csr
+from asn1crypto import csr, util
 
 if sys.version_info < (3,):
     byte_cls = str
@@ -34,7 +33,7 @@ class CSRTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('country_name', 'US'),
                 ('state_or_province_name', 'Massachusetts'),
                 ('locality_name', 'Newbury'),
@@ -46,7 +45,7 @@ class CSRTests(unittest.TestCase):
             cri['subject'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('algorithm', 'rsa'),
                 ('parameters', None),
             ]),
@@ -78,7 +77,7 @@ class CSRTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('country_name', 'US'),
                 ('state_or_province_name', 'Massachusetts'),
                 ('locality_name', 'Newbury'),
@@ -90,7 +89,7 @@ class CSRTests(unittest.TestCase):
             cri['subject'].native
         )
         self.assertEqual(
-            OrderedDict([
+            util.OrderedDict([
                 ('algorithm', 'rsa'),
                 ('parameters', None),
             ]),
@@ -106,24 +105,24 @@ class CSRTests(unittest.TestCase):
         )
         self.assertEqual(
             [
-                OrderedDict([
+                util.OrderedDict([
                     ('type', 'extension_request'),
                     (
                         'values',
                         [
                             [
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('extn_id', 'basic_constraints'),
                                     ('critical', False),
                                     (
                                         'extn_value',
-                                        OrderedDict([
+                                        util.OrderedDict([
                                             ('ca', False),
                                             ('path_len_constraint', None),
                                         ])
                                     ),
                                 ]),
-                                OrderedDict([
+                                util.OrderedDict([
                                     ('extn_id', 'key_usage'),
                                     ('critical', False),
                                     (

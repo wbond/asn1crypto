@@ -4,6 +4,7 @@
 Miscellaneous data helpers, including functions for converting integers to and
 from bytes and UTC timezone. Exports the following items:
 
+ - OrderedDict()
  - int_from_bytes()
  - int_to_bytes()
  - timezone.utc
@@ -14,6 +15,8 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import sys
 import math
 
+
+from ._ordereddict import OrderedDict
 
 
 # Python 2
