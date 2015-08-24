@@ -796,7 +796,9 @@ class RelativeDistinguishedName(SetOf):
             values that have been prepped for comparison
         """
 
-        return {ntv['type'].native: ntv.prepped_value for ntv in rdn}
+        output = {}
+        [output.update([(ntv['type'].native, ntv.prepped_value)]) for ntv in rdn]  #pylint: disable=W0106
+        return output
 
 
 class RDNSequence(SequenceOf):
