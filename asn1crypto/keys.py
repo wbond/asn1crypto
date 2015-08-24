@@ -197,7 +197,7 @@ class _ECPoint():
             y = int_from_bytes(remaining[field_len:])
             return (x, y)
 
-        if first_byte not in {b'\x02', b'\x03'}:
+        if first_byte not in set([b'\x02', b'\x03']):
             raise ValueError('Invalid EC public key - first byte is incorrect')
 
         raise ValueError('Compressed representations of EC public keys are not supported due to patent US6252960')

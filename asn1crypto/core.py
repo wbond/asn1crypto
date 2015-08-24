@@ -892,8 +892,8 @@ class Primitive(Asn1Value):
 
         # If the objects share a common base class that is not too low-level
         # then we can compare the contents
-        self_bases = (set(self.__class__.__bases__) | {self.__class__}) - {Asn1Value, Primitive, ValueMap}
-        other_bases = (set(other.__class__.__bases__) | {other.__class__}) - {Asn1Value, Primitive, ValueMap}
+        self_bases = (set(self.__class__.__bases__) | set([self.__class__])) - set([Asn1Value, Primitive, ValueMap])
+        other_bases = (set(other.__class__.__bases__) | set([other.__class__])) - set([Asn1Value, Primitive, ValueMap])
         if self_bases | other_bases:
             return self.contents == other.contents
 

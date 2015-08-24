@@ -221,18 +221,18 @@ class X509Tests(unittest.TestCase):
             ('keys/test-der.crt',                          set()),
             ('keys/test-inter-der.crt',                    set()),
             ('keys/test-third-der.crt',                    set()),
-            ('geotrust_certs/GeoTrust_Universal_CA.crt',   {'basic_constraints', 'key_usage'}),
-            ('geotrust_certs/GeoTrust_Primary_CA.crt',     {'basic_constraints', 'key_usage'}),
-            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', {'basic_constraints', 'key_usage'}),
-            ('geotrust_certs/codex.crt',                   {'key_usage'}),
-            ('lets_encrypt/isrgrootx1.pem',                {'key_usage', 'basic_constraints'}),
-            ('lets_encrypt/letsencryptauthorityx1.pem',    {'key_usage', 'basic_constraints'}),
-            ('lets_encrypt/letsencryptauthorityx2.pem',    {'key_usage', 'basic_constraints'}),
-            ('globalsign_example_keys/IssuingCA-der.cer',  {'basic_constraints', 'key_usage'}),
-            ('globalsign_example_keys/rootCA.cer',         {'basic_constraints', 'key_usage'}),
-            ('globalsign_example_keys/SSL1.cer',           {'key_usage', 'extended_key_usage', 'basic_constraints'}),
-            ('globalsign_example_keys/SSL2.cer',           {'key_usage', 'extended_key_usage', 'basic_constraints'}),
-            ('globalsign_example_keys/SSL3.cer',           {'key_usage', 'extended_key_usage', 'basic_constraints'}),
+            ('geotrust_certs/GeoTrust_Universal_CA.crt',   set(['basic_constraints', 'key_usage'])),
+            ('geotrust_certs/GeoTrust_Primary_CA.crt',     set(['basic_constraints', 'key_usage'])),
+            ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', set(['basic_constraints', 'key_usage'])),
+            ('geotrust_certs/codex.crt',                   set(['key_usage'])),
+            ('lets_encrypt/isrgrootx1.pem',                set(['key_usage', 'basic_constraints'])),
+            ('lets_encrypt/letsencryptauthorityx1.pem',    set(['key_usage', 'basic_constraints'])),
+            ('lets_encrypt/letsencryptauthorityx2.pem',    set(['key_usage', 'basic_constraints'])),
+            ('globalsign_example_keys/IssuingCA-der.cer',  set(['basic_constraints', 'key_usage'])),
+            ('globalsign_example_keys/rootCA.cer',         set(['basic_constraints', 'key_usage'])),
+            ('globalsign_example_keys/SSL1.cer',           set(['key_usage', 'extended_key_usage', 'basic_constraints'])),
+            ('globalsign_example_keys/SSL2.cer',           set(['key_usage', 'extended_key_usage', 'basic_constraints'])),
+            ('globalsign_example_keys/SSL3.cer',           set(['key_usage', 'extended_key_usage', 'basic_constraints'])),
         )
 
     @data('critical_extensions_info')
@@ -276,51 +276,51 @@ class X509Tests(unittest.TestCase):
             ('keys/test-third-der.crt',                    None),
             (
                 'geotrust_certs/GeoTrust_Universal_CA.crt',
-                {'digital_signature', 'key_cert_sign', 'crl_sign'}
+                set(['digital_signature', 'key_cert_sign', 'crl_sign'])
             ),
             (
                 'geotrust_certs/GeoTrust_Primary_CA.crt',
-                {'key_cert_sign', 'crl_sign'}
+                set(['key_cert_sign', 'crl_sign'])
             ),
             (
                 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
-                {'key_cert_sign', 'crl_sign'}
+                set(['key_cert_sign', 'crl_sign'])
             ),
             (
                 'geotrust_certs/codex.crt',
-                {'digital_signature', 'key_encipherment'}
+                set(['digital_signature', 'key_encipherment'])
             ),
             (
                 'lets_encrypt/isrgrootx1.pem',
-                {'key_cert_sign', 'crl_sign'}
+                set(['key_cert_sign', 'crl_sign'])
             ),
             (
                 'lets_encrypt/letsencryptauthorityx1.pem',
-                {'digital_signature', 'key_cert_sign', 'crl_sign'}
+                set(['digital_signature', 'key_cert_sign', 'crl_sign'])
             ),
             (
                 'lets_encrypt/letsencryptauthorityx2.pem',
-                {'digital_signature', 'key_cert_sign', 'crl_sign'}
+                set(['digital_signature', 'key_cert_sign', 'crl_sign'])
             ),
             (
                 'globalsign_example_keys/IssuingCA-der.cer',
-                {'key_cert_sign', 'crl_sign'}
+                set(['key_cert_sign', 'crl_sign'])
             ),
             (
                 'globalsign_example_keys/rootCA.cer',
-                {'key_cert_sign', 'crl_sign'}
+                set(['key_cert_sign', 'crl_sign'])
             ),
             (
                 'globalsign_example_keys/SSL1.cer',
-                {'digital_signature', 'key_encipherment'}
+                set(['digital_signature', 'key_encipherment'])
             ),
             (
                 'globalsign_example_keys/SSL2.cer',
-                {'digital_signature', 'key_encipherment'}
+                set(['digital_signature', 'key_encipherment'])
             ),
             (
                 'globalsign_example_keys/SSL3.cer',
-                {'digital_signature', 'key_encipherment'}
+                set(['digital_signature', 'key_encipherment'])
             ),
         )
 

@@ -127,7 +127,7 @@ class CSRTests(unittest.TestCase):
                                     ('critical', False),
                                     (
                                         'extn_value',
-                                        {'digital_signature', 'non_repudiation', 'key_encipherment'},
+                                        set(['digital_signature', 'non_repudiation', 'key_encipherment']),
                                     ),
                                 ])
                             ]

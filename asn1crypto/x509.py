@@ -401,11 +401,11 @@ class IPAddress(OctetString):
             byte_string = self.__bytes__()
             byte_len = len(byte_string)
             cidr_int = None
-            if byte_len in {32, 16}:
+            if byte_len in set([32, 16]):
                 value = inet_ntop(socket.AF_INET6, byte_string[0:16])
                 if byte_len > 16:
                     cidr_int = int_from_bytes(byte_string[16:])
-            elif byte_len in {8, 4}:
+            elif byte_len in set([8, 4]):
                 value = inet_ntop(socket.AF_INET, byte_string[0:4])
                 if byte_len > 4:
                     cidr_int = int_from_bytes(byte_string[4:])
@@ -871,7 +871,7 @@ class Name(Choice):
             if attribute_name not in name_dict:
                 continue
 
-            if attribute_name in {'email_address', 'domain_component'}:
+            if attribute_name in set(['email_address', 'domain_component']):
                 value = IA5String(name_dict[attribute_name])
             else:
                 value = DirectoryString(name='utf8_string', value=UTF8String(name_dict[attribute_name]))

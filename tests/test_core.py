@@ -173,7 +173,7 @@ class CoreTests(unittest.TestCase):
             (
                 (0, 1, 1),
                 b'\x03\x02\x00\x60',
-                {'one', 'two'}
+                set(['one', 'two'])
             ),
             (
                 (0,),
@@ -181,9 +181,9 @@ class CoreTests(unittest.TestCase):
                 set()
             ),
             (
-                {'one', 'two'},
+                set(['one', 'two']),
                 b'\x03\x02\x00\x60',
-                {'one', 'two'}
+                set(['one', 'two'])
             )
         )
 
@@ -201,10 +201,10 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(True, 'one' in named.native)
 
     def test_mapped_bit_string_unset_bit(self):
-        named = NamedBits({'one', 'two'})
+        named = NamedBits(set(['one', 'two']))
         named['one'] = False
         self.assertEqual(True, named['two'])
-        self.assertEqual({'two'}, named.native)
+        self.assertEqual(set(['two']), named.native)
 
     def test_mapped_bit_string_sparse(self):
         named = NamedBits((0, 0, 0, 0, 0, 1))
@@ -216,7 +216,7 @@ class CoreTests(unittest.TestCase):
         named = NamedBits()
         named[1] = True
         self.assertEqual(True, named['one'])
-        self.assertEqual({'one'}, named.native)
+        self.assertEqual(set(['one']), named.native)
 
     def test_get_sequence_value(self):
         seq = SequenceOfInts([1, 2])
