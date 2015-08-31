@@ -54,7 +54,7 @@ from .core import (
 )
 from .algos import SignedDigestAlgorithm
 from .keys import PublicKeyInfo
-from .util import int_to_bytes, int_from_bytes
+from .util import int_to_bytes, int_from_bytes, inet_ntop, inet_pton
 from ._errors import object_name
 
 if sys.version_info < (3,):
@@ -69,11 +69,6 @@ else:
     byte_cls = bytes
     bytes_to_list = list
     from urllib.parse import urlsplit, urlunsplit, quote as urlquote, unquote_to_bytes
-
-if sys.platform == 'win32':
-    from ._win._ws2_32 import inet_ntop, inet_pton
-else:
-    from socket import inet_ntop, inet_pton
 
 
 

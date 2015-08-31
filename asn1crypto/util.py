@@ -8,6 +8,8 @@ from bytes and UTC timezone. Exports the following items:
  - int_from_bytes()
  - int_to_bytes()
  - timezone.utc
+ - inet_ntop()
+ - inet_pton()
 """
 
 from __future__ import unicode_literals, division, absolute_import, print_function
@@ -16,7 +18,13 @@ import sys
 import math
 
 
-from ._ordereddict import OrderedDict
+from ._ordereddict import OrderedDict  #pylint: disable=W0611
+
+
+if sys.platform == 'win32':
+    from ._win._ws2_32 import inet_ntop, inet_pton  #pylint: disable=W0611
+else:
+    from socket import inet_ntop, inet_pton
 
 
 # Python 2
