@@ -951,8 +951,10 @@ class Name(Choice):
             for key in data:
                 value = data[key]
                 if isinstance(value, list):
-                    value = ', '.join(value)
-                to_join.append('%s: %s' % (key, value.native))
+                    value = ', '.join([sub_value.native for sub_value in value])
+                else:
+                    value = value.native
+                to_join.append('%s: %s' % (key, value))
 
             has_comma = False
             for element in to_join:
