@@ -35,6 +35,23 @@ class X509Tests(unittest.TestCase):
 
     #pylint: disable=C0326
     @staticmethod
+    def is_valid_domain_ip_info():
+        return (
+            ('geotrust_certs/codex.crt', 'codexns.io', True),
+            ('geotrust_certs/codex.crt', 'dev.codexns.io', True),
+            ('geotrust_certs/codex.crt', 'rc.codexns.io', True),
+            ('geotrust_certs/codex.crt', 'foo.codexns.io', False),
+            ('geotrust_certs/codex.crt', '1.2.3.4', False),
+            ('geotrust_certs/codex.crt', '1::1', False),
+        )
+
+    @data('is_valid_domain_ip_info')
+    def is_valid_domain_ip(self, cert, domain_ip, result):
+        cert = self._load_cert(cert)
+        self.assertEqual(result, cert.is_valid_domain_ip(domain_ip))
+
+    #pylint: disable=C0326
+    @staticmethod
     def ip_address_info():
         return (
             ('127.0.0.1',          b'\x04\x04\x7F\x00\x00\x01'),

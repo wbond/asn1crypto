@@ -2251,6 +2251,136 @@ class Certificate(Sequence):
                     self._self_signed = 'maybe'
         return self._self_signed
 
+    def is_valid_domain_ip(self, domain_ip):
+        """
+        Check if a domain name or IP address is valid according to the
+        certificate
+
+        :param domain_ip:
+            A unicode string of a domain name or IP address
+
+        :return:
+            A boolean - if the domain or IP is valid for the certificate
+        """
+
+        if not isinstance(domain_ip, str_cls):
+            raise TypeError('domain_ip must be a unicode string, not %s' % object_name(domain_ip))
+
+        encoded_domain_ip = domain_ip.encode('idna').decode('ascii').lower()
+
+        is_ipv6 = encoded_domain_ip.find(':') != -1
+        is_ipv4 = not is_ipv6 and re.match('^\\d+\\.\\d+\\.\\d+\\.\\d+$', encoded_domain_ip)
+        is_domain = not is_ipv6 and not is_ipv4
+
+        # Handle domain name checks
+        if is_domain:
+            if not self.valid_domains:
+                return False
+
+            domain_labels = encoded_domain_ip.split('.')
+
+            for valid_domain in self.valid_domains:
+                encoded_valid_domain = valid_domain.encode('idna').decode('ascii').lower()
+                valid_domain_labels = encoded_valid_domain.split('.')
+
+                # The domain must be equal in label length to match
+                if len(valid_domain_labels) != len(domain_labels):
+                    continue
+
+                if valid_domain_labels == domain_labels:
+                    return True
+
+                if self._is_wildcard_domain(encoded_valid_domain) and self._is_wildcard_match(domain_labels, valid_domain_labels):
+                    return True
+
+            return False
+
+        # Handle IP address checks
+        if not self.valid_ips:
+            return False
+
+        family = socket.AF_INET if is_ipv4 else socket.AF_INET6
+        normalized_ip = inet_pton(family, encoded_domain_ip)
+
+        for valid_ip in self.valid_ips:
+            valid_family = socket.AF_INET if valid_ip.find('.') != -1 else socket.AF_INET6
+            normalized_valid_ip = inet_pton(valid_family, valid_ip)
+
+            if normalized_valid_ip == normalized_ip:
+                return True
+
+        return False
+
+    def _is_wildcard_domain(self, domain):
+        """
+        Checks if a domain is a valid wildcard according to
+        https://tools.ietf.org/html/rfc6125#section-6.4.3
+
+        :param domain:
+            A unicode string of the domain name, where any U-labels from an IDN
+            have been converted to A-labels
+
+        :return:
+            A boolean - if the domain is a valid wildcard domain
+        """
+
+        # The * character must be present for a wildcard match, and if there is
+        # most than one, it is an invalid wildcard specification
+        if domain.count('*') != 1:
+            return False
+
+        labels = domain.lower().split('.')
+
+        if not labels:
+            return False
+
+        # Wildcards may only appear in the left-most label
+        if labels[0].find('*') == -1:
+            return False
+
+        # Wildcards may not be embedded in an A-label from an IDN
+        if labels[0][0:4] == 'xn--':
+            return False
+
+        return True
+
+    def _is_wildcard_match(self, domain_labels, valid_domain_labels):
+        """
+        Determines if the labels in a domain are a match for labels from a
+        wildcard valid domain name
+
+        :param domain_labels:
+            A list of unicode strings, with A-label form for IDNs, of the labels
+            in the domain name to check
+
+        :param valid_domain_labels:
+            A list of unicode strings, with A-label form for IDNs, of the labels
+            in a wildcard domain pattern
+
+        :return:
+            A boolean - if the domain matches the valid domain
+        """
+
+        first_domain_label = domain_labels[0]
+        other_domain_labels = domain_labels[1:]
+
+        wildcard_label = valid_domain_labels[0]
+        other_valid_domain_labels = valid_domain_labels[1:]
+
+        # The wildcard is only allowed in the first label, so if
+        # The subsequent labels are not equal, there is no match
+        if other_domain_labels != other_valid_domain_labels:
+            return False
+
+        if wildcard_label == '*':
+            return True
+
+        wildcard_regex = re.compile('^' + wildcard_label.replace('*', '.*') + '$')
+        if wildcard_regex.match(first_domain_label):
+            return True
+
+        return False
+
 
 def _iri_utf8_errors_handler(exc):
     """
