@@ -2223,9 +2223,7 @@ class Certificate(Sequence):
         """
 
         if self._self_issued is None:
-            self._self_issued = False
-            if self.ca:
-                self._self_issued = self.subject == self.issuer
+            self._self_issued = self.subject == self.issuer
         return self._self_issued
 
     @property
