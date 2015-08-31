@@ -2155,15 +2155,6 @@ class Certificate(Sequence):
         if self._valid_domains is None:
             self._valid_domains = []
 
-            # If the common name in the subject looks like a domain, add it
-            pattern = re.compile('^(\\*\\.)?(?:[a-zA-Z0-9](?:[a-zA-Z0-9\\-]*[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$')
-            for rdn in self.subject.chosen:
-                for name_type_value in rdn:
-                    if name_type_value['type'].native == 'common_name':
-                        value = name_type_value['value'].native
-                        if pattern.match(value):
-                            self._valid_domains.append(value)
-
             # For the subject alt name extension, we can look at the name of
             # the choice selected since it distinguishes between domain names,
             # email addresses, IPs, etc
@@ -2171,6 +2162,20 @@ class Certificate(Sequence):
                 for general_name in self.subject_alt_name_value:
                     if general_name.name == 'dns_name' and general_name.native not in self._valid_domains:
                         self._valid_domains.append(general_name.native)
+
+            # If there was no subject alt name extension, and the common name
+            # in the subject looks like a domain, that is considered the valid
+            # list. This is done because according to
+            # https://tools.ietf.org/html/rfc6125#section-6.4.4, the common
+            # name should not be used if the subject alt name is present.
+            else:
+                pattern = re.compile('^(\\*\\.)?(?:[a-zA-Z0-9](?:[a-zA-Z0-9\\-]*[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}$')
+                for rdn in self.subject.chosen:
+                    for name_type_value in rdn:
+                        if name_type_value['type'].native == 'common_name':
+                            value = name_type_value['value'].native
+                            if pattern.match(value):
+                                self._valid_domains.append(value)
 
         return self._valid_domains
 

@@ -1303,14 +1303,14 @@ class X509Tests(unittest.TestCase):
             ('geotrust_certs/GeoTrust_Universal_CA.crt',   []),
             ('geotrust_certs/GeoTrust_Primary_CA.crt',     []),
             ('geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt', []),
-            ('geotrust_certs/codex.crt',                   ['codexns.io', 'dev.codexns.io', 'rc.codexns.io', 'packagecontrol.io', 'wbond.net']),
+            ('geotrust_certs/codex.crt',                   ['dev.codexns.io', 'rc.codexns.io', 'packagecontrol.io', 'wbond.net', 'codexns.io']),
             ('lets_encrypt/isrgrootx1.pem',                []),
             ('lets_encrypt/letsencryptauthorityx1.pem',    []),
             ('lets_encrypt/letsencryptauthorityx2.pem',    []),
             ('globalsign_example_keys/IssuingCA-der.cer',  []),
             ('globalsign_example_keys/rootCA.cer',         []),
             ('globalsign_example_keys/SSL1.cer',           ['anything.example.com']),
-            ('globalsign_example_keys/SSL2.cer',           ['*.google.com', 'anything.example.com']),
+            ('globalsign_example_keys/SSL2.cer',           ['anything.example.com']),
             ('globalsign_example_keys/SSL3.cer',           ['*.google.com']),
         )
 
