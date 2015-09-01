@@ -1651,6 +1651,8 @@ class Certificate(Sequence):
     _valid_ips = None
     _self_issued = None
     _self_signed = None
+    _sha1 = None
+    _sha256 = None
 
     def _set_extensions(self):
         """
@@ -2250,6 +2252,29 @@ class Certificate(Sequence):
                 else:
                     self._self_signed = 'maybe'
         return self._self_signed
+
+    @property
+    def sha1(self):
+        """
+        :return:
+            The SHA1 hash of the DER-encoded bytes of this complete certificate
+        """
+
+        if self._sha1 is None:
+            self._sha1 = hashlib.sha1(self.dump()).digest()
+        return self._sha1
+
+    @property
+    def sha256(self):
+        """
+        :return:
+            The SHA-256 hash of the DER-encoded bytes of this complete
+            certificate
+        """
+
+        if self._sha256 is None:
+            self._sha256 = hashlib.sha256(self.dump()).digest()
+        return self._sha256
 
     def is_valid_domain_ip(self, domain_ip):
         """
