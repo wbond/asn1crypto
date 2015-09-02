@@ -1,5 +1,20 @@
 # changelog
 
+## 0.11.0
+
+ - Added Python 2.6 support
+ - Added ability to compare primitive type objects
+ - Implemented proper support for internationalized domains, URLs and email
+   addresses in `x509.Certificate`
+ - Comparing `x509.Name` and `x509.GeneralName` objects adheres to RFC 5280
+ - `x509.Certificate.self_signed` and `x509.Certificate.self_issued` no longer
+   require that certificate is for a CA
+ - Fixed `x509.Certificate.valid_domains` to adhere to RFC 6125
+ - Added `x509.Certificate.is_valid_domain_ip()`
+ - Added `x509.Certificate.sha1` and `x509.Certificate.sha256`
+ - Exposed `util.inet_ntop()` and `util.inet_pton()` for IP address encoding
+ - Improved exception messages for improper types to include type's module name
+
 ## 0.10.1
 
  - Fixed bug in `core.Sequence` affecting Python 2.7 and pypy

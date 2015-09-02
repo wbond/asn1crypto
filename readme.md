@@ -38,12 +38,12 @@ Python 2.6, 2.7, 3.3, 3.4, pypy or pypy3. *No third-party packages required.*
 
 ## Version
 
-0.10.1 - [changelog](changelog.md)
+0.11.0 - [changelog](changelog.md)
 
 ## Installation
 
 ```bash
-pip install git+git://github.com/wbond/asn1crypto.git@0.10.1
+pip install git+git://github.com/wbond/asn1crypto.git@0.11.0
 ```
 
 ## Documentation
