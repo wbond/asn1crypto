@@ -29,7 +29,7 @@ def _assert_is_instance(self, obj, cls, msg=None):
         self.fail(msg)
 
 
-def _assert_raises(self, excClass, callableObj=None, *args, **kwargs):
+def _assert_raises(self, excClass, callableObj=None, *args, **kwargs):  # noqa
     context = _AssertRaisesContext(excClass, self)
     if callableObj is None:
         return context
@@ -59,7 +59,7 @@ class _AssertRaisesContext(object):
         if not issubclass(exc_type, self.expected):
             # let unexpected exceptions pass through
             return False
-        self.exception = exc_value # store for later retrieval
+        self.exception = exc_value  # store for later retrieval
         if self.expected_regexp is None:
             return True
 

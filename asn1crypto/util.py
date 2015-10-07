@@ -18,20 +18,19 @@ import sys
 import math
 
 
-from ._ordereddict import OrderedDict  #pylint: disable=W0611
+from ._ordereddict import OrderedDict  # noqa
 
 
 if sys.platform == 'win32':
-    from ._win._ws2_32 import inet_ntop, inet_pton  #pylint: disable=W0611
+    from ._win._ws2_32 import inet_ntop, inet_pton
 else:
-    from socket import inet_ntop, inet_pton
+    from socket import inet_ntop, inet_pton  # noqa
 
 
 # Python 2
 if sys.version_info <= (3,):
 
     from datetime import timedelta, tzinfo
-
 
     def int_to_bytes(value, signed=False, width=None):
         """
@@ -92,7 +91,7 @@ if sys.version_info <= (3,):
             An integer
         """
 
-        num = long(value.encode("hex"), 16)  #pylint: disable=E0602
+        num = long(value.encode("hex"), 16)  # noqa
 
         if not signed:
             return num
@@ -104,8 +103,7 @@ if sys.version_info <= (3,):
 
         return num
 
-
-    class utc(tzinfo):
+    class utc(tzinfo):  # noqa
 
         def tzname(self, _):
             return 'UTC+00:00'
@@ -116,8 +114,7 @@ if sys.version_info <= (3,):
         def dst(self, _):
             return timedelta(0)
 
-
-    class timezone():
+    class timezone():  # noqa
 
         utc = utc()
 
@@ -125,8 +122,7 @@ if sys.version_info <= (3,):
 # Python 3
 else:
 
-    from datetime import timezone  #pylint: disable=W0611
-
+    from datetime import timezone  # noqa
 
     def int_to_bytes(value, signed=False, width=None):
         """

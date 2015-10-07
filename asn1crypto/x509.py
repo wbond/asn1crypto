@@ -21,7 +21,7 @@ import hashlib
 import stringprep
 import unicodedata
 import socket
-from encodings import idna  #pylint: disable=W0611
+from encodings import idna  # noqa
 import codecs
 
 from ._ordereddict import OrderedDict
@@ -55,21 +55,17 @@ from .core import (
 from .algos import SignedDigestAlgorithm
 from .keys import PublicKeyInfo
 from .util import int_to_bytes, int_from_bytes, inet_ntop, inet_pton
-from ._errors import object_name
+from ._errors import unwrap
+from ._types import type_name, str_cls, byte_cls
 
 if sys.version_info < (3,):
-    str_cls = unicode  #pylint: disable=E0602
-    byte_cls = str
-    from urlparse import urlsplit, urlunsplit  #pylint: disable=F0401
-    from urllib import quote as urlquote, unquote as unquote_to_bytes  #pylint: disable=E0611
+    from urlparse import urlsplit, urlunsplit
+    from urllib import quote as urlquote, unquote as unquote_to_bytes
     bytes_to_list = lambda byte_string: [ord(b) for b in byte_string]
 
 else:
-    str_cls = str
-    byte_cls = bytes
     bytes_to_list = list
     from urllib.parse import urlsplit, urlunsplit, quote as urlquote, unquote_to_bytes
-
 
 
 # The structures in this file are taken from https://tools.ietf.org/html/rfc5280
@@ -112,7 +108,13 @@ class URI(IA5String):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string, not %s' % (object_name(self), object_name(value)))
+            raise TypeError(unwrap(
+                '''
+                %s value must be a unicode string, not %s
+                ''',
+                type_name(self),
+                type_name(value)
+            ))
 
         self._normalized = True
         self._native = value
@@ -261,7 +263,13 @@ class EmailAddress(IA5String):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string, not %s' % (object_name(self), object_name(value)))
+            raise TypeError(unwrap(
+                '''
+                %s value must be a unicode string, not %s
+                ''',
+                type_name(self),
+                type_name(value)
+            ))
 
         if value.find('@') != -1:
             mailbox, hostname = value.rsplit('@', 1)
@@ -307,13 +315,13 @@ class EmailAddress(IA5String):
 
         if not self._normalized:
             self.set(self.native)
-        if not other._normalized:  #pylint: disable=W0212
+        if not other._normalized:
             other.set(other.native)
 
-        if self._contents.find(b'@') == -1 or other._contents.find(b'@') == -1:  #pylint: disable=W0212
-            return self._contents == other._contents  #pylint: disable=W0212
+        if self._contents.find(b'@') == -1 or other._contents.find(b'@') == -1:
+            return self._contents == other._contents
 
-        other_mailbox, other_hostname = other._contents.rsplit(b'@', 1)  #pylint: disable=W0212
+        other_mailbox, other_hostname = other._contents.rsplit(b'@', 1)
         mailbox, hostname = self._contents.rsplit(b'@', 1)
 
         if mailbox != other_mailbox:
@@ -326,12 +334,16 @@ class EmailAddress(IA5String):
 
 
 class IPAddress(OctetString):
-    def parse(self, spec=None, spec_params=None):  #pylint: disable=W0613
+    def parse(self, spec=None, spec_params=None):
         """
         This method is not applicable to IP addresses
         """
 
-        raise ValueError('IP address values can not be parsed')
+        raise ValueError(unwrap(
+            '''
+            IP address values can not be parsed
+            '''
+        ))
 
     def set(self, value):
         """
@@ -343,7 +355,13 @@ class IPAddress(OctetString):
         """
 
         if not isinstance(value, str_cls):
-            raise ValueError('%s value must be a unicode string, not %s' % (object_name(self), object_name(value)))
+            raise TypeError(unwrap(
+                '''
+                %s value must be a unicode string, not %s
+                ''',
+                type_name(self),
+                type_name(value)
+            ))
 
         original_value = value
 
@@ -354,17 +372,34 @@ class IPAddress(OctetString):
             value = parts[0]
             cidr = int(parts[1])
             if cidr < 0:
-                raise ValueError('%s value contains a CIDR range less than 0' % object_name(self))
+                raise ValueError(unwrap(
+                    '''
+                    %s value contains a CIDR range less than 0
+                    ''',
+                    type_name(self)
+                ))
 
         if value.find(':') != -1:
             family = socket.AF_INET6
             if cidr > 128:
-                raise ValueError('%s value contains a CIDR range bigger than 128, the maximum value for an IPv6 address' % object_name(self))
+                raise ValueError(unwrap(
+                    '''
+                    %s value contains a CIDR range bigger than 128, the maximum
+                    value for an IPv6 address
+                    ''',
+                    type_name(self)
+                ))
             cidr_size = 128
         else:
             family = socket.AF_INET
             if cidr > 32:
-                raise ValueError('%s value contains a CIDR range bigger than 32, the maximum value for an IPv4 address' % object_name(self))
+                raise ValueError(unwrap(
+                    '''
+                    %s value contains a CIDR range bigger than 32, the maximum
+                    value for an IPv4 address
+                    ''',
+                    type_name(self)
+                ))
             cidr_size = 32
 
         cidr_bytes = b''
@@ -659,7 +694,12 @@ class NameTypeAndValue(Sequence):
             string = re.sub('\ud834[\udd73-\udd7a]|\udb40[\udc20-\udc7f]|\U000e0001', '', string)
         else:
             string = re.sub('[\U0001D173-\U0001D17A\U000E0020-\U000E007F\U000e0001]', '', string)
-        string = re.sub('[\u0000-\u0008\u000e-\u001f\u007f-\u0084\u0086-\u009f\u06dd\u070f\u180e\u200c-\u200f\u202a-\u202e\u2060-\u2063\u206a-\u206f\ufeff\ufff9-\ufffb]+', '', string)
+        string = re.sub(
+            '[\u0000-\u0008\u000e-\u001f\u007f-\u0084\u0086-\u009f\u06dd\u070f\u180e\u200c-\u200f'
+            '\u202a-\u202e\u2060-\u2063\u206a-\u206f\ufeff\ufff9-\ufffb]+',
+            '',
+            string
+        )
         string = string.replace('\u200b', '')
         string = re.sub('[\u00a0\u1680\u2000-\u200a\u2028-\u2029\u202f\u205f\u3000]', ' ', string)
 
@@ -671,22 +711,47 @@ class NameTypeAndValue(Sequence):
         # Prohibit step
         for char in string:
             if stringprep.in_table_a1(char):
-                raise ValueError('X.509 Name objects may not contain unassigned code points')
+                raise ValueError(unwrap(
+                    '''
+                    X.509 Name objects may not contain unassigned code points
+                    '''
+                ))
 
             if stringprep.in_table_c8(char):
-                raise ValueError('X.509 Name objects may not contain change display or deprecated characters')
+                raise ValueError(unwrap(
+                    '''
+                    X.509 Name objects may not contain change display or
+                    zzzzdeprecated characters
+                    '''
+                ))
 
             if stringprep.in_table_c3(char):
-                raise ValueError('X.509 Name objects may not contain private use characters')
+                raise ValueError(unwrap(
+                    '''
+                    X.509 Name objects may not contain private use characters
+                    '''
+                ))
 
             if stringprep.in_table_c4(char):
-                raise ValueError('X.509 Name objects may not contain non-character code points')
+                raise ValueError(unwrap(
+                    '''
+                    X.509 Name objects may not contain non-character code points
+                    '''
+                ))
 
             if stringprep.in_table_c5(char):
-                raise ValueError('X.509 Name objects may not contain surrogate code points')
+                raise ValueError(unwrap(
+                    '''
+                    X.509 Name objects may not contain surrogate code points
+                    '''
+                ))
 
             if char == '\ufffd':
-                raise ValueError('X.509 Name objects may not contain the replacement character')
+                raise ValueError(unwrap(
+                    '''
+                    X.509 Name objects may not contain the replacement character
+                    '''
+                ))
 
         # Check bidirectional step - here we ensure that we are not mixing
         # left-to-right and right-to-left text in the string
@@ -703,7 +768,12 @@ class NameTypeAndValue(Sequence):
             last_is_r_and_al = stringprep.in_table_d1(string[-1])
 
             if has_l_cat or not first_is_r_and_al or not last_is_r_and_al:
-                raise ValueError('X.509 Name object contains a malformed bidirectional sequence')
+                raise ValueError(unwrap(
+                    '''
+                    X.509 Name object contains a malformed bidirectional
+                    sequence
+                    '''
+                ))
 
         # Insignificant space handling step
         string = ' ' + re.sub(' +', '  ', string).strip() + ' '
@@ -759,8 +829,8 @@ class RelativeDistinguishedName(SetOf):
         self_values = self._get_values(self)
         other_values = self._get_values(other)
 
-        for type_name in self_types:
-            if self_values[type_name] != other_values[type_name]:
+        for type_name_ in self_types:
+            if self_values[type_name_] != other_values[type_name_]:
                 return False
 
         return True
@@ -792,7 +862,7 @@ class RelativeDistinguishedName(SetOf):
         """
 
         output = {}
-        [output.update([(ntv['type'].native, ntv.prepped_value)]) for ntv in rdn]  #pylint: disable=W0106
+        [output.update([(ntv['type'].native, ntv.prepped_value)]) for ntv in rdn]
         return output
 
 
@@ -1260,10 +1330,21 @@ class GeneralName(Choice):
         """
 
         if self.name in ('other_name', 'x400_address', 'edi_party_name'):
-            raise ValueError('comparison is not supported for GeneralName objects of choice %s' % self.name)
+            raise ValueError(unwrap(
+                '''
+                Comparison is not supported for GeneralName objects of
+                choice %s
+                ''',
+                self.name
+            ))
 
         if other.name in ('other_name', 'x400_address', 'edi_party_name'):
-            raise ValueError('comparison is not supported for GeneralName objects of choice %s' % other.name)
+            raise ValueError(unwrap(
+                '''
+                Comparison is not supported for GeneralName objects of choice
+                %s''',
+                other.name
+            ))
 
         if self.name != other.name:
             return False
@@ -1364,7 +1445,12 @@ class DistributionPoint(Sequence):
             self._url = None
             name = self['distribution_point']
             if name.name != 'full_name':
-                raise ValueError('CRL distribution points that are relative to the issuer are not supported')
+                raise ValueError(unwrap(
+                    '''
+                    CRL distribution points that are relative to the issuer are
+                    not supported
+                    '''
+                ))
 
             for general_name in name.chosen:
                 if general_name.name == 'uniform_resource_identifier':
@@ -2059,12 +2145,13 @@ class Certificate(Sequence):
         """
 
         if self._authority_issuer_serial is False:
-            if self.authority_key_identifier_value and self.authority_key_identifier_value['authority_cert_issuer'].native:
-                authority_issuer = self.authority_key_identifier_value['authority_cert_issuer'][0].chosen
+            akiv = self.authority_key_identifier_value
+            if akiv and akiv['authority_cert_issuer'].native:
+                issuer = self.authority_key_identifier_value['authority_cert_issuer'][0].chosen
                 # We untag the element since it is tagged via being a choice from GeneralName
-                authority_issuer = authority_issuer.untag()
+                issuer = issuer.untag()
                 authority_serial = self.authority_key_identifier_value['authority_cert_serial_number'].native
-                self._authority_issuer_serial = authority_issuer.sha256 + b':' + str_cls(authority_serial).encode('ascii')
+                self._authority_issuer_serial = issuer.sha256 + b':' + str_cls(authority_serial).encode('ascii')
             else:
                 self._authority_issuer_serial = None
         return self._authority_issuer_serial
@@ -2289,7 +2376,12 @@ class Certificate(Sequence):
         """
 
         if not isinstance(domain_ip, str_cls):
-            raise TypeError('domain_ip must be a unicode string, not %s' % object_name(domain_ip))
+            raise TypeError(unwrap(
+                '''
+                domain_ip must be a unicode string, not %s
+                ''',
+                type_name(domain_ip)
+            ))
 
         encoded_domain_ip = domain_ip.encode('idna').decode('ascii').lower()
 
@@ -2315,7 +2407,8 @@ class Certificate(Sequence):
                 if valid_domain_labels == domain_labels:
                     return True
 
-                if self._is_wildcard_domain(encoded_valid_domain) and self._is_wildcard_match(domain_labels, valid_domain_labels):
+                is_wildcard = self._is_wildcard_domain(encoded_valid_domain)
+                if is_wildcard and self._is_wildcard_match(domain_labels, valid_domain_labels):
                     return True
 
             return False

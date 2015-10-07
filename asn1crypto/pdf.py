@@ -22,7 +22,6 @@ from .ocsp import OCSPResponse
 from .x509 import ExtensionId, Extension, GeneralName, KeyPurposeId
 
 
-
 class AdobeArchiveRevInfo(Sequence):
     _fields = [
         ('version', Integer)
@@ -56,12 +55,12 @@ class SetOfRevocationInfoArchival(SetOf):
     _child_spec = RevocationInfoArchival
 
 
-ExtensionId._map['1.2.840.113583.1.1.9.2'] = 'adobe_archive_rev_info'  #pylint: disable=W0212
-ExtensionId._map['1.2.840.113583.1.1.9.1'] = 'adobe_timestamp'  #pylint: disable=W0212
-ExtensionId._map['1.2.840.113583.1.1.10'] = 'adobe_ppklite_credential'  #pylint: disable=W0212
-Extension._oid_specs['adobe_archive_rev_info'] = AdobeArchiveRevInfo  #pylint: disable=W0212
-Extension._oid_specs['adobe_timestamp'] = AdobeTimestamp  #pylint: disable=W0212
-Extension._oid_specs['adobe_ppklite_credential'] = Null  #pylint: disable=W0212
-KeyPurposeId._map['1.2.840.113583.1.1.5'] = 'pdf_signing'  #pylint: disable=W0212
-CMSAttributeType._map['1.2.840.113583.1.1.8'] = 'adobe_revocation_info_archival'  #pylint: disable=W0212
-CMSAttribute._oid_specs['adobe_revocation_info_archival'] = SetOfRevocationInfoArchival  #pylint: disable=W0212
+ExtensionId._map['1.2.840.113583.1.1.9.2'] = 'adobe_archive_rev_info'
+ExtensionId._map['1.2.840.113583.1.1.9.1'] = 'adobe_timestamp'
+ExtensionId._map['1.2.840.113583.1.1.10'] = 'adobe_ppklite_credential'
+Extension._oid_specs['adobe_archive_rev_info'] = AdobeArchiveRevInfo
+Extension._oid_specs['adobe_timestamp'] = AdobeTimestamp
+Extension._oid_specs['adobe_ppklite_credential'] = Null
+KeyPurposeId._map['1.2.840.113583.1.1.5'] = 'pdf_signing'
+CMSAttributeType._map['1.2.840.113583.1.1.8'] = 'adobe_revocation_info_archival'
+CMSAttribute._oid_specs['adobe_revocation_info_archival'] = SetOfRevocationInfoArchival

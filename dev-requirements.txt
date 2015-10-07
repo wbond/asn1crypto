@@ -1,2 +1,2 @@
 coverage>=4.0b1
-pylint
+flake8

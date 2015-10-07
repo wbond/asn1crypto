@@ -7,14 +7,14 @@ import os
 
 from asn1crypto import pem, util
 
-from .unittest_data import DataDecorator, data
+from .unittest_data import data_decorator, data
 from ._unittest_compat import patch
 
 patch()
 
 if sys.version_info < (3,):
     byte_cls = str
-    num_cls = long  #pylint: disable=E0602
+    num_cls = long  # noqa
 else:
     byte_cls = bytes
     num_cls = int
@@ -24,19 +24,36 @@ tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 
-@DataDecorator
+@data_decorator
 class PEMTests(unittest.TestCase):
 
-    #pylint: disable=C0326
     @staticmethod
     def detect_files():
         return (
-            ('keys/test-der.crt',       False),
-            ('keys/test-inter-der.crt', False),
-            ('keys/test-third-der.crt', False),
-            ('keys/test.crt',           True),
-            ('keys/test-inter.crt',     True),
-            ('keys/test-third.crt',     True),
+            (
+                'keys/test-der.crt',
+                False
+            ),
+            (
+                'keys/test-inter-der.crt',
+                False
+            ),
+            (
+                'keys/test-third-der.crt',
+                False
+            ),
+            (
+                'keys/test.crt',
+                True
+            ),
+            (
+                'keys/test-inter.crt',
+                True
+            ),
+            (
+                'keys/test-third.crt',
+                True
+            ),
         )
 
     @data('detect_files')
@@ -45,16 +62,48 @@ class PEMTests(unittest.TestCase):
             byte_string = f.read()
         self.assertEqual(is_pem, pem.detect(byte_string))
 
-    #pylint: disable=C0326
     @staticmethod
     def unarmor_armor_files():
         return (
-            ('keys/test.crt',        'keys/test-der.crt',         'CERTIFICATE',          {}),
-            ('keys/test-inter.crt',  'keys/test-inter-der.crt',   'CERTIFICATE',          {}),
-            ('keys/test-third.crt',  'keys/test-third-der.crt',   'CERTIFICATE',          {}),
-            ('keys/test-pkcs8.key',  'keys/test-pkcs8-der.key',   'PRIVATE KEY',          {}),
-            ('test-third.csr',       'test-third-der.csr',        'CERTIFICATE REQUEST',  {}),
-            ('keys/test-aes128.key', 'keys/test-aes128-der.key',  'RSA PRIVATE KEY',      util.OrderedDict([('Proc-Type', '4,ENCRYPTED'), ('DEK-Info', 'AES-128-CBC,01F6EE04516C912788B11BD7377626C2')])),
+            (
+                'keys/test.crt',
+                'keys/test-der.crt',
+                'CERTIFICATE',
+                {}
+            ),
+            (
+                'keys/test-inter.crt',
+                'keys/test-inter-der.crt',
+                'CERTIFICATE',
+                {}
+            ),
+            (
+                'keys/test-third.crt',
+                'keys/test-third-der.crt',
+                'CERTIFICATE',
+                {}
+            ),
+            (
+                'keys/test-pkcs8.key',
+                'keys/test-pkcs8-der.key',
+                'PRIVATE KEY',
+                {}
+            ),
+            (
+                'test-third.csr',
+                'test-third-der.csr',
+                'CERTIFICATE REQUEST',
+                {}
+            ),
+            (
+                'keys/test-aes128.key',
+                'keys/test-aes128-der.key',
+                'RSA PRIVATE KEY',
+                util.OrderedDict([
+                    ('Proc-Type', '4,ENCRYPTED'),
+                    ('DEK-Info', 'AES-128-CBC,01F6EE04516C912788B11BD7377626C2')
+                ])
+            ),
         )
 
     @data('unarmor_armor_files')

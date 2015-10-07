@@ -21,7 +21,6 @@ tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 
-
 class OCSPTests(unittest.TestCase):
 
     def test_parse_request(self):

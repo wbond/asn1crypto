@@ -294,12 +294,12 @@ class SetOfSigningCertificatesV2(SetOf):
     _child_spec = SigningCertificateV2
 
 
-EncapsulatedContentInfo._oid_specs['tst_info'] = TSTInfo  #pylint: disable=W0212
-EncapsulatedContentInfo._oid_specs['timestamped_data'] = TimeStampedData  #pylint: disable=W0212
-ContentInfo._oid_specs['timestamped_data'] = TimeStampedData  #pylint: disable=W0212
-ContentType._map['1.2.840.113549.1.9.16.1.4'] = 'tst_info'  #pylint: disable=W0212
-ContentType._map['1.2.840.113549.1.9.16.1.31'] = 'timestamped_data'  #pylint: disable=W0212
-CMSAttributeType._map['1.2.840.113549.1.9.16.2.12'] = 'signing_certificate'  #pylint: disable=W0212
-CMSAttribute._oid_specs['signing_certificate'] = SetOfSigningCertificates  #pylint: disable=W0212
-CMSAttributeType._map['1.2.840.113549.1.9.16.2.47'] = 'signing_certificate_v2'  #pylint: disable=W0212
-CMSAttribute._oid_specs['signing_certificate_v2'] = SetOfSigningCertificatesV2  #pylint: disable=W0212
+EncapsulatedContentInfo._oid_specs['tst_info'] = TSTInfo
+EncapsulatedContentInfo._oid_specs['timestamped_data'] = TimeStampedData
+ContentInfo._oid_specs['timestamped_data'] = TimeStampedData
+ContentType._map['1.2.840.113549.1.9.16.1.4'] = 'tst_info'
+ContentType._map['1.2.840.113549.1.9.16.1.31'] = 'timestamped_data'
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.12'] = 'signing_certificate'
+CMSAttribute._oid_specs['signing_certificate'] = SetOfSigningCertificates
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.47'] = 'signing_certificate_v2'
+CMSAttribute._oid_specs['signing_certificate_v2'] = SetOfSigningCertificatesV2

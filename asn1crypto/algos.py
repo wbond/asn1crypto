@@ -18,6 +18,7 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+from ._errors import unwrap
 from .core import Any, Choice, Integer, ObjectIdentifier, OctetString, Sequence
 
 
@@ -225,7 +226,12 @@ class SignedDigestAlgorithm(Sequence):
         if algorithm in algo_map:
             return algo_map[algorithm]
 
-        raise ValueError('Signature algorithm not known for %s' % algorithm)
+        raise ValueError(unwrap(
+            '''
+            Signature algorithm not known for %s
+            ''',
+            algorithm
+        ))
 
     @property
     def hash_algo(self):
@@ -260,7 +266,12 @@ class SignedDigestAlgorithm(Sequence):
         if algorithm == 'rsassa_pss':
             return self['parameters']['hash_algorithm']['algorithm'].native
 
-        raise ValueError('Hash algorithm not known for %s' % algorithm)
+        raise ValueError(unwrap(
+            '''
+            Hash algorithm not known for %s
+            ''',
+            algorithm
+        ))
 
 
 class Pbkdf2Salt(Choice):
@@ -450,7 +461,8 @@ class EncryptionAlgorithm(Sequence):
         Returns the name of the key derivation function to use.
 
         :return:
-            A unicode from of one of the following: "pbkdf1", "pbkdf2", "pkcs12_kdf"
+            A unicode from of one of the following: "pbkdf1", "pbkdf2",
+            "pkcs12_kdf"
         """
 
         encryption_algo = self['algorithm'].native
@@ -468,9 +480,21 @@ class EncryptionAlgorithm(Sequence):
                 if encryption_algo == 'pkcs12':
                     return 'pkcs12_kdf'
 
-            raise ValueError('Encryption algorithm "%s" does not have a registered key derivation function' % encryption_algo)
+            raise ValueError(unwrap(
+                '''
+                Encryption algorithm "%s" does not have a registered key
+                derivation function
+                ''',
+                encryption_algo
+            ))
 
-        raise ValueError('Unrecognized encryption algorithm "%s", can not determine key derivation function' % encryption_algo)
+        raise ValueError(unwrap(
+            '''
+            Unrecognized encryption algorithm "%s", can not determine key
+            derivation function
+            ''',
+            encryption_algo
+        ))
 
     @property
     def kdf_hmac(self):
@@ -478,7 +502,8 @@ class EncryptionAlgorithm(Sequence):
         Returns the HMAC algorithm to use with the KDF.
 
         :return:
-            A unicode string of one of the following: "md2", "md5", "sha1", "sha224", "sha256", "sha384", "sha512"
+            A unicode string of one of the following: "md2", "md5", "sha1",
+            "sha224", "sha256", "sha384", "sha512"
         """
 
         encryption_algo = self['algorithm'].native
@@ -491,9 +516,21 @@ class EncryptionAlgorithm(Sequence):
                 _, hmac_algo, _ = encryption_algo.split('_', 2)
                 return hmac_algo
 
-            raise ValueError('Encryption algorithm "%s" does not have a registered key derivation function' % encryption_algo)
+            raise ValueError(unwrap(
+                '''
+                Encryption algorithm "%s" does not have a registered key
+                derivation function
+                ''',
+                encryption_algo
+            ))
 
-        raise ValueError('Unrecognized encryption algorithm "%s", can not determine key derivation hmac algorithm' % encryption_algo)
+        raise ValueError(unwrap(
+            '''
+            Unrecognized encryption algorithm "%s", can not determine key
+            derivation hmac algorithm
+            ''',
+            encryption_algo
+        ))
 
     @property
     def kdf_salt(self):
@@ -510,7 +547,13 @@ class EncryptionAlgorithm(Sequence):
             salt = self['parameters']['key_derivation_func']['parameters']['salt']
 
             if salt.name == 'other_source':
-                raise ValueError('Can not determine key derivation salt - the reversed-for-future-use other source salt choice was specified in the PBKDF2 params structure')
+                raise ValueError(unwrap(
+                    '''
+                    Can not determine key derivation salt - the
+                    reserved-for-future-use other source salt choice was
+                    specified in the PBKDF2 params structure
+                    '''
+                ))
 
             return salt.native
 
@@ -518,9 +561,21 @@ class EncryptionAlgorithm(Sequence):
             if encryption_algo.find('_') != -1:
                 return self['parameters']['salt'].native
 
-            raise ValueError('Encryption algorithm "%s" does not have a registered key derivation function' % encryption_algo)
+            raise ValueError(unwrap(
+                '''
+                Encryption algorithm "%s" does not have a registered key
+                derivation function
+                ''',
+                encryption_algo
+            ))
 
-        raise ValueError('Unrecognized encryption algorithm "%s", can not determine key derivation salt' % encryption_algo)
+        raise ValueError(unwrap(
+            '''
+            Unrecognized encryption algorithm "%s", can not determine key
+            derivation salt
+            ''',
+            encryption_algo
+        ))
 
     @property
     def kdf_iterations(self):
@@ -540,9 +595,21 @@ class EncryptionAlgorithm(Sequence):
             if encryption_algo.find('_') != -1:
                 return self['parameters']['iterations'].native
 
-            raise ValueError('Encryption algorithm "%s" does not have a registered key derivation function' % encryption_algo)
+            raise ValueError(unwrap(
+                '''
+                Encryption algorithm "%s" does not have a registered key
+                derivation function
+                ''',
+                encryption_algo
+            ))
 
-        raise ValueError('Unrecognized encryption algorithm "%s", can not determine key derivation iterations' % encryption_algo)
+        raise ValueError(unwrap(
+            '''
+            Unrecognized encryption algorithm "%s", can not determine key
+            derivation iterations
+            ''',
+            encryption_algo
+        ))
 
     @property
     def key_length(self):
@@ -577,11 +644,12 @@ class EncryptionAlgorithm(Sequence):
             rc2_params = self['parameters'].parsed['encryption_scheme']['parameters'].parsed
             rc2_parameter_version = rc2_params['rc2_parameter_version'].native
 
-            # See page 24 of http://www.emc.com/collateral/white-papers/h11302-pkcs5v2-1-password-based-cryptography-standard-wp.pdf
+            # See page 24 of
+            # http://www.emc.com/collateral/white-papers/h11302-pkcs5v2-1-password-based-cryptography-standard-wp.pdf
             encoded_key_bits_map = {
                 160: 5,   # 40-bit
                 120: 8,   # 64-bit
-                58:  16,  # 128-bit
+                58: 16,   # 128-bit
             }
 
             if rc2_parameter_version in encoded_key_bits_map:
@@ -593,7 +661,12 @@ class EncryptionAlgorithm(Sequence):
             if rc2_parameter_version is None:
                 return 4  # 32-bit default
 
-            raise ValueError('Invalid RC2 parameter version found in EncryptionAlgorithm parameters')
+            raise ValueError(unwrap(
+                '''
+                Invalid RC2 parameter version found in EncryptionAlgorithm
+                parameters
+                '''
+            ))
 
         if encryption_algo == 'pbes2':
             key_length = self['parameters']['key_derivation_func']['parameters']['key_length'].native
@@ -623,7 +696,12 @@ class EncryptionAlgorithm(Sequence):
                 'pkcs12_sha1_rc2_40': 5,
             }[encryption_algo]
 
-        raise ValueError('Unrecognized encryption algorithm "%s"' % encryption_algo)
+        raise ValueError(unwrap(
+            '''
+            Unrecognized encryption algorithm "%s"
+            ''',
+            encryption_algo
+        ))
 
     @property
     def encryption_cipher(self):
@@ -633,7 +711,8 @@ class EncryptionAlgorithm(Sequence):
         between different variations of TripleDES, AES, and the RC* ciphers.
 
         :return:
-            A unicode string from one of the following: "rc2", "rc5", "des", "tripledes", "aes"
+            A unicode string from one of the following: "rc2", "rc5", "des",
+            "tripledes", "aes"
         """
 
         encryption_algo = self['algorithm'].native
@@ -669,7 +748,12 @@ class EncryptionAlgorithm(Sequence):
                 'pkcs12_sha1_rc2_40': 'rc2',
             }[encryption_algo]
 
-        raise ValueError('Unrecognized encryption algorithm "%s"' % encryption_algo)
+        raise ValueError(unwrap(
+            '''
+            Unrecognized encryption algorithm "%s"
+            ''',
+            encryption_algo
+        ))
 
     @property
     def encryption_block_size(self):
@@ -715,7 +799,12 @@ class EncryptionAlgorithm(Sequence):
                 'pkcs12_sha1_rc2_40': 8,
             }[encryption_algo]
 
-        raise ValueError('Unrecognized encryption algorithm "%s"' % encryption_algo)
+        raise ValueError(unwrap(
+            '''
+            Unrecognized encryption algorithm "%s"
+            ''',
+            encryption_algo
+        ))
 
     @property
     def encryption_iv(self):
@@ -748,7 +837,12 @@ class EncryptionAlgorithm(Sequence):
         if encryption_algo.find('.') == -1:
             return None
 
-        raise ValueError('Unrecognized encryption algorithm "%s"' % encryption_algo)
+        raise ValueError(unwrap(
+            '''
+            Unrecognized encryption algorithm "%s"
+            ''',
+            encryption_algo
+        ))
 
 
 class Pbes2Params(Sequence):
@@ -783,4 +877,4 @@ class Pkcs5MacAlgorithm(Sequence):
     }
 
 
-EncryptionAlgorithm._oid_specs['pbes2'] = Pbes2Params  #pylint: disable=W0212
+EncryptionAlgorithm._oid_specs['pbes2'] = Pbes2Params

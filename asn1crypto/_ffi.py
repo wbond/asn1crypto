@@ -53,7 +53,7 @@ except (ImportError):
     def unicode_buffer(initializer):
         return create_unicode_buffer(initializer)
 
-    def bytes_from_buffer(buffer, maxlen=None):  #pylint: disable=W0613
+    def bytes_from_buffer(buffer, maxlen=None):
         return buffer.raw
 
     def null():

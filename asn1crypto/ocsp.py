@@ -33,7 +33,6 @@ from .keys import PublicKeyAlgorithm
 from .x509 import Certificate, GeneralName, GeneralNames, Name
 
 
-
 # The structures in this file are taken from https://tools.ietf.org/html/rfc6960
 
 

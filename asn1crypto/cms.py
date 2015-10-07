@@ -52,7 +52,6 @@ from .ocsp import OCSPResponse
 from .x509 import Attributes, Certificate, Extensions, GeneralNames, Name
 
 
-
 # These structures are taken from
 # ftp://ftp.rsasecurity.com/pub/pkcs/ascii/pkcs-6.asc
 
@@ -62,6 +61,7 @@ class ExtendedCertificateInfo(Sequence):
         ('certificate', Certificate),
         ('attributes', Attributes),
     ]
+
 
 class ExtendedCertificate(Sequence):
     _fields = [
@@ -661,7 +661,7 @@ class CompressedData(Sequence):
         return self._decompressed
 
 
-ContentInfo._oid_specs = {  #pylint: disable=W0212
+ContentInfo._oid_specs = {
     'data': OctetString,
     'signed_data': SignedData,
     'enveloped_data': EnvelopedData,
@@ -674,7 +674,7 @@ ContentInfo._oid_specs = {  #pylint: disable=W0212
 }
 
 
-EncapsulatedContentInfo._oid_specs = {  #pylint: disable=W0212
+EncapsulatedContentInfo._oid_specs = {
     'signed_data': SignedData,
     'enveloped_data': EnvelopedData,
     'signed_and_enveloped_data': SignedAndEnvelopedData,
@@ -686,7 +686,7 @@ EncapsulatedContentInfo._oid_specs = {  #pylint: disable=W0212
 }
 
 
-CMSAttribute._oid_specs = {  #pylint: disable=W0212
+CMSAttribute._oid_specs = {
     'content_type': SetOfContentType,
     'message_digest': SetOfOctetString,
     'signing_time': SetOfTime,

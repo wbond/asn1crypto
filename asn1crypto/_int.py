@@ -39,7 +39,6 @@ from ._ffi import LibraryNotFoundError, FFIEngineError, buffer_from_bytes, bytes
 from .util import int_to_bytes, int_from_bytes
 
 
-
 # First try to use ctypes or cffi with OpenSSL for better performance
 try:
     try:
@@ -117,7 +116,7 @@ except (LibraryNotFoundError, FFIEngineError):
         uc, vc, ud, vd = 1, 0, 0, 1
         while c != 0:
             q, c, d = divmod(d, c) + (c,)
-            uc, vc, ud, vd = ud - q*uc, vd - q*vc, uc, vc
+            uc, vc, ud, vd = ud - q * uc, vd - q * vc, uc, vc
 
         # At this point, d is the GCD, and ud*a+vd*p = d.
         # If d == 1, this means that ud is a inverse.

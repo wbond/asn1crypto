@@ -17,7 +17,6 @@ from .keys import PublicKeyInfo
 from .x509 import DirectoryString, Extensions, Name
 
 
-
 # The structures in this file are taken from https://tools.ietf.org/html/rfc2986
 # and https://tools.ietf.org/html/rfc2985
 

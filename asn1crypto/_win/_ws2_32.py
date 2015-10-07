@@ -3,10 +3,18 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import socket
 
-from .._ffi import FFIEngineError, buffer_from_bytes, bytes_from_buffer, cast_void_p, is_null, unicode_buffer, string_from_buffer
+from .._ffi import (
+    buffer_from_bytes,
+    bytes_from_buffer,
+    cast_void_p,
+    FFIEngineError,
+    is_null,
+    string_from_buffer,
+    unicode_buffer,
+)
 
 try:
-    from ._ws2_32_cffi import ws2_32  #pylint: disable=W0611
+    from ._ws2_32_cffi import ws2_32
 except (FFIEngineError):
     from ._ws2_32_ctypes import ws2_32
 

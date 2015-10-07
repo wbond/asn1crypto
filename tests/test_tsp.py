@@ -14,7 +14,6 @@ tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 
-
 class TSPTests(unittest.TestCase):
 
     def test_parse_request(self):
@@ -229,7 +228,10 @@ class TSPTests(unittest.TestCase):
                     'certs',
                     [
                         util.OrderedDict([
-                            ('cert_hash', b'\x22\x3C\xDA\x27\x07\x96\x73\x81\x6B\x60\x8A\x1B\x8C\xB0\xAB\x02\x30\x10\x7F\xCC'),
+                            (
+                                'cert_hash',
+                                b'\x22\x3C\xDA\x27\x07\x96\x73\x81\x6B\x60\x8A\x1B\x8C\xB0\xAB\x02\x30\x10\x7F\xCC'
+                            ),
                             ('issuer_serial', None),
                         ])
                     ]

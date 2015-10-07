@@ -25,14 +25,12 @@ import sys
 if not sys.version_info < (2, 7):
     from collections import OrderedDict
 
-
 else:
-    from UserDict import DictMixin  #pylint: disable=F0401
-
+    from UserDict import DictMixin
 
     class OrderedDict(dict, DictMixin):
 
-        def __init__(self, *args, **kwds):  #pylint: disable=W0231
+        def __init__(self, *args, **kwds):
             if len(args) > 1:
                 raise TypeError('expected at most 1 arguments, got %d' % len(args))
             try:
@@ -78,7 +76,7 @@ else:
             if not self:
                 raise KeyError('dictionary is empty')
             if last:
-                key = reversed(self).next()  #pylint: disable=E0111
+                key = reversed(self).next()
             else:
                 key = iter(self).next()
             value = self.pop(key)
@@ -125,7 +123,7 @@ else:
             if isinstance(other, OrderedDict):
                 if len(self) != len(other):
                     return False
-                for p, q in  zip(self.items(), other.items()):
+                for p, q in zip(self.items(), other.items()):
                     if p != q:
                         return False
                 return True

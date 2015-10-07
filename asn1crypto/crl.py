@@ -35,7 +35,6 @@ from .x509 import (
 )
 
 
-
 # The structures in this file are taken from https://tools.ietf.org/html/rfc5280
 
 

@@ -25,20 +25,20 @@ def data(provider_method, first_param_name_suffix=False):
     """
 
     def test_func_decorator(test_func):
-        test_func._provider_method = provider_method  #pylint: disable=W0212
-        test_func._provider_name_suffix = first_param_name_suffix  #pylint: disable=W0212
+        test_func._provider_method = provider_method
+        test_func._provider_name_suffix = first_param_name_suffix
         return test_func
     return test_func_decorator
 
 
-def DataDecorator(cls):
+def data_decorator(cls):
     """
     A class decorator that works with the @provider decorator to generate test
     method from a data provider
     """
 
     def generate_test_func(name, original_function, num, params):
-        if original_function._provider_name_suffix:  #pylint: disable=W0212
+        if original_function._provider_name_suffix:
             data_name = params[0]
             params = params[1:]
         else:
@@ -53,7 +53,7 @@ def DataDecorator(cls):
         func = getattr(cls, name)
         if hasattr(func, '_provider_method'):
             num = 1
-            for params in getattr(cls, func._provider_method)():  #pylint: disable=W0212
+            for params in getattr(cls, func._provider_method)():
                 generate_test_func(name, func, num, params)
                 num += 1
 

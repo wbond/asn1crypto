@@ -13,7 +13,7 @@ patch()
 
 if sys.version_info < (3,):
     byte_cls = str
-    num_cls = long  #pylint: disable=E0602
+    num_cls = long  # noqa
 else:
     byte_cls = bytes
     num_cls = int

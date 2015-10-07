@@ -3,23 +3,22 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import os
 
-from pylint.lint import Run
+from flake8.engine import get_style_guide
 
 
 cur_dir = os.path.dirname(__file__)
-rc_path = os.path.join(cur_dir, '..', '.pylintrc')
+config_file = os.path.join(cur_dir, '..', '.pep8')
 
 
 def run():
-    print('Running pylint...')
+    print('Running flake8...')
 
-    files = []
-    for root, _, filenames in os.walk('../asn1crypto/'):
+    flake8_style = get_style_guide(config_file=config_file)
+
+    paths = []
+    for root, _, filenames in os.walk('asn1crypto'):
         for filename in filenames:
             if not filename.endswith('.py'):
                 continue
-            files.append(os.path.join(root, filename))
-
-    args = ['--rcfile=%s' % rc_path] + files
-
-    Run(args)
+            paths.append(os.path.join(root, filename))
+    flake8_style.check_files(paths)

@@ -31,7 +31,6 @@ from .keys import PrivateKeyInfo, EncryptedPrivateKeyInfo
 from .x509 import Certificate
 
 
-
 # The structures in this file are taken from https://tools.ietf.org/html/rfc7292
 
 class MacData(Sequence):
@@ -173,4 +172,4 @@ class SafeBag(Sequence):
     }
 
 
-SafeContents._child_spec = SafeBag  #pylint: disable=W0212
+SafeContents._child_spec = SafeBag

@@ -45,19 +45,9 @@ from ._elliptic_curve import (
     PrimeCurve,
     PrimePoint,
 )
+from ._errors import unwrap
 from .util import int_from_bytes, int_to_bytes
-from ._errors import object_name
-
-try:
-    # Python 2
-    str_cls = unicode  #pylint: disable=E0602
-    byte_cls = str
-
-except NameError:
-    # Python 3
-    str_cls = str
-    byte_cls = bytes
-
+from ._types import type_name, str_cls, byte_cls
 
 
 class OtherPrimeInfo(Sequence):
@@ -198,9 +188,18 @@ class _ECPoint():
             return (x, y)
 
         if first_byte not in set([b'\x02', b'\x03']):
-            raise ValueError('Invalid EC public key - first byte is incorrect')
+            raise ValueError(unwrap(
+                '''
+                Invalid EC public key - first byte is incorrect
+                '''
+            ))
 
-        raise ValueError('Compressed representations of EC public keys are not supported due to patent US6252960')
+        raise ValueError(unwrap(
+            '''
+            Compressed representations of EC public keys are not supported due
+            to patent US6252960
+            '''
+        ))
 
 
 class ECPoint(OctetString, _ECPoint):
@@ -534,7 +533,12 @@ class PrivateKeyInfo(Sequence):
         """
 
         if not isinstance(private_key, byte_cls) and not isinstance(private_key, Asn1Value):
-            raise ValueError('private_key must be a byte string or Asn1Value, not %s' % object_name(private_key))
+            raise TypeError(unwrap(
+                '''
+                private_key must be a byte string or Asn1Value, not %s
+                ''',
+                type_name(private_key)
+            ))
 
         if algorithm == 'rsa':
             if not isinstance(private_key, RSAPrivateKey):
@@ -555,14 +559,19 @@ class PrivateKeyInfo(Sequence):
             params = private_key['parameters']
             del private_key['parameters']
         else:
-            raise ValueError('algorithm must be one of "rsa", "dsa", "ec", not %s' % repr(algorithm))
+            raise ValueError(unwrap(
+                '''
+                algorithm must be one of "rsa", "dsa", "ec", not %s
+                ''',
+                repr(algorithm)
+            ))
 
         private_key_algo = PrivateKeyAlgorithm()
         private_key_algo['algorithm'] = PrivateKeyAlgorithmId(algorithm)
         private_key_algo['parameters'] = params
 
         container = cls()
-        container._algorithm = algorithm  #pylint: disable=W0212
+        container._algorithm = algorithm
         container['version'] = Integer(0)
         container['private_key_algorithm'] = private_key_algo
         container['private_key'] = private_key
@@ -570,7 +579,7 @@ class PrivateKeyInfo(Sequence):
         # Here we save the DSA public key if possible since it is not contained
         # within the PKCS#8 structure for a DSA key
         if algorithm == 'dsa':
-            container._public_key = public_key  #pylint: disable=W0212
+            container._public_key = public_key
 
         return container
 
@@ -602,11 +611,21 @@ class PrivateKeyInfo(Sequence):
             curve_type, details = self.curve
 
             if curve_type == 'implicit_ca':
-                raise ValueError('Unable to compute public key for EC key using Implicit CA parameters')
+                raise ValueError(unwrap(
+                    '''
+                    Unable to compute public key for EC key using Implicit CA
+                    parameters
+                    '''
+                ))
 
             if curve_type == 'specified':
                 if details['field_id']['field_type'] == 'characteristic_two_field':
-                    raise ValueError('Unable to compute public key for EC key over a characteristic two field')
+                    raise ValueError(unwrap(
+                        '''
+                        Unable to compute public key for EC key over a
+                        characteristic two field
+                        '''
+                    ))
 
                 curve = PrimeCurve(
                     details['field_id']['parameters'],
@@ -618,7 +637,13 @@ class PrivateKeyInfo(Sequence):
 
             elif curve_type == 'named':
                 if details not in ('secp192r1', 'secp224r1', 'secp256r1', 'secp384r1', 'secp521r1'):
-                    raise ValueError('Unable to compute public key for EC named curve %s, parameters not currently included' % details)
+                    raise ValueError(unwrap(
+                        '''
+                        Unable to compute public key for EC named curve %s,
+                        parameters not currently included
+                        ''',
+                        details
+                    ))
 
                 base_point = {
                     'secp192r1': SECP192R1_BASE_POINT,
@@ -677,7 +702,12 @@ class PrivateKeyInfo(Sequence):
         """
 
         if self.algorithm != 'ec':
-            raise ValueError('Only EC keys have a curve, this key is %s' % self.algorithm.upper())
+            raise ValueError(unwrap(
+                '''
+                Only EC keys have a curve, this key is %s
+                ''',
+                self.algorithm.upper()
+            ))
 
         params = self['private_key_algorithm']['parameters']
         chosen = params.chosen
@@ -703,7 +733,13 @@ class PrivateKeyInfo(Sequence):
         """
 
         if self.algorithm != 'dsa':
-            raise ValueError('Only DSA keys are generated using a hash algorithm, this key is %s' % self.algorithm.upper())
+            raise ValueError(unwrap(
+                '''
+                Only DSA keys are generated using a hash algorithm, this key is
+                %s
+                ''',
+                self.algorithm.upper()
+            ))
 
         byte_len = math.log(self['private_key_algorithm']['parameters']['q'].native, 2) / 8
 
@@ -922,10 +958,20 @@ class PublicKeyInfo(Sequence):
         """
 
         if not isinstance(public_key, byte_cls) and not isinstance(public_key, Asn1Value):
-            raise ValueError('public_key must be a byte string or Asn1Value, not %s' % object_name(public_key))
+            raise TypeError(unwrap(
+                '''
+                public_key must be a byte string or Asn1Value, not %s
+                ''',
+                type_name(public_key)
+            ))
 
         if algorithm != 'rsa':
-            raise ValueError('algorithm must "rsa", not %s' % repr(algorithm))
+            raise ValueError(unwrap(
+                '''
+                algorithm must "rsa", not %s
+                ''',
+                repr(algorithm)
+            ))
 
         algo = PublicKeyAlgorithm()
         algo['algorithm'] = PublicKeyAlgorithmId(algorithm)
@@ -953,7 +999,14 @@ class PublicKeyInfo(Sequence):
 
         key_type = self.algorithm.upper()
         a_an = 'an' if key_type == 'EC' else 'a'
-        raise ValueError('Only RSA public keys may be unwrapped - this key is %s %s public key' % (a_an, key_type))
+        raise ValueError(unwrap(
+            '''
+            Only RSA public keys may be unwrapped - this key is %s %s public
+            key
+            ''',
+            a_an,
+            key_type
+        ))
 
     @property
     def curve(self):
@@ -972,7 +1025,12 @@ class PublicKeyInfo(Sequence):
         """
 
         if self.algorithm != 'ec':
-            raise ValueError('Only EC keys have a curve, this key is %s' % self.algorithm.upper())
+            raise ValueError(unwrap(
+                '''
+                Only EC keys have a curve, this key is %s
+                ''',
+                self.algorithm.upper()
+            ))
 
         params = self['algorithm']['parameters']
         chosen = params.chosen
@@ -998,7 +1056,13 @@ class PublicKeyInfo(Sequence):
         """
 
         if self.algorithm != 'dsa':
-            raise ValueError('Only DSA keys are generated using a hash algorithm, this key is %s' % self.algorithm.upper())
+            raise ValueError(unwrap(
+                '''
+                Only DSA keys are generated using a hash algorithm, this key is
+                %s
+                ''',
+                self.algorithm.upper()
+            ))
 
         byte_len = math.log(self['algorithm']['parameters']['q'].native, 2) / 8
 

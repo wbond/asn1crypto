@@ -6,7 +6,7 @@ import os
 
 from asn1crypto import core
 
-from .unittest_data import DataDecorator, data
+from .unittest_data import data_decorator, data
 from ._unittest_compat import patch
 
 patch()
@@ -70,7 +70,7 @@ class NumChoice(core.Choice):
     ]
 
 
-@DataDecorator
+@data_decorator
 class CoreTests(unittest.TestCase):
 
     def test_sequence_spec(self):
@@ -84,23 +84,22 @@ class CoreTests(unittest.TestCase):
         seq = SequenceAny()
         self.assertEqual(core.Any, seq.spec())
 
-    #pylint: disable=C0326
     @staticmethod
     def compare_primitive_info():
         return (
-            (core.ObjectIdentifier('1.2.3'),       core.ObjectIdentifier('1.2.3'),                   True),
-            (core.Integer(1),                      Enum(1),                                          False),
-            (core.Integer(1),                      core.Integer(1, tag_type='implicit', tag=5),      True),
-            (core.Integer(1),                      core.Integer(1, tag_type='explicit', tag=5),      True),
-            (core.Integer(1),                      core.Integer(2),                                  False),
-            (core.OctetString(b''),                core.OctetString(b''),                            True),
-            (core.OctetString(b''),                core.OctetString(b'1'),                           False),
-            (core.OctetString(b''),                core.OctetBitString(b''),                         False),
-            (core.ParsableOctetString(b'12'),      core.OctetString(b'12'),                          True),
-            (core.ParsableOctetBitString(b'12'),   core.OctetBitString(b'12'),                       True),
-            (core.UTF8String('12'),                core.UTF8String('12'),                            True),
-            (core.UTF8String('12'),                core.UTF8String('1'),                             False),
-            (core.UTF8String('12'),                core.IA5String('12'),                             False),
+            (core.ObjectIdentifier('1.2.3'), core.ObjectIdentifier('1.2.3'), True),
+            (core.Integer(1), Enum(1), False),
+            (core.Integer(1), core.Integer(1, tag_type='implicit', tag=5), True),
+            (core.Integer(1), core.Integer(1, tag_type='explicit', tag=5), True),
+            (core.Integer(1), core.Integer(2), False),
+            (core.OctetString(b''), core.OctetString(b''), True),
+            (core.OctetString(b''), core.OctetString(b'1'), False),
+            (core.OctetString(b''), core.OctetBitString(b''), False),
+            (core.ParsableOctetString(b'12'), core.OctetString(b'12'), True),
+            (core.ParsableOctetBitString(b'12'), core.OctetBitString(b'12'), True),
+            (core.UTF8String('12'), core.UTF8String('12'), True),
+            (core.UTF8String('12'), core.UTF8String('1'), False),
+            (core.UTF8String('12'), core.IA5String('12'), False),
         )
 
     @data('compare_primitive_info')
@@ -110,19 +109,18 @@ class CoreTests(unittest.TestCase):
         else:
             self.assertNotEqual(one, two)
 
-    #pylint: disable=C0326
     @staticmethod
     def integer_info():
         return (
-            (0,                b'\x02\x01\x00'),
-            (255,              b'\x02\x02\x00\xFF'),
-            (128,              b'\x02\x02\x00\x80'),
-            (127,              b'\x02\x01\x7F'),
-            (-127,             b'\x02\x01\x81'),
-            (-127,             b'\x02\x01\x81'),
-            (32768,            b'\x02\x03\x00\x80\x00'),
-            (-32768,           b'\x02\x02\x80\x00'),
-            (-32769,           b'\x02\x03\xFF\x7F\xFF'),
+            (0, b'\x02\x01\x00'),
+            (255, b'\x02\x02\x00\xFF'),
+            (128, b'\x02\x02\x00\x80'),
+            (127, b'\x02\x01\x7F'),
+            (-127, b'\x02\x01\x81'),
+            (-127, b'\x02\x01\x81'),
+            (32768, b'\x02\x03\x00\x80\x00'),
+            (-32768, b'\x02\x02\x80\x00'),
+            (-32769, b'\x02\x03\xFF\x7F\xFF'),
         )
 
     @data('integer_info')
@@ -131,11 +129,10 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(der_bytes, i.dump())
         self.assertEqual(native, core.Integer.load(der_bytes).native)
 
-    #pylint: disable=C0326
     @staticmethod
     def type_info():
         return (
-            ('universal/object_identifier.der',    core.ObjectIdentifier,    '1.2.840.113549.1.1.1'),
+            ('universal/object_identifier.der', core.ObjectIdentifier, '1.2.840.113549.1.1.1'),
         )
 
     @data('type_info')
@@ -147,11 +144,10 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(native, parsed.native)
         self.assertEqual(der, parsed.dump(force=True))
 
-    #pylint: disable=C0326
     @staticmethod
     def bit_string_info():
         return (
-            ((0, 1, 1),                b'\x03\x02\x05\x60'),
+            ((0, 1, 1), b'\x03\x02\x05\x60'),
             ((0, 1, 1, 0, 0, 0, 0, 0), b'\x03\x02\x00\x60'),
         )
 
@@ -168,7 +164,6 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(False, named[1])
         self.assertEqual(True, named[0])
 
-    #pylint: disable=C0326
     @staticmethod
     def mapped_bit_string_info():
         return (
