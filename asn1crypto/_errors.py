@@ -3,7 +3,7 @@
 """
 Helper for formatting exception messages. Exports the following items:
 
- - single_line()
+ - unwrap()
 """
 
 from __future__ import unicode_literals, division, absolute_import, print_function

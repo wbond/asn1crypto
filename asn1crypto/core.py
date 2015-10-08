@@ -46,30 +46,32 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import math
-import sys
-import re
 from datetime import datetime
 import binascii
+import math
+import re
+import sys
 
 from . import _teletex_codec
-from ._ordereddict import OrderedDict
 from ._errors import unwrap
+from ._ordereddict import OrderedDict
 from ._types import type_name, str_cls, byte_cls, int_types
 from .util import int_to_bytes, int_from_bytes, timezone
 
 # Python 2
 if sys.version_info <= (3,):
+    from cStringIO import StringIO as BytesIO
+    from datetime import timedelta
+
+    range = xrange  # noqa
     py2 = True
     chr_cls = chr
-    range = xrange  # noqa
-    from datetime import timedelta
-    from cStringIO import StringIO as BytesIO
 
 # Python 3
 else:
-    py2 = False
     from io import BytesIO
+
+    py2 = False
 
     def chr_cls(num):
         return bytes([num])

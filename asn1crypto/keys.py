@@ -19,6 +19,17 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import hashlib
 import math
 
+from ._elliptic_curve import (
+    SECP192R1_BASE_POINT,
+    SECP224R1_BASE_POINT,
+    SECP256R1_BASE_POINT,
+    SECP384R1_BASE_POINT,
+    SECP521R1_BASE_POINT,
+    PrimeCurve,
+    PrimePoint,
+)
+from ._errors import unwrap
+from ._types import type_name, str_cls, byte_cls
 from .algos import DigestAlgorithm, EncryptionAlgorithm
 from .core import (
     Any,
@@ -36,18 +47,7 @@ from .core import (
     SequenceOf,
     SetOf,
 )
-from ._elliptic_curve import (
-    SECP192R1_BASE_POINT,
-    SECP224R1_BASE_POINT,
-    SECP256R1_BASE_POINT,
-    SECP384R1_BASE_POINT,
-    SECP521R1_BASE_POINT,
-    PrimeCurve,
-    PrimePoint,
-)
-from ._errors import unwrap
 from .util import int_from_bytes, int_to_bytes
-from ._types import type_name, str_cls, byte_cls
 
 
 class OtherPrimeInfo(Sequence):

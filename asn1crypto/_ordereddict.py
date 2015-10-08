@@ -23,9 +23,11 @@
 import sys
 
 if not sys.version_info < (2, 7):
+
     from collections import OrderedDict
 
 else:
+
     from UserDict import DictMixin
 
     class OrderedDict(dict, DictMixin):

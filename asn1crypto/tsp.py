@@ -18,6 +18,13 @@ Other type classes are defined that help compose the types listed above.
 from __future__ import unicode_literals, division, absolute_import, print_function
 
 from .algos import DigestAlgorithm
+from .cms import (
+    CMSAttribute,
+    CMSAttributeType,
+    ContentInfo,
+    ContentType,
+    EncapsulatedContentInfo,
+)
 from .core import (
     Any,
     BitString,
@@ -33,15 +40,13 @@ from .core import (
     SetOf,
     UTF8String,
 )
-from .cms import (
-    CMSAttribute,
-    CMSAttributeType,
-    ContentInfo,
-    ContentType,
-    EncapsulatedContentInfo,
-)
 from .crl import CertificateList
-from .x509 import Attributes, CertificatePolicies, GeneralName, GeneralNames
+from .x509 import (
+    Attributes,
+    CertificatePolicies,
+    GeneralName,
+    GeneralNames,
+)
 
 
 # The structures in this file are based on https://tools.ietf.org/html/rfc3161,

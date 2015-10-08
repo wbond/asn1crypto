@@ -15,16 +15,19 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import sys
-import re
-import hashlib
-import stringprep
-import unicodedata
-import socket
 from encodings import idna  # noqa
 import codecs
+import hashlib
+import re
+import socket
+import stringprep
+import sys
+import unicodedata
 
+from ._errors import unwrap
 from ._ordereddict import OrderedDict
+from ._types import type_name, str_cls, byte_cls
+from .algos import SignedDigestAlgorithm
 from .core import (
     Any,
     BitString,
@@ -52,20 +55,27 @@ from .core import (
     UTF8String,
     VisibleString,
 )
-from .algos import SignedDigestAlgorithm
 from .keys import PublicKeyInfo
 from .util import int_to_bytes, int_from_bytes, inet_ntop, inet_pton
-from ._errors import unwrap
-from ._types import type_name, str_cls, byte_cls
 
 if sys.version_info < (3,):
     from urlparse import urlsplit, urlunsplit
-    from urllib import quote as urlquote, unquote as unquote_to_bytes
+    from urllib import (
+        quote as urlquote,
+        unquote as unquote_to_bytes,
+    )
+
     bytes_to_list = lambda byte_string: [ord(b) for b in byte_string]
 
 else:
+    from urllib.parse import (
+        quote as urlquote,
+        unquote_to_bytes,
+        urlsplit,
+        urlunsplit,
+    )
+
     bytes_to_list = list
-    from urllib.parse import urlsplit, urlunsplit, quote as urlquote, unquote_to_bytes
 
 
 # The structures in this file are taken from https://tools.ietf.org/html/rfc5280

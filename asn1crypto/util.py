@@ -14,12 +14,10 @@ from bytes and UTC timezone. Exports the following items:
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import sys
 import math
-
+import sys
 
 from ._ordereddict import OrderedDict  # noqa
-
 
 if sys.platform == 'win32':
     from ._win._ws2_32 import inet_ntop, inet_pton

@@ -15,6 +15,7 @@ Other type classes are defined that help compose the types listed above.
 from __future__ import unicode_literals, division, absolute_import, print_function
 
 from .algos import DigestInfo
+from .cms import ContentInfo, SignedData
 from .core import (
     Any,
     BMPString,
@@ -26,7 +27,6 @@ from .core import (
     SequenceOf,
     SetOf,
 )
-from .cms import ContentInfo, SignedData
 from .keys import PrivateKeyInfo, EncryptedPrivateKeyInfo
 from .x509 import Certificate
 

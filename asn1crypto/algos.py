@@ -19,7 +19,14 @@ Other type classes are defined that help compose the types listed above.
 from __future__ import unicode_literals, division, absolute_import, print_function
 
 from ._errors import unwrap
-from .core import Any, Choice, Integer, ObjectIdentifier, OctetString, Sequence
+from .core import (
+    Any,
+    Choice,
+    Integer,
+    ObjectIdentifier,
+    OctetString,
+    Sequence,
+)
 
 
 # Structures and OIDs in this file are pulled from

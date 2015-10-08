@@ -11,9 +11,9 @@ Encoding DER to PEM and decoding PEM to DER. Exports the following items:
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import sys
 import base64
 import re
+import sys
 
 from ._errors import unwrap
 from ._types import type_name, str_cls, byte_cls

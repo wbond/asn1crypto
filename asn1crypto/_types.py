@@ -1,8 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import sys
 import inspect
+import sys
 
 
 if sys.version_info < (3,):

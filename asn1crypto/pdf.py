@@ -19,7 +19,12 @@ from .core import (
 )
 from .crl import CertificateList
 from .ocsp import OCSPResponse
-from .x509 import ExtensionId, Extension, GeneralName, KeyPurposeId
+from .x509 import (
+    Extension,
+    ExtensionId,
+    GeneralName,
+    KeyPurposeId,
+)
 
 
 class AdobeArchiveRevInfo(Sequence):

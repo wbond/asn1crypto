@@ -45,6 +45,7 @@ try:
         return ffi.string(buffer)
 
 except (ImportError):
+
     from ctypes import create_string_buffer, create_unicode_buffer, cast, c_void_p
 
     def buffer_from_bytes(initializer):

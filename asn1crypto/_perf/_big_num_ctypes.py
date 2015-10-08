@@ -21,8 +21,8 @@ interfacing with libcrypto.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-from ctypes.util import find_library
 from ctypes import CDLL, c_int, c_char_p, c_void_p
+from ctypes.util import find_library
 
 from .._ffi import LibraryNotFoundError, FFIEngineError
 
