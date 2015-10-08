@@ -3,8 +3,9 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import unittest
 import os
+from datetime import datetime
 
-from asn1crypto import core
+from asn1crypto import core, util
 
 from .unittest_data import data_decorator, data
 from ._unittest_compat import patch
@@ -128,6 +129,20 @@ class CoreTests(unittest.TestCase):
         i = core.Integer(native)
         self.assertEqual(der_bytes, i.dump())
         self.assertEqual(native, core.Integer.load(der_bytes).native)
+
+    @staticmethod
+    def utctime_info():
+        return (
+            (datetime(2030, 12, 31, 8, 30, 0, tzinfo=util.timezone.utc), b'\x17\x0D301231083000Z'),
+            (datetime(2049, 12, 31, 8, 30, 0, tzinfo=util.timezone.utc), b'\x17\x0D491231083000Z'),
+            (datetime(1950, 12, 31, 8, 30, 0, tzinfo=util.timezone.utc), b'\x17\x0D501231083000Z'),
+        )
+
+    @data('utctime_info')
+    def utctime(self, native, der_bytes):
+        u = core.UTCTime(native)
+        self.assertEqual(der_bytes, u.dump())
+        self.assertEqual(native, core.UTCTime.load(der_bytes).native)
 
     @staticmethod
     def type_info():

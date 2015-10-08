@@ -3486,11 +3486,17 @@ class UTCTime(AbstractTime):
 
         strlen = len(string)
 
+        year_num = int(string[0:2])
+        if year_num < 50:
+            prefix = '20'
+        else:
+            prefix = '19'
+
         if strlen == 10:
-            return datetime.strptime(string, '%y%m%d%H%M')
+            return datetime.strptime(prefix + string, '%Y%m%d%H%M')
 
         if strlen == 12:
-            return datetime.strptime(string, '%y%m%d%H%M%S')
+            return datetime.strptime(prefix + string, '%Y%m%d%H%M%S')
 
         return string
 
