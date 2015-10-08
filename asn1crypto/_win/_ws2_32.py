@@ -19,9 +19,8 @@ except (FFIEngineError):
     from ._ws2_32_ctypes import ws2_32
 
 
-class ws2_32_const():
-    AF_INET = 2
-    AF_INET6 = 23
+AF_INET = 2
+AF_INET6 = 23
 
 
 def inet_ntop(address_family, packed_ip):
@@ -39,11 +38,11 @@ def inet_ntop(address_family, packed_ip):
     """
 
     family = {
-        socket.AF_INET: ws2_32_const.AF_INET,
-        socket.AF_INET6: ws2_32_const.AF_INET6,
+        socket.AF_INET: AF_INET,
+        socket.AF_INET6: AF_INET6,
     }[address_family]
 
-    buffer_size = 46 if family == ws2_32_const.AF_INET6 else 16
+    buffer_size = 46 if family == AF_INET6 else 16
     buffer = unicode_buffer(buffer_size)
     packed_ip_buffer = buffer_from_bytes(packed_ip)
     result = ws2_32.InetNtopW(family, cast_void_p(packed_ip_buffer), buffer, buffer_size)
@@ -68,11 +67,11 @@ def inet_pton(address_family, ip_string):
     """
 
     family = {
-        socket.AF_INET: ws2_32_const.AF_INET,
-        socket.AF_INET6: ws2_32_const.AF_INET6,
+        socket.AF_INET: AF_INET,
+        socket.AF_INET6: AF_INET6,
     }[address_family]
 
-    buffer_size = 16 if family == ws2_32_const.AF_INET6 else 4
+    buffer_size = 16 if family == AF_INET6 else 4
     buffer = buffer_from_bytes(buffer_size)
     result = ws2_32.InetPtonW(family, ip_string, buffer)
     if result != 1:
