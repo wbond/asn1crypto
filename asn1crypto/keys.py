@@ -1052,7 +1052,8 @@ class PublicKeyInfo(Sequence):
             ValueError - when the key is not a DSA key
 
         :return:
-            A unicode string of "sha1" or "sha2"
+            A unicode string of "sha1" or "sha2" or None if no parameters are
+            present
         """
 
         if self.algorithm != 'dsa':
@@ -1064,7 +1065,11 @@ class PublicKeyInfo(Sequence):
                 self.algorithm.upper()
             ))
 
-        byte_len = math.log(self['algorithm']['parameters']['q'].native, 2) / 8
+        parameters = self['algorithm']['parameters']
+        if parameters.native is None:
+            return None
+
+        byte_len = math.log(parameters['q'].native, 2) / 8
 
         return 'sha1' if byte_len <= 20 else 'sha2'
 

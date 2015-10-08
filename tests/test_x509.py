@@ -2813,6 +2813,74 @@ class X509Tests(unittest.TestCase):
             extensions.native
         )
 
+    def test_parse_dsa_certificate_inheritance(self):
+        cert = self._load_cert('DSAParametersInheritedCACert.crt')
+
+        tbs_certificate = cert['tbs_certificate']
+        signature = tbs_certificate['signature']
+        issuer = tbs_certificate['issuer']
+        validity = tbs_certificate['validity']
+        subject = tbs_certificate['subject']
+        subject_public_key_info = tbs_certificate['subject_public_key_info']
+        subject_public_key_algorithm = subject_public_key_info['algorithm']
+
+        self.assertEqual(
+            'v3',
+            tbs_certificate['version'].native
+        )
+        self.assertEqual(
+            2,
+            tbs_certificate['serial_number'].native
+        )
+        self.assertEqual(
+            'sha1_dsa',
+            signature['algorithm'].native
+        )
+        self.assertEqual(
+            None,
+            signature['parameters'].native
+        )
+        self.assertEqual(
+            util.OrderedDict([
+                ('country_name', 'US'),
+                ('organization_name', 'Test Certificates 2011'),
+                ('common_name', 'DSA CA'),
+            ]),
+            issuer.native
+        )
+        self.assertEqual(
+            datetime(2010, 1, 1, 8, 30, tzinfo=util.timezone.utc),
+            validity['not_before'].native
+        )
+        self.assertEqual(
+            datetime(2030, 12, 31, 8, 30, tzinfo=util.timezone.utc),
+            validity['not_after'].native
+        )
+        self.assertEqual(
+            util.OrderedDict([
+                ('country_name', 'US'),
+                ('organization_name', 'Test Certificates 2011'),
+                ('common_name', 'DSA Parameters Inherited CA'),
+            ]),
+            subject.native
+        )
+        self.assertEqual(
+            'dsa',
+            subject_public_key_algorithm['algorithm'].native
+        )
+        self.assertEqual(
+            None,
+            subject_public_key_algorithm['parameters'].native
+        )
+        self.assertEqual(
+            'dsa',
+            subject_public_key_info.algorithm
+        )
+        self.assertEqual(
+            None,
+            subject_public_key_info.hash_algo
+        )
+
     def test_parse_ec_certificate(self):
         cert = self._load_cert('keys/test-ec-der.crt')
 
