@@ -2646,7 +2646,7 @@ class Sequence(Asn1Value):
                                 field += 1
                                 continue
 
-                    if field_spec is None or (issubclass(field_spec, Any) and spec_override):
+                    if field_spec is None or (spec_override and issubclass(field_spec, Any)):
                         field_spec = value_spec
                         spec_override = None
 
@@ -3815,45 +3815,6 @@ def _build_id_tuple(params, spec):
     return (required_class, required_tag)
 
 
-def _parse_id(encoded_data, pointer):
-    """
-    Peeks ahead into a byte string and parses the ASN.1 header
-
-    :param encoded_data:
-        A byte string
-
-    :param pointer:
-        The index in the byte string to parse the header from
-
-    :return:
-        A 4-element tuple of (class_, method, tag, number_of_bytes_consumed)
-    """
-
-    original_pointer = pointer
-
-    first_octet = ord(encoded_data[pointer:pointer + 1])
-    pointer += 1
-
-    class_ = first_octet >> 6
-    method = (first_octet >> 5) & 1
-
-    tag = first_octet & 31
-    # Base 128 length using 8th bit as continuation indicator
-    if tag == 31:
-        tag = 0
-        while True:
-            num = ord(encoded_data[pointer:pointer + 1])
-            pointer += 1
-            tag *= 128
-            tag += num & 127
-            if num >> 7 == 0:
-                break
-
-    num_bytes = pointer - original_pointer
-
-    return (class_, method, tag, num_bytes)
-
-
 def _build(class_, method, tag, header, contents, trailer, spec=None, spec_params=None, nested_spec=None):
     """
     Builds an Asn1Value object generically, or using a spec with optional params
@@ -3905,7 +3866,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         else:
             value = spec(contents=contents)
 
-        if isinstance(value, Any):
+        if spec == Any:
             pass
 
         elif value.tag_type == 'explicit':
@@ -4083,23 +4044,41 @@ def _parse(encoded_data, pointer=0):
 
     encoded_length = len(encoded_data)
 
-    def _slice(start, end):
-        if end > encoded_length:
-            raise ValueError(unwrap(
-                '''
-                Insufficient data - %s bytes requested but only %s available
-                ''',
-                end,
-                encoded_length
-            ))
-        return encoded_data[start:end]
-
     start = pointer
 
-    class_, method, tag, num_bytes = _parse_id(encoded_data, pointer)
+    id_pointer = pointer
+    first_octet = ord(encoded_data[id_pointer]) if py2 else encoded_data[id_pointer]
+    id_pointer += 1
+
+    class_ = first_octet >> 6
+    method = (first_octet >> 5) & 1
+
+    tag = first_octet & 31
+    # Base 128 length using 8th bit as continuation indicator
+    if tag == 31:
+        tag = 0
+        while True:
+            num = ord(encoded_data[id_pointer]) if py2 else encoded_data[id_pointer]
+            id_pointer += 1
+            tag *= 128
+            tag += num & 127
+            if num >> 7 == 0:
+                break
+
+    num_bytes = id_pointer - start
+
     pointer += num_bytes
 
-    length_octet = ord(_slice(pointer, pointer + 1))
+    if pointer + 1 > encoded_length:
+        raise ValueError(unwrap(
+            '''
+            Insufficient data - %s bytes requested but only %s available
+            ''',
+            pointer + 1,
+            encoded_length
+        ))
+    length_octet = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
+
     pointer += 1
     length_type = length_octet >> 7
     if length_type == 1:
@@ -4107,22 +4086,55 @@ def _parse(encoded_data, pointer=0):
         remaining_length_octets = length_octet & 127
         while remaining_length_octets > 0:
             length *= 256
-            length += ord(_slice(pointer, pointer + 1))
+            if pointer + 1 > encoded_length:
+                raise ValueError(unwrap(
+                    '''
+                    Insufficient data - %s bytes requested but only %s available
+                    ''',
+                    pointer + 1,
+                    encoded_length
+                ))
+            length += ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
             pointer += 1
             remaining_length_octets -= 1
     else:
         length = length_octet & 127
 
-    header = _slice(start, pointer)
+    if pointer > encoded_length:
+        raise ValueError(unwrap(
+            '''
+            Insufficient data - %s bytes requested but only %s available
+            ''',
+            pointer,
+            encoded_length
+        ))
+    header = encoded_data[start:pointer]
 
     # Indefinite length
     if length_type == 1 and length == 0:
         end_token = encoded_data.find(b'\x00\x00', pointer)
-        contents = _slice(pointer, end_token)
+        if end_token > encoded_length:
+            raise ValueError(unwrap(
+                '''
+                Insufficient data - %s bytes requested but only %s available
+                ''',
+                end_token,
+                encoded_length
+            ))
+        contents = encoded_data[pointer:end_token]
         pointer = end_token + 2
         trailer = b'\x00\x00'
+
     else:
-        contents = _slice(pointer, pointer + length)
+        if pointer + length > encoded_length:
+            raise ValueError(unwrap(
+                '''
+                Insufficient data - %s bytes requested but only %s available
+                ''',
+                pointer + length,
+                encoded_length
+            ))
+        contents = encoded_data[pointer:pointer + length]
         pointer += length
         trailer = b''
 
