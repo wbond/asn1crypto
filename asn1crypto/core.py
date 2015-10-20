@@ -2321,7 +2321,13 @@ class Sequence(Asn1Value):
                 type_name(self)
             ))
 
-        return self._lazy_child(key)
+        try:
+            return self._lazy_child(key)
+
+        except (ValueError, TypeError) as e:
+            args = e.args[1:]
+            e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
+            raise e
 
     def __setitem__(self, key, value):
         """
