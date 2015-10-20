@@ -11,6 +11,8 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import hashlib
+
 from .algos import SignedDigestAlgorithm
 from .core import (
     Boolean,
@@ -300,6 +302,8 @@ class CertificateList(Sequence):
     _authority_information_access_value = None
     _issuer_cert_urls = None
     _delta_crl_distribution_points = None
+    _sha1 = None
+    _sha256 = None
 
     def _set_extensions(self):
         """
@@ -499,3 +503,34 @@ class CertificateList(Sequence):
                             self._delta_crl_distribution_points.append(distribution_point)
 
         return self._delta_crl_distribution_points
+
+    @property
+    def signature(self):
+        """
+        :return:
+            A byte string of the signature
+        """
+
+        return self['signature'].native
+
+    @property
+    def sha1(self):
+        """
+        :return:
+            The SHA1 hash of the DER-encoded bytes of this certificate list
+        """
+
+        if self._sha1 is None:
+            self._sha1 = hashlib.sha1(self.dump()).digest()
+        return self._sha1
+
+    @property
+    def sha256(self):
+        """
+        :return:
+            The SHA-256 hash of the DER-encoded bytes of this certificate list
+        """
+
+        if self._sha256 is None:
+            self._sha256 = hashlib.sha256(self.dump()).digest()
+        return self._sha256
