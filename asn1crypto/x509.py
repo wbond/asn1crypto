@@ -948,10 +948,20 @@ class Name(Choice):
             if attribute_name not in name_dict:
                 continue
 
-            if attribute_name in set(['email_address', 'domain_component']):
-                value = IA5String(name_dict[attribute_name])
+            if attribute_name == 'email_address':
+                value = EmailAddress(name_dict[attribute_name])
+            elif attribute_name == 'domain_component':
+                value = DNSName(name_dict[attribute_name])
+            elif attribute_name in set(['dn_qualifier', 'country_name', 'serial_number']):
+                value = DirectoryString(
+                    name='printable_string',
+                    value=PrintableString(name_dict[attribute_name])
+                )
             else:
-                value = DirectoryString(name='utf8_string', value=UTF8String(name_dict[attribute_name]))
+                value = DirectoryString(
+                    name='utf8_string',
+                    value=UTF8String(name_dict[attribute_name])
+                )
 
             attributes.append(NameTypeAndValue({
                 'type': attribute_name,
