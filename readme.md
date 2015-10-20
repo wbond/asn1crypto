@@ -34,16 +34,17 @@ a bunch of ASN.1 structures for use with various common cryptography standards:
 
 ## Dependencies
 
-Python 2.6, 2.7, 3.2, 3.3, 3.4, pypy or pypy3. *No third-party packages required.*
+Python 2.6, 2.7, 3.2, 3.3, 3.4, 3.5, pypy or pypy3. *No third-party packages
+required.*
 
 ## Version
 
-0.11.0 - [changelog](changelog.md)
+0.11.1 - [changelog](changelog.md)
 
 ## Installation
 
 ```bash
-pip install git+git://github.com/wbond/asn1crypto.git@0.11.0
+pip install asn1crypto
 ```
 
 ## Documentation

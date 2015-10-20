@@ -1,5 +1,14 @@
 # changelog
 
+## 0.11.1
+
+ - Corrected `core.UTCTime` to interpret year <= 49 as 20xx and >= 50 as 19xx
+ - `keys.PublicKeyInfo.hash_algo` can now handle DSA keys without parameters
+ - Added `crl.CertificateList.sha256` and `crl.CertificateList.sha1`
+ - Fixed `x509.Name.build()` to properly encode `country_name`, `serial_number`
+   and `dn_qualifier` as `core.PrintableString` as specified in RFC 5280,
+   instead of `core.UTF8String`
+
 ## 0.11.0
 
  - Added Python 2.6 support
