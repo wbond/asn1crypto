@@ -790,7 +790,7 @@ class Choice(Asn1Value):
 
         return self.chosen.native
 
-    def validate(self, class_, tag):
+    def validate(self, class_, tag, contents):
         """
         Ensures that the class and tag specified exist as an alternative
 
@@ -800,11 +800,28 @@ class Choice(Asn1Value):
         :param tag:
             The integer tag from the encoded value header
 
+        :param contents:
+            A byte string of the contents of the value - used when the object
+            is explicitly tagged
+
         :raises:
             ValueError - when value is not a valid alternative
         """
 
         id_ = (class_, tag)
+
+        if self.tag_type == 'explicit':
+            if (self.explicit_class, self.explicit_tag) != id_:
+                raise ValueError(unwrap(
+                    '''
+                    %s was explicitly tagged, but the value provided does not
+                    match the class and tag
+                    ''',
+                    type_name(self)
+                ))
+
+            ((class_, _, tag, _, _, _), _) = _parse(contents)
+            id_ = (class_, tag)
 
         if id_ in self._id_map:
             self._choice = self._id_map[id_]
@@ -2553,7 +2570,7 @@ class Sequence(Asn1Value):
                 ))
             if not isinstance(value, value_spec):
                 wrapper = value_spec()
-                wrapper.validate(value.class_, value.tag)
+                wrapper.validate(value.class_, value.tag, value.contents)
                 wrapper._parsed = value
                 new_value = wrapper
             else:
@@ -2633,7 +2650,7 @@ class Sequence(Asn1Value):
                             if issubclass(field_spec, Choice):
                                 try:
                                     tester = field_spec(**field_params)
-                                    tester.validate(*id_)
+                                    tester.validate(id_[0], id_[1], parts[4])
                                     choice_match = True
                                 except (ValueError):
                                     pass
@@ -3007,7 +3024,7 @@ class SequenceOf(Asn1Value):
                 ))
             if not isinstance(value, self._child_spec):
                 wrapper = self._child_spec()
-                wrapper.validate(value.class_, value.tag)
+                wrapper.validate(value.class_, value.tag, value.contents)
                 wrapper._parsed = value
                 value = wrapper
             new_value = value
@@ -3902,7 +3919,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 ))
 
         elif isinstance(value, Choice):
-            value.validate(class_, tag)
+            value.validate(class_, tag, contents)
 
         else:
             if class_ != value.class_:
