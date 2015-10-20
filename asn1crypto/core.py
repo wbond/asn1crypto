@@ -48,6 +48,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 from datetime import datetime
 import binascii
+import copy
 import math
 import re
 import sys
@@ -291,9 +292,9 @@ class Asn1Value(object):
 
         return '<%s %s %s>' % (type_name(self), id(self), repr(self.contents or b''))
 
-    def copy(self):
+    def _new_instance(self):
         """
-        Copies the object, preserving any special tagging from it
+        Constructs a new copy of the current object, preserving any tagging
 
         :return:
             An Asn1Value object
@@ -304,8 +305,45 @@ class Asn1Value(object):
         new_obj.tag = self.tag
         new_obj.explicit_class = self.explicit_class
         new_obj.explicit_tag = self.explicit_tag
-        new_obj._copy(self)
         return new_obj
+
+    def __copy__(self):
+        """
+        Implements the copy.copy() interface
+
+        :return:
+            A new shallow copy of the current Asn1Value object
+        """
+
+        new_obj = self._new_instance()
+        new_obj._copy(self, copy.copy)
+        return new_obj
+
+    def __deepcopy__(self, memo):
+        """
+        Implements the copy.deepcopy() interface
+
+        :param memo:
+            A dict for memoization
+
+        :return:
+            A new deep copy of the current Asn1Value object
+        """
+
+        new_obj = self._new_instance()
+        memo[id(self)] = new_obj
+        new_obj._copy(self, copy.deepcopy)
+        return new_obj
+
+    def copy(self):
+        """
+        Copies the object, preserving any special tagging from it
+
+        :return:
+            An Asn1Value object
+        """
+
+        return copy.deepcopy(self)
 
     def retag(self, tag_type, tag):
         """
@@ -322,7 +360,7 @@ class Asn1Value(object):
         """
 
         new_obj = self.__class__(tag_type=tag_type, tag=tag)
-        new_obj._copy(self)
+        new_obj._copy(self, copy.deepcopy)
         return new_obj
 
     def untag(self):
@@ -334,15 +372,19 @@ class Asn1Value(object):
         """
 
         new_obj = self.__class__()
-        new_obj._copy(self)
+        new_obj._copy(self, copy.deepcopy)
         return new_obj
 
-    def _copy(self, other):
+    def _copy(self, other, copy_func):
         """
         Copies the contents of another Asn1Value object to itself
 
         :param object:
             Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
         """
 
         if self.__class__ != other.__class__:
@@ -355,9 +397,9 @@ class Asn1Value(object):
             ))
 
         self.contents = other.contents
-        self._native = other._native
+        self._native = copy_func(other._native)
         if hasattr(other, '_parsed'):
-            self._parsed = other._parsed
+            self._parsed = copy_func(other._parsed)
 
     def debug(self, nest_level=1):
         """
@@ -803,12 +845,16 @@ class Choice(Asn1Value):
 
         return '[%s %s]' % (CLASS_NUM_TO_NAME_MAP[class_].upper(), tag)
 
-    def _copy(self, other):
+    def _copy(self, other, copy_func):
         """
         Copies the contents of another Asn1Value object to itself
 
         :param object:
             Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
         """
 
         if self.__class__ != other.__class__:
@@ -821,10 +867,10 @@ class Choice(Asn1Value):
             ))
 
         self.contents = other.contents
-        self._native = other._native
+        self._native = copy_func(other._native)
         self._choice = other._choice
         self._name = other._name
-        self._parsed = other._parsed
+        self._parsed = copy_func(other._parsed)
 
     def dump(self, force=False):
         """
@@ -1719,12 +1765,16 @@ class ParsableOctetString(Primitive):
 
         return self._parsed[0]
 
-    def _copy(self, other):
+    def _copy(self, other, copy_func):
         """
         Copies the contents of another ParsableOctetString object to itself
 
         :param object:
             Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
         """
 
         if self.__class__ != other.__class__:
@@ -1737,8 +1787,8 @@ class ParsableOctetString(Primitive):
             ))
 
         self.contents = other.contents
-        self._native = other._native
-        self._parsed = other._parsed
+        self._native = copy_func(other._native)
+        self._parsed = copy_func(other._parsed)
 
     def dump(self, force=False):
         """
@@ -2735,12 +2785,16 @@ class Sequence(Asn1Value):
                 self._native[name] = child.native
         return self._native
 
-    def _copy(self, other):
+    def _copy(self, other, copy_func):
         """
         Copies the contents of another Asn1Value object to itself
 
         :param object:
             Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
         """
 
         if self.__class__ != other.__class__:
@@ -2753,7 +2807,7 @@ class Sequence(Asn1Value):
             ))
 
         self.contents = other.contents
-        self._native = other._native
+        self._native = copy_func(other._native)
         if self.children is not None:
             self.children = []
             for child in other.children:
@@ -3164,12 +3218,16 @@ class SequenceOf(Asn1Value):
             self._native = [child.native for child in self]
         return self._native
 
-    def _copy(self, other):
+    def _copy(self, other, copy_func):
         """
         Copies the contents of another Asn1Value object to itself
 
         :param object:
             Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
         """
 
         if self.__class__ != other.__class__:
@@ -3182,7 +3240,7 @@ class SequenceOf(Asn1Value):
             ))
 
         self.contents = other.contents
-        self._native = other._native
+        self._native = copy_func(other._native)
         if self.children is not None:
             self.children = []
             for child in other.children:

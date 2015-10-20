@@ -71,6 +71,13 @@ class NumChoice(core.Choice):
     ]
 
 
+class SeqChoice(core.Choice):
+    _alternatives = [
+        ('one', CopySeq, {'tag_type': 'explicit', 'tag': 0}),
+        ('two', CopySeq, {'tag_type': 'implicit', 'tag': 1}),
+    ]
+
+
 @data_decorator
 class CoreTests(unittest.TestCase):
 
@@ -273,6 +280,8 @@ class CoreTests(unittest.TestCase):
 
     def test_copy_mutable(self):
         a = CopySeq({'name': 'foo', 'pair': {'id': '1.2.3', 'value': 5}})
+        # Cache the native representation so it is copied during the copy operation
+        a.native
         b = a.copy()
         self.assertNotEqual(id(a), id(b))
         self.assertNotEqual(id(a['pair']), id(b['pair']))
@@ -282,6 +291,9 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(a['pair']['value'].native, b['pair']['value'].native)
         a['pair']['value'] = 6
         self.assertNotEqual(a['pair']['value'].native, b['pair']['value'].native)
+
+        a.native['pair']['value'] = 6
+        self.assertNotEqual(a.native['pair']['value'], b.native['pair']['value'])
 
         self.assertNotEqual(a.contents, b.contents)
         self.assertNotEqual(a.dump(), b.dump())
@@ -309,3 +321,14 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(correct.dump(), choice.dump())
         self.assertEqual(correct.tag_type, choice.chosen.tag_type)
         self.assertEqual(correct.explicit_tag, choice.chosen.explicit_tag)
+
+    def test_copy_choice_mutate(self):
+        a = CopySeq({'name': 'foo', 'pair': {'id': '1.2.3', 'value': 5}})
+        choice = SeqChoice(
+            name='one',
+            value=a
+        )
+        choice.dump()
+        choice_copy = choice.copy()
+        choice.chosen['name'] = 'bar'
+        self.assertNotEqual(choice.chosen['name'], choice_copy.chosen['name'])
