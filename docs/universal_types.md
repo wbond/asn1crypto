@@ -219,9 +219,9 @@ way to construct the value out of a native Python data type.
 ### Optional Fields
 
 When a field is configured via the `optional` parameter, not present in the
-`Sequence`, but accessed, an instance of the `NoValue` class will be returned.
-This class is serialized to an empty byte string and returns `None` when
-`.native` is accessed.
+`Sequence`, but accessed, the `VOID` object will be returned. This is an object
+that is serialized to an empty byte string and returns `None` when `.native` is
+accessed.
 
 ## Set
 

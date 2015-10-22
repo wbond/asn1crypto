@@ -2609,7 +2609,7 @@ class X509Tests(unittest.TestCase):
         )
         self.assertIsInstance(
             tbs_certificate['issuer_unique_id'],
-            core.NoValue
+            core.Void
         )
         self.assertEqual(
             None,
@@ -2617,7 +2617,7 @@ class X509Tests(unittest.TestCase):
         )
         self.assertIsInstance(
             tbs_certificate['subject_unique_id'],
-            core.NoValue
+            core.Void
         )
 
         self.maxDiff = None
@@ -2759,7 +2759,7 @@ class X509Tests(unittest.TestCase):
         )
         self.assertIsInstance(
             tbs_certificate['issuer_unique_id'],
-            core.NoValue
+            core.Void
         )
         self.assertEqual(
             None,
@@ -2767,7 +2767,7 @@ class X509Tests(unittest.TestCase):
         )
         self.assertIsInstance(
             tbs_certificate['subject_unique_id'],
-            core.NoValue
+            core.Void
         )
 
         self.maxDiff = None
@@ -3006,7 +3006,7 @@ class X509Tests(unittest.TestCase):
         )
         self.assertIsInstance(
             tbs_certificate['issuer_unique_id'],
-            core.NoValue
+            core.Void
         )
         self.assertEqual(
             None,
@@ -3014,7 +3014,7 @@ class X509Tests(unittest.TestCase):
         )
         self.assertIsInstance(
             tbs_certificate['subject_unique_id'],
-            core.NoValue
+            core.Void
         )
 
         self.maxDiff = None

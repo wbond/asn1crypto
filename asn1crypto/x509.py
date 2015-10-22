@@ -38,7 +38,6 @@ from .core import (
     GeneralString,
     IA5String,
     Integer,
-    NoValue,
     Null,
     NumericString,
     ObjectIdentifier,
@@ -55,6 +54,7 @@ from .core import (
     UTCTime,
     UTF8String,
     VisibleString,
+    VOID,
 )
 from .keys import PublicKeyInfo
 from .util import int_to_bytes, int_from_bytes, inet_ntop, inet_pton
@@ -2222,7 +2222,7 @@ class Certificate(Sequence):
 
         for distribution_point in crl_distribution_points:
             distribution_point_name = distribution_point['distribution_point']
-            if distribution_point_name.__class__ == NoValue:
+            if distribution_point_name is VOID:
                 continue
             # RFC 5280 indicates conforming CA should not use the relative form
             if distribution_point_name.name == 'name_relative_to_crl_issuer':

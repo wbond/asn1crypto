@@ -20,7 +20,6 @@ ASN.1 type classes for universal types. Exports the following items:
  - Integer()
  - IntegerBitString()
  - IntegerOctetString()
- - NoValue()
  - Null()
  - NumericString()
  - ObjectDescriptor()
@@ -40,6 +39,8 @@ ASN.1 type classes for universal types. Exports the following items:
  - UTF8String()
  - VideotexString()
  - VisibleString()
+ - VOID
+ - Void()
 
 Other type classes are defined that help compose the types listed above.
 """
@@ -477,7 +478,7 @@ class ValueMap():
             cls._reverse_map[value] = key
 
 
-class NoValue(Asn1Value):
+class Void(Asn1Value):
     """
     A representation of an optional value that is not present. Has .native
     property and .dump() method to be compatible with other value classes.
@@ -526,7 +527,7 @@ class NoValue(Asn1Value):
         return b''
 
 
-NO_VALUE = NoValue()
+VOID = Void()
 
 
 class Any(Asn1Value):
@@ -2224,7 +2225,7 @@ class Sequence(Asn1Value):
                     # been set for the field, then skip it
                     if check_existing:
                         index = self._field_map[key]
-                        if index < len(self.children) and not isinstance(self.children[index], NoValue):
+                        if index < len(self.children) and self.children[index] is not VOID:
                             continue
 
                     if key in value:
@@ -2437,7 +2438,7 @@ class Sequence(Asn1Value):
             ))
 
         if 'optional' in params:
-            self.children[key] = NO_VALUE
+            self.children[key] = VOID
             if self._native is not None:
                 self._native[name] = None
         else:
@@ -2635,7 +2636,7 @@ class Sequence(Asn1Value):
 
         if self._contents is None:
             if self._fields:
-                self.children = [NO_VALUE] * len(self._fields)
+                self.children = [VOID] * len(self._fields)
                 for index, (_, _, params) in enumerate(self._fields):
                     if 'default' in params:
                         field_name, field_spec, value_spec, field_params, _ = self._determine_spec(index)
@@ -2676,7 +2677,7 @@ class Sequence(Asn1Value):
 
                             if not choice_match:
                                 if 'optional' in field_params:
-                                    self.children.append(NO_VALUE)
+                                    self.children.append(VOID)
                                 else:
                                     self.children.append(field_spec(**field_params))
                                 field += 1
@@ -2736,7 +2737,7 @@ class Sequence(Asn1Value):
                 if 'default' in field_params:
                     self.children.append(field_spec(**field_params))
                 elif 'optional' in field_params:
-                    self.children.append(NO_VALUE)
+                    self.children.append(VOID)
                 else:
                     raise ValueError(unwrap(
                         '''
@@ -2861,7 +2862,7 @@ class Sequence(Asn1Value):
         _basic_debug(prefix, self)
         for field_name in self:
             child = self._lazy_child(self._field_map[field_name])
-            if not isinstance(child, NoValue):
+            if child is not VOID:
                 print('%s    Field "%s"' % (prefix, field_name))
                 child.debug(nest_level + 3)
 
@@ -3405,7 +3406,7 @@ class Set(Sequence):
                 elif 'optional' not in field_params and 'default' not in field_params:
                     missing = True
                 elif 'optional' in field_params:
-                    child_map[index] = NO_VALUE
+                    child_map[index] = VOID
                 elif 'default' in field_params:
                     child_map[index] = spec(**field_params)
 
@@ -3889,7 +3890,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     """
 
     if header is None:
-        return NO_VALUE
+        return VOID
 
     # If an explicit specification was passed in, make sure it matches
     if spec is not None:
