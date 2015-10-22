@@ -483,6 +483,17 @@ class NoValue(Asn1Value):
     property and .dump() method to be compatible with other value classes.
     """
 
+    def __eq__(self, other):
+        """
+        :param other:
+            The other Primitive to compare to
+
+        :return:
+            A boolean
+        """
+
+        return other.__class__ == self.__class__
+
     def __len__(self):
         return 0
 
