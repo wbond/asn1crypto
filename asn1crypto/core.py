@@ -691,8 +691,10 @@ class Choice(Asn1Value):
         cls._id_map = {}
         cls._name_map = {}
         for index, info in enumerate(cls._alternatives):
-            params = info[2] if len(info) > 2 else {}
-            id_ = _build_id_tuple(params, info[1])
+            if len(info) < 3:
+                info = info + ({},)
+                cls._alternatives[index] = info
+            id_ = _build_id_tuple(info[2], info[1])
             cls._id_map[id_] = index
             cls._name_map[info[0]] = index
 
@@ -739,9 +741,7 @@ class Choice(Asn1Value):
                     ))
 
                 self._choice = self._name_map[name]
-                info = self._alternatives[self._choice]
-                spec = info[1]
-                params = {} if len(info) < 3 else info[2]
+                _, spec, params = self._alternatives[self._choice]
 
                 if not isinstance(value, spec):
                     value = spec(value, **params)
@@ -776,9 +776,8 @@ class Choice(Asn1Value):
             return self._parsed
 
         try:
-            info = self._alternatives[self._choice]
-            params = info[2] if len(info) > 2 else {}
-            self._parsed, _ = _parse_build(self.contents, spec=info[1], spec_params=params)
+            _, spec, params = self._alternatives[self._choice]
+            self._parsed, _ = _parse_build(self.contents, spec=spec, spec_params=params)
         except (ValueError, TypeError) as e:
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
@@ -2426,21 +2425,21 @@ class Sequence(Asn1Value):
                 ))
             key = self._field_map[key]
 
-        info = self._fields[key]
-        if len(info) < 3 or ('default' not in info[2] and 'optional' not in info[2]):
+        name, _, params = self._fields[key]
+        if not params or ('default' not in params and 'optional' not in params):
             raise ValueError(unwrap(
                 '''
                 Can not delete the value for the field "%s" of %s since it is
                 not optional or defaulted
                 ''',
-                info[0],
+                name,
                 type_name(self)
             ))
 
-        if 'optional' in info[2]:
+        if 'optional' in params:
             self.children[key] = NO_VALUE
             if self._native is not None:
-                self._native[info[0]] = None
+                self._native[name] = None
         else:
             self.__setitem__(key, None)
         self._mutated = True
@@ -2480,7 +2479,7 @@ class Sequence(Asn1Value):
             else:
                 child_dump = child.dump(force=force)
             # Skip values that are the same as the default
-            if len(info) > 2 and 'default' in info[2]:
+            if info[2] and 'default' in info[2]:
                 default_value = info[1](**info[2])
                 if default_value.dump() == child_dump:
                     continue
@@ -2500,9 +2499,11 @@ class Sequence(Asn1Value):
         cls._field_map = {}
         cls._field_ids = []
         for index, field in enumerate(cls._fields):
+            if len(field) < 3:
+                field = field + ({},)
+                cls._fields[index] = field
             cls._field_map[field[0]] = index
-            params = field[2] if len(field) > 2 else {}
-            cls._field_ids.append(_build_id_tuple(params, field[1]))
+            cls._field_ids.append(_build_id_tuple(field[2], field[1]))
 
         if cls._oid_pair is not None:
             cls._oid_nums = (cls._field_map[cls._oid_pair[0]], cls._field_map[cls._oid_pair[1]])
@@ -2523,15 +2524,12 @@ class Sequence(Asn1Value):
              - None or Asn1Value class indicating the value spec was derived fomr an OID or a spec callback
         """
 
-        info = self._fields[index]
-        field_params = info[2] if len(info) > 2 else {}
-
-        field_spec = info[1]
+        name, field_spec, field_params = self._fields[index]
         value_spec = field_spec
         spec_override = None
 
-        if self._spec_callbacks is not None and info[0] in self._spec_callbacks:
-            callback = self._spec_callbacks[info[0]]
+        if self._spec_callbacks is not None and name in self._spec_callbacks:
+            callback = self._spec_callbacks[name]
             spec_override = callback(self)
             if spec_override:
                 # Allow a spec callback to specify both the base spec and
@@ -2550,7 +2548,7 @@ class Sequence(Asn1Value):
                 spec_override = self._oid_specs[oid]
                 value_spec = spec_override
 
-        return (info[0], field_spec, value_spec, field_params, spec_override)
+        return (name, field_spec, value_spec, field_params, spec_override)
 
     def _make_value(self, field_name, field_spec, value_spec, field_params, value):
         """
@@ -2638,8 +2636,8 @@ class Sequence(Asn1Value):
         if self._contents is None:
             if self._fields:
                 self.children = [NO_VALUE] * len(self._fields)
-                for index, info in enumerate(self._fields):
-                    if len(info) > 2 and 'default' in info[2]:
+                for index, (_, _, params) in enumerate(self._fields):
+                    if 'default' in params:
                         field_name, field_spec, value_spec, field_params, _ = self._determine_spec(index)
                         self.children[index] = self._make_value(field_name, field_spec, value_spec, field_params, None)
             return
@@ -2650,10 +2648,11 @@ class Sequence(Asn1Value):
             child_pointer = 0
             field = 0
             seen_field = 1
+            field_len = len(self._fields)
             while child_pointer < contents_length:
                 parts, num_bytes = _parse(self._contents, pointer=child_pointer)
 
-                if field < len(self._fields):
+                if field < field_len:
                     _, field_spec, value_spec, field_params, spec_override = self._determine_spec(field)
 
                     # If the next value is optional or default, allow it to be absent
@@ -2693,7 +2692,7 @@ class Sequence(Asn1Value):
                         child = parts + (field_spec, field_params)
 
                 # Handle situations where an optional or defaulted field definition is incorrect
-                elif len(self._fields) > 0 and seen_field <= len(self._fields):
+                elif field_len > 0 and seen_field <= field_len:
                     missed_fields = []
                     prev_field = field - 1
                     while prev_field >= 0:
@@ -2731,12 +2730,9 @@ class Sequence(Asn1Value):
                 field += 1
                 seen_field += 1
 
-            total_fields = len(self._fields)
             index = len(self.children)
-            while index < total_fields:
-                field_info = self._fields[index]
-                field_spec = field_info[1]
-                field_params = field_info[2] if len(field_info) > 2 else {}
+            while index < field_len:
+                name, field_spec, field_params = self._fields[index]
                 if 'default' in field_params:
                     self.children.append(field_spec(**field_params))
                 elif 'optional' in field_params:
@@ -2746,7 +2742,7 @@ class Sequence(Asn1Value):
                         '''
                         Field "%s" is missing from structure
                         ''',
-                        field_info[0]
+                        name
                     ))
                 index += 1
 
@@ -3340,9 +3336,11 @@ class Set(Sequence):
         cls._field_map = {}
         cls._field_ids = {}
         for index, field in enumerate(cls._fields):
+            if len(field) < 3:
+                field = field + ({},)
+                cls._fields[index] = field
             cls._field_map[field[0]] = index
-            params = field[2] if len(field) > 2 else {}
-            cls._field_ids[_build_id_tuple(params, field[1])] = index
+            cls._field_ids[_build_id_tuple(field[2], field[1])] = index
 
         if cls._oid_pair is not None:
             cls._oid_nums = (cls._field_map[cls._oid_pair[0]], cls._field_map[cls._oid_pair[1]])
@@ -3370,10 +3368,7 @@ class Set(Sequence):
                 id_ = (parts[0], parts[2])
 
                 field = self._field_ids[id_]
-                field_info = self._fields[field]
-                field_params = field_info[2] if len(field_info) > 2 else {}
-
-                spec = field_info[1]
+                _, spec, field_params = self._fields[field]
                 parse_as = None
 
                 if self._oid_nums is not None and self._oid_nums[1] == field:
@@ -3401,25 +3396,25 @@ class Set(Sequence):
             for index in range(0, total_fields):
                 if index in child_map:
                     continue
-                field_info = self._fields[index]
+                name, spec, field_params = self._fields[index]
 
                 missing = False
 
-                if len(field_info) < 3:
+                if not field_params:
                     missing = True
-                elif 'optional' not in field_info[2] and 'default' not in field_info[2]:
+                elif 'optional' not in field_params and 'default' not in field_params:
                     missing = True
-                elif 'optional' in field_info[2]:
+                elif 'optional' in field_params:
                     child_map[index] = NO_VALUE
-                elif 'default' in field_info[2]:
-                    child_map[index] = field_info[1](**field_info[2])
+                elif 'default' in field_params:
+                    child_map[index] = spec(**field_params)
 
                 if missing:
                     raise ValueError(unwrap(
                         '''
                         Missing required field "%s" from %s
                         ''',
-                        field_info[0],
+                        name,
                         type_name(self)
                     ))
 
