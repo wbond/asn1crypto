@@ -3898,6 +3898,8 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         else:
             value = spec(contents=contents)
 
+        is_choice = isinstance(value, Choice)
+
         if spec == Any:
             pass
 
@@ -3933,7 +3935,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                     tag
                 ))
 
-        elif isinstance(value, Choice):
+        elif is_choice:
             value.validate(class_, tag, contents)
 
         else:
@@ -3971,6 +3973,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     # anyway a little further on
     elif spec_params and 'tag_type' in spec_params and spec_params['tag_type'] == 'explicit':
         value = Asn1Value(contents=contents, **spec_params)
+        is_choice = False
 
     # If no spec was specified, allow anything and just process what
     # is in the input data
@@ -4018,6 +4021,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         spec = universal_specs[tag]
 
         value = spec(contents=contents, class_=class_)
+        is_choice = False
 
     value._header = header
     if trailer is not None and trailer != b'':
@@ -4036,13 +4040,13 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         value.tag_type = 'explicit'
         value.explicit_class = original_value.explicit_class
         value.explicit_tag = original_value.explicit_tag
-    elif isinstance(value, Choice):
+    elif is_choice:
         value.contents = value._header + value.contents
         value._header = b''
 
     try:
         # Force parsing the Choice now
-        if isinstance(value, Choice):
+        if is_choice:
             value.parse()
 
         if nested_spec:
