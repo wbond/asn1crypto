@@ -4082,9 +4082,8 @@ def _parse(encoded_data, pointer=0):
 
     start = pointer
 
-    id_pointer = pointer
-    first_octet = ord(encoded_data[id_pointer]) if py2 else encoded_data[id_pointer]
-    id_pointer += 1
+    first_octet = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
+    pointer += 1
 
     class_ = first_octet >> 6
     method = (first_octet >> 5) & 1
@@ -4094,16 +4093,12 @@ def _parse(encoded_data, pointer=0):
     if tag == 31:
         tag = 0
         while True:
-            num = ord(encoded_data[id_pointer]) if py2 else encoded_data[id_pointer]
-            id_pointer += 1
+            num = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
+            pointer += 1
             tag *= 128
             tag += num & 127
             if num >> 7 == 0:
                 break
-
-    num_bytes = id_pointer - start
-
-    pointer += num_bytes
 
     if pointer + 1 > encoded_length:
         raise ValueError(unwrap(
@@ -4174,9 +4169,7 @@ def _parse(encoded_data, pointer=0):
         pointer += length
         trailer = b''
 
-    num_bytes = pointer - start
-
-    return ((class_, method, tag, header, contents, trailer), num_bytes)
+    return ((class_, method, tag, header, contents, trailer), pointer - start)
 
 
 def _parse_build(encoded_data, pointer=0, spec=None, spec_params=None):
