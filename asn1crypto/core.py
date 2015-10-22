@@ -526,6 +526,9 @@ class NoValue(Asn1Value):
         return b''
 
 
+NO_VALUE = NoValue()
+
+
 class Any(Asn1Value):
     """
     A value class that can contain any value, and allows for easy parsing of
@@ -2435,7 +2438,7 @@ class Sequence(Asn1Value):
             ))
 
         if 'optional' in info[2]:
-            self.children[key] = NoValue()
+            self.children[key] = NO_VALUE
             if self._native is not None:
                 self._native[info[0]] = None
         else:
@@ -2634,7 +2637,7 @@ class Sequence(Asn1Value):
 
         if self._contents is None:
             if self._fields:
-                self.children = [NoValue()] * len(self._fields)
+                self.children = [NO_VALUE] * len(self._fields)
                 for index, info in enumerate(self._fields):
                     if len(info) > 2 and 'default' in info[2]:
                         field_name, field_spec, value_spec, field_params, _ = self._determine_spec(index)
@@ -2674,7 +2677,7 @@ class Sequence(Asn1Value):
 
                             if not choice_match:
                                 if 'optional' in field_params:
-                                    self.children.append(NoValue())
+                                    self.children.append(NO_VALUE)
                                 else:
                                     self.children.append(field_spec(**field_params))
                                 field += 1
@@ -2737,7 +2740,7 @@ class Sequence(Asn1Value):
                 if 'default' in field_params:
                     self.children.append(field_spec(**field_params))
                 elif 'optional' in field_params:
-                    self.children.append(NoValue())
+                    self.children.append(NO_VALUE)
                 else:
                     raise ValueError(unwrap(
                         '''
@@ -3407,7 +3410,7 @@ class Set(Sequence):
                 elif 'optional' not in field_info[2] and 'default' not in field_info[2]:
                     missing = True
                 elif 'optional' in field_info[2]:
-                    child_map[index] = NoValue()
+                    child_map[index] = NO_VALUE
                 elif 'default' in field_info[2]:
                     child_map[index] = field_info[1](**field_info[2])
 
@@ -3891,7 +3894,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     """
 
     if header is None:
-        return NoValue()
+        return NO_VALUE
 
     # If an explicit specification was passed in, make sure it matches
     if spec is not None:
