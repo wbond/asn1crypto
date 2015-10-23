@@ -357,6 +357,46 @@ class X509Tests(unittest.TestCase):
         else:
             self.assertNotEqual(general_name_1, general_name_2)
 
+    def test_v1_cert(self):
+        cert = self._load_cert('chromium/ndn.ca.crt')
+        tbs_cert = cert['tbs_certificate']
+        self.assertEqual('v1', tbs_cert['version'].native)
+        self.assertEqual(15832340745319036834, tbs_cert['serial_number'].native)
+        self.assertEqual(
+            'Email Address: support@dreamhost.com; Common Name: New Dream Network Certificate Authority; '
+            'Organizational Unit: Security; Organization: New Dream Network, LLC; Locality: Los Angeles; '
+            'State/Province: California; Country: US',
+            tbs_cert['issuer'].human_friendly
+        )
+        self.assertEqual(
+            'Email Address: support@dreamhost.com; Common Name: New Dream Network Certificate Authority; '
+            'Organizational Unit: Security; Organization: New Dream Network, LLC; Locality: Los Angeles; '
+            'State/Province: California; Country: US',
+            tbs_cert['subject'].human_friendly
+        )
+
+    def test_subject_alt_name_variations(self):
+        cert = self._load_cert('chromium/subjectAltName_sanity_check.pem')
+        alt_names = cert.subject_alt_name_value
+        for general_name in alt_names:
+            self.assertIsInstance(general_name, x509.GeneralName)
+        self.assertIsInstance(alt_names[0].chosen, x509.IPAddress)
+        self.assertEqual(alt_names[0].chosen.native, '127.0.0.2')
+        self.assertIsInstance(alt_names[1].chosen, x509.IPAddress)
+        self.assertEqual(alt_names[1].chosen.native, 'fe80::1')
+        self.assertIsInstance(alt_names[2].chosen, x509.DNSName)
+        self.assertEqual(alt_names[2].chosen.native, 'test.example')
+        self.assertIsInstance(alt_names[3].chosen, x509.EmailAddress)
+        self.assertEqual(alt_names[3].chosen.native, 'test@test.example')
+        self.assertIsInstance(alt_names[4].chosen, x509.AnotherName)
+        self.assertEqual(alt_names[4].chosen.native, util.OrderedDict([('type_id', '1.2.3.4'), ('value', 'ignore me')]))
+        self.assertIsInstance(alt_names[5].chosen, x509.Name)
+        self.assertEqual(alt_names[5].chosen.native, util.OrderedDict([('common_name', '127.0.0.3')]))
+
+    def test_punycode_common_name(self):
+        cert = self._load_cert('chromium/punycodetest.pem')
+        self.assertEqual('xn--wgv71a119e.com', cert['tbs_certificate']['subject'].native['common_name'])
+
     @staticmethod
     def signature_algo_info():
         return (
