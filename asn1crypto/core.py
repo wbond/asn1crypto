@@ -3149,6 +3149,35 @@ class SequenceOf(Asn1Value):
         for index in range(0, len(self.children)):
             yield self._lazy_child(index)
 
+    def __contains__(self, item):
+        """
+        :param item:
+            An object of the type cls._child_spec
+
+        :return:
+            A boolean if the item is contained in this SequenceOf
+        """
+
+        if item is None or item is VOID:
+            return False
+
+        if not isinstance(item, self._child_spec):
+            raise TypeError(unwrap(
+                '''
+                Checking membership in %s is only available for instances of
+                %s, not %s
+                ''',
+                type_name(self),
+                type_name(self._child_spec),
+                type_name(item)
+            ))
+
+        for child in self:
+            if child == item:
+                return True
+
+        return False
+
     def append(self, value):
         """
         Allows adding a child to the end of the sequence
