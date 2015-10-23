@@ -495,6 +495,9 @@ class Void(Asn1Value):
 
         return other.__class__ == self.__class__
 
+    def __nonzero__(self):
+        return False
+
     def __len__(self):
         return 0
 
