@@ -24,6 +24,7 @@ a bunch of ASN.1 structures for use with various common cryptography standards:
 
  - [asn1crypto](https://github.com/wbond/asn1crypto)
  - [oscrypto](https://github.com/wbond/oscrypto)
+ - [csrbuilder](https://github.com/wbond/csrbuilder)
  - [certbuilder](https://github.com/wbond/certbuilder)
  - [crlbuilder](https://github.com/wbond/crlbuilder)
 
