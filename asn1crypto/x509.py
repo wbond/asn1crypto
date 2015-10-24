@@ -982,6 +982,9 @@ class Name(Choice):
 
         return self.chosen.hashable
 
+    def __len__(self):
+        return len(self.chosen)
+
     def __ne__(self, other):
         return not self == other
 
