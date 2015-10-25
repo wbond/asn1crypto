@@ -868,7 +868,7 @@ class Choice(Asn1Value):
             ''',
             asn1,
             type_name(self),
-            '. '.join(asn1s)
+            ', '.join(asn1s)
         ))
 
     def _format_class_tag(self, class_, tag):
