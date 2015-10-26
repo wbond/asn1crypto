@@ -179,7 +179,10 @@ class URI(IA5String):
         if path is None:
             path = ''
 
-        return urlunsplit((scheme, netloc, path, query, fragment))
+        output = urlunsplit((scheme, netloc, path, query, fragment))
+        if isinstance(output, str_cls):
+            output = output.encode('latin1')
+        return output
 
     def __unicode__(self):
         """
