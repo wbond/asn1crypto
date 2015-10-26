@@ -687,6 +687,21 @@ class Choice(Asn1Value):
     # A dict that maps alternative names to an index in _alternatives
     _name_map = None
 
+    @classmethod
+    def load(cls, encoded_data, **kwargs):
+        """
+        Loads a BER/DER-encoded byte string using the current class as the spec
+
+        :param encoded_data:
+            A byte string of BER or DER encoded data
+
+        :return:
+            A instance of the current class
+        """
+
+        value, _ = _parse_build(encoded_data, spec=cls, spec_params=kwargs)
+        return value
+
     def _setup(self):
         """
         Generates _id_map from _alternatives to allow validating contents
