@@ -1,5 +1,9 @@
 # changelog
 
+## 0.12.1
+
+ - Fixed a `unicode`/`bytes` bug with `x509.URI.dump()` on Python 2
+
 ## 0.12.0
 
  - Backwards Compatiblity Break: `core.NoValue` was renamed to `core.Void` and
