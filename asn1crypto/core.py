@@ -485,6 +485,8 @@ class Void(Asn1Value):
     property and .dump() method to be compatible with other value classes.
     """
 
+    contents = b''
+
     def __eq__(self, other):
         """
         :param other:
@@ -2592,6 +2594,9 @@ class Sequence(Asn1Value):
         :return:
             An instance of a child class of Asn1Value
         """
+
+        if value is None and 'optional' in field_params:
+            return VOID
 
         specs_different = field_spec != value_spec
         is_any = issubclass(field_spec, Any)
