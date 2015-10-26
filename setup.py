@@ -36,7 +36,7 @@ setup(
 
     description=(
         'Fast ASN.1 parser and serializer with definitions for private keys, public keys, '
-        'certificates, CRL, OCSP, CMS, PKCS#7, PKCS#8, PKCS#12, PKCS#5, X.509 and TSA'
+        'certificates, CRL, OCSP, CMS, PKCS#7, PKCS#8, PKCS#12, PKCS#5, X.509 and TSP'
     ),
     long_description='Docs for this project are maintained at https://github.com/wbond/asn1crypto#readme.',
 
