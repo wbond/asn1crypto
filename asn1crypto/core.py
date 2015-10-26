@@ -303,6 +303,7 @@ class Asn1Value(object):
 
         new_obj = self.__class__()
         new_obj.tag_type = self.tag_type
+        new_obj.class_ = self.class_
         new_obj.tag = self.tag
         new_obj.explicit_class = self.explicit_class
         new_obj.explicit_tag = self.explicit_tag
