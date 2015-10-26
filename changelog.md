@@ -1,5 +1,22 @@
 # changelog
 
+## 0.12.0
+
+ - Backwards Compatiblity Break: `core.NoValue` was renamed to `core.Void` and
+   a singleton was added as `core.VOID`
+ - 20-30% improvement in parsing performance
+ - `core.Void` now implements `__nonzero__`
+ - `core.Asn1Value.copy()` now performs a deep copy
+ - All `core` value classes are now compatible with the `copy` module
+ - `core.SequenceOf` and `core.SetOf` now implement `__contains__`
+ - Added `x509.Name.__len__()`
+ - Fixed a bug where `core.Choice.validate()` would not properly account for
+   explicit tagging
+ - `core.Choice.load()` now properly passes itself as the spec when parsing
+ - `x509.Certificate.crl_distribution_points` no longer throws an exception if
+   the `DistributionPoint` does not have a value for the `distribution_point`
+   field
+
 ## 0.11.1
 
  - Corrected `core.UTCTime` to interpret year <= 49 as 20xx and >= 50 as 19xx
