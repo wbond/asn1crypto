@@ -1,5 +1,10 @@
 # changelog
 
+## 0.12.2
+
+ - Correct `core.Sequence.__setitem__()` so set `core.VOID` to an optional
+   field when `None` is set
+
 ## 0.12.1
 
  - Fixed a `unicode`/`bytes` bug with `x509.URI.dump()` on Python 2

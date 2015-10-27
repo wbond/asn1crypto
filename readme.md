@@ -40,7 +40,7 @@ required.*
 
 ## Version
 
-0.12.1 - [changelog](changelog.md)
+0.12.2 - [changelog](changelog.md)
 
 ## Installation
 
