@@ -625,3 +625,25 @@ class OCSPResponse(Sequence):
         if self._processed_extensions is False:
             self._set_extensions()
         return self._extended_revoke_value
+
+    @property
+    def basic_ocsp_response(self):
+        """
+        A shortcut into the BasicOCSPResponse sequence
+
+        :return:
+            None or an asn1crypto.ocsp.BasicOCSPResponse object
+        """
+
+        return self['response_bytes']['response'].parsed
+
+    @property
+    def response_data(self):
+        """
+        A shortcut into the parsed, ResponseData sequence
+
+        :return:
+            None or an asn1crypto.ocsp.ResponseData object
+        """
+
+        return self['response_bytes']['response'].parsed['tbs_response_data']
