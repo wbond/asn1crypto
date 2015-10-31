@@ -1043,7 +1043,16 @@ class Name(Choice):
             for key in data:
                 value = data[key]
                 if isinstance(value, list):
-                    value = ', '.join([sub_value.native for sub_value in value])
+                    native_sub_values = []
+                    for sub_value in value:
+                        if isinstance(sub_value, list):
+                            native_sub_value = ', '.join(
+                                reversed([sub_sub_value.native for sub_sub_value in sub_value])
+                            )
+                        else:
+                            native_sub_value = sub_value.native
+                        native_sub_values.append(native_sub_value)
+                    value = ', '.join(reversed(native_sub_values))
                 else:
                     value = value.native
                 to_join.append('%s: %s' % (key, value))
