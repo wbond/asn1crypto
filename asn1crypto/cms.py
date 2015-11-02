@@ -419,7 +419,13 @@ class RecipientIdentifier(Choice):
 
 class KeyEncryptionAlgorithmId(ObjectIdentifier):
     _map = {
-        '1.2.840.113549.1.1.1': 'rsa'
+        '1.2.840.113549.1.1.1': 'rsa',
+        '2.16.840.1.101.3.4.1.5': 'aes128_wrap',
+        '2.16.840.1.101.3.4.1.8': 'aes128_wrap_pad',
+        '2.16.840.1.101.3.4.1.25': 'aes192_wrap',
+        '2.16.840.1.101.3.4.1.28': 'aes192_wrap_pad',
+        '2.16.840.1.101.3.4.1.45': 'aes256_wrap',
+        '2.16.840.1.101.3.4.1.48': 'aes256_wrap_pad',
     }
 
 
