@@ -125,6 +125,22 @@ class CMSTests(unittest.TestCase):
             encrypted_content_info['content_encryption_algorithm']['algorithm'].native
         )
         self.assertEqual(
+            'aes',
+            encrypted_content_info['content_encryption_algorithm'].encryption_cipher
+        )
+        self.assertEqual(
+            'cbc',
+            encrypted_content_info['content_encryption_algorithm'].encryption_mode
+        )
+        self.assertEqual(
+            16,
+            encrypted_content_info['content_encryption_algorithm'].key_length
+        )
+        self.assertEqual(
+            16,
+            encrypted_content_info['content_encryption_algorithm'].encryption_block_size
+        )
+        self.assertEqual(
             b'\x1F\x34\x54\x9F\x7F\xB7\x06\xBD\x81\x57\x68\x84\x79\xB5\x2F\x6F',
             encrypted_content_info['content_encryption_algorithm']['parameters'].native
         )
@@ -213,6 +229,22 @@ class CMSTests(unittest.TestCase):
         self.assertEqual(
             'tripledes_3key',
             encrypted_content_info['content_encryption_algorithm']['algorithm'].native
+        )
+        self.assertEqual(
+            'tripledes',
+            encrypted_content_info['content_encryption_algorithm'].encryption_cipher
+        )
+        self.assertEqual(
+            'cbc',
+            encrypted_content_info['content_encryption_algorithm'].encryption_mode
+        )
+        self.assertEqual(
+            24,
+            encrypted_content_info['content_encryption_algorithm'].key_length
+        )
+        self.assertEqual(
+            8,
+            encrypted_content_info['content_encryption_algorithm'].encryption_block_size
         )
         self.assertEqual(
             b'\x52\x50\x98\xFA\x33\x88\xC7\x3C',
