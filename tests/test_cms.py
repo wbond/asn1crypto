@@ -121,7 +121,7 @@ class CMSTests(unittest.TestCase):
             encrypted_content_info['content_type'].native
         )
         self.assertEqual(
-            'aes128',
+            'aes128_cbc',
             encrypted_content_info['content_encryption_algorithm']['algorithm'].native
         )
         self.assertEqual(
