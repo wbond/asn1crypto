@@ -47,7 +47,7 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import binascii
 import copy
 import math
@@ -63,7 +63,6 @@ from .util import int_to_bytes, int_from_bytes, timezone
 # Python 2
 if sys.version_info <= (3,):
     from cStringIO import StringIO as BytesIO
-    from datetime import timedelta
 
     range = xrange  # noqa
     py2 = True
