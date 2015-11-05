@@ -3,6 +3,9 @@ language: c
 matrix:
   include:
     - os: osx
+      python: "2.6"
+      env: TRAVIS_PYTHON_VERSION=2.6
+    - os: osx
       python: "2.7"
       env: TRAVIS_PYTHON_VERSION=2.7
     - os: osx
@@ -37,31 +40,28 @@ matrix:
       python: "pypy3"
 install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-        if [ "$TRAVIS_PYTHON_VERSION" == "3.5" ]; then
-            brew install python3;
-            /usr/local/bin/pip3 install flake8;
+        if [ "$TRAVIS_PYTHON_VERSION" == "pypy" ]; then
+            brew install pypy;
+            /usr/local/bin/pip_pypy install flake8;
+            export PYTHON_BIN=/usr/local/bin/pypy;
         else
-            if [ "$TRAVIS_PYTHON_VERSION" == "pypy" ]; then
-                brew install pypy;
-                /usr/local/bin/pip_pypy install flake8;
+            if [ "$TRAVIS_PYTHON_VERSION" == "3.5" ]; then
+                brew install python3;
+                /usr/local/bin/pip3 install flake8;
+                export PYTHON_BIN=/usr/local/bin/python3;
             else
-                sudo /usr/bin/easy_install-2.7 flake8;
+                if [ "$TRAVIS_PYTHON_VERSION" == "2.7" ]; then
+                    sudo /usr/bin/easy_install-2.7 flake8;
+                    export PYTHON_BIN=/usr/bin/python2.7;
+                else
+                    sudo /usr/bin/easy_install-2.6 flake8;
+                    export PYTHON_BIN=/usr/bin/python2.6;
+                fi
             fi
         fi
     else
         pip install flake8;
+        export PYTHON_BIN=python;
     fi
 script:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-        if [ "$TRAVIS_PYTHON_VERSION" == "3.5" ]; then
-            /usr/local/bin/python3 run.py ci;
-        else
-            if [ "$TRAVIS_PYTHON_VERSION" == "pypy" ]; then
-                /usr/local/bin/pypy run.py ci;
-            else
-                /usr/bin/python2.7 run.py ci;
-            fi
-        fi
-    else
-        python run.py ci;
-    fi
+  - $PYTHON_BIN run.py ci
