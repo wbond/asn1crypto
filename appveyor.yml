@@ -1,0 +1,5 @@
+install:
+- cmd: C:\Python27\Scripts\pip.exe install flake8
+build: off
+test_script:
+- cmd: python run.py ci
