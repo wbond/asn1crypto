@@ -1,5 +1,67 @@
+version: "{build}"
+environment:
+  matrix:
+    - PYTHON: "C:\\Python26"
+      PYTHON_ID: "26"
+      PYTHON_EXE: python
+    - PYTHON: "C:\\Python26-x64"
+      PYTHON_ID: "26-x64"
+      PYTHON_EXE: python
+    - PYTHON: "C:\\Python27"
+      PYTHON_ID: "27"
+      PYTHON_EXE: python
+    - PYTHON: "C:\\Python27-x64"
+      PYTHON_ID: "27-x64"
+      PYTHON_EXE: python
+    - PYTHON: "C:\\Python33"
+      PYTHON_ID: "33"
+      PYTHON_EXE: python
+    - PYTHON: "C:\\Python33-x64"
+      PYTHON_ID: "33-x64"
+      PYTHON_EXE: python
+    - PYTHON: "C:\\pypy-4.0.0-win32"
+      PYTHON_ID: "pypy"
+      PYTHON_EXE: pypy
 install:
-- cmd: C:\Python27\Scripts\pip.exe install flake8
+  - ps:
+      $env:PYTMP = "${env:TMP}\py";
+      if (!(Test-Path "$env:PYTMP")) {
+        New-Item -ItemType directory -Path "$env:PYTMP" | Out-Null;
+      }
+
+      if ("${env:PYTHON_ID}" -eq "26") {
+        if (!(Test-Path "${env:PYTMP}\python-2.6.6.msi")) {
+          (New-Object Net.WebClient).DownloadFile('https://www.python.org/ftp/python/2.6.6/python-2.6.6.msi', "${env:PYTMP}\python-2.6.6.msi");
+        }
+        Start-Process -FilePath msiexec.exe -ArgumentList ('/qn', '/i', "${env:PYTMP}\python-2.6.6.msi", "TARGETDIR=${env:PYTHON}") -Wait;
+      } elseif ("${env:PYTHON_ID}" -eq "26-x64") {
+        if (!(Test-Path "${env:PYTMP}\python-2.6.6.amd64.msi")) {
+          (New-Object Net.WebClient).DownloadFile('https://www.python.org/ftp/python/2.6.6/python-2.6.6.amd64.msi', "${env:PYTMP}\python-2.6.6.amd64.msi");
+        }
+        Start-Process -FilePath msiexec.exe -ArgumentList ('/qn', '/i', "${env:PYTMP}\python-2.6.6.amd64.msi", "TARGETDIR=${env:PYTHON}") -Wait;
+      } elseif ("${env:PYTHON_ID}" -eq "pypy") {
+        if (!(Test-Path "${env:PYTMP}\pypy-4.0.0-win32.zip")) {
+          (New-Object Net.WebClient).DownloadFile('https://bitbucket.org/pypy/pypy/downloads/pypy-4.0.0-win32.zip', "${env:PYTMP}\pypy-4.0.0-win32.zip");
+        }
+        7z x -y "${env:PYTMP}\pypy-4.0.0-win32.zip" -oC:\ | Out-Null;
+      }
+
+      if (!(Test-Path "${env:PYTMP}\get-pip.py")) {
+        (New-Object Net.WebClient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', "${env:PYTMP}\get-pip.py");
+      }
+
+      if ("${env:PYTHON_ID}" -eq "pypy") {
+        & "${env:PYTHON}\pypy.exe" "${env:PYTMP}\get-pip.py";
+        & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install flake8;
+      } elseif ("${env:PYTHON_ID}" -eq "26" -or "${env:PYTHON_ID}" -eq "26-x64") {
+        & "${env:PYTHON}\python.exe" -W ignore "${env:PYTMP}\get-pip.py";
+        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'flake8'])";
+      } else {
+        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install flake8;
+      }
+  - "SET PATH=%PYTHON%;%PATH%"
+cache:
+  - '%TMP%\py\'
 build: off
 test_script:
-- cmd: python run.py ci
+  - cmd: "%PYTHON_EXE% run.py ci"

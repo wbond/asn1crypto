@@ -49,17 +49,7 @@ elif task == 'coverage':
     from dev.coverage import run
 
 elif task == 'ci':
-    from dev.tests import run as run_tests
-    from dev.lint import run as run_lint
-
-    def run():
-        print('Python ' + sys.version.replace('\n', ''))
-        print('')
-        lint_result = run_lint()
-        print('\nRunning tests')
-        tests_result = run_tests()
-
-        return lint_result and tests_result
+    from dev.ci import run
 
 result = run(*params)
 sys.exit(int(not result))
