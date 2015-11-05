@@ -11,7 +11,7 @@ else:
 
 
 def show_usage():
-    print('Usage: run.py (lint | tests [regex] | coverage)', file=sys.stderr)
+    print('Usage: run.py (lint | tests [regex] | coverage | ci)', file=sys.stderr)
     sys.exit(1)
 
 
@@ -29,7 +29,7 @@ if len(sys.argv) < 2 or len(sys.argv) > 3:
 
 task = get_arg(1)
 
-if task not in ('lint', 'tests', 'coverage'):
+if task not in set(['lint', 'tests', 'coverage', 'ci']):
     show_usage()
 
 if task != 'tests' and len(sys.argv) == 3:
@@ -48,4 +48,18 @@ elif task == 'tests':
 elif task == 'coverage':
     from dev.coverage import run
 
-run(*params)
+elif task == 'ci':
+    from dev.tests import run as run_tests
+    from dev.lint import run as run_lint
+
+    def run():
+        print('Python ' + sys.version.replace('\n', ''))
+        print('')
+        lint_result = run_lint()
+        print('\nRunning tests')
+        tests_result = run_tests()
+
+        return lint_result and tests_result
+
+result = run(*params)
+sys.exit(int(not result))

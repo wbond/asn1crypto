@@ -11,7 +11,14 @@ config_file = os.path.join(cur_dir, '..', '.pep8')
 
 
 def run():
-    print('Running flake8...')
+    """
+    Runs flake8 lint
+
+    :return:
+        A bool - if flake8 did not find any errors
+    """
+
+    print('Running flake8')
 
     flake8_style = get_style_guide(config_file=config_file)
 
@@ -21,4 +28,8 @@ def run():
             if not filename.endswith('.py'):
                 continue
             paths.append(os.path.join(root, filename))
-    flake8_style.check_files(paths)
+    report = flake8_style.check_files(paths)
+    success = report.total_errors == 0
+    if success:
+        print('OK')
+    return success
