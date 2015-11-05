@@ -46,7 +46,7 @@ required.*
 ## Continuous Integration
 
  - [Windows](https://ci.appveyor.com/project/wbond/asn1crypto/history) via AppVeyor
- - [OS X & Linux](https://travis-ci.org/wbond/package_control_channel/builds) via Travis CI
+ - [OS X & Linux](https://travis-ci.org/wbond/asn1crypto/builds) via Travis CI
 
 ## Installation
 
