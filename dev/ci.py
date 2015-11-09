@@ -8,6 +8,13 @@ from .lint import run as run_lint
 
 
 def run():
+    """
+    Runs the linter and tests
+
+    :return:
+        A bool - if the linter and tests ran successfully
+    """
+
     print('Python ' + sys.version.replace('\n', ''))
     print('')
     lint_result = run_lint()
