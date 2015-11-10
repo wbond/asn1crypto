@@ -41,7 +41,7 @@ required.*
 
 ## Version
 
-0.12.2 - [changelog](changelog.md)
+0.13.0 - [changelog](changelog.md)
 
 ## Continuous Integration
 

@@ -1,5 +1,21 @@
 # changelog
 
+## 0.13.0
+
+ - Backwards compatibility break: the native representation of some
+   `algos.EncryptionAlgorithmId` values changed. `aes128` became `aes128_cbc`,
+   `aes192` became `aes192_cbc` and `aes256` became `aes256_cbc`.
+ - Added more OIDs to `algos.EncryptionAlgorithmId`
+ - Added more OIDs to `cms.KeyEncryptionAlgorithmId`
+ - `x509.Name.human_friendly` now properly supports multiple values per
+   `x509.NameTypeAndValue` object
+ - Added `ocsp.OCSPResponse.basic_ocsp_response` and
+   `ocsp.OCSPResponse.response_data` properties
+ - Added `algos.EncryptionAlgorithm.encryption_mode` property
+ - Fixed a bug with parsing times containing timezone offsets in Python 3
+ - The `attributes` field of `csr.CertificationRequestInfo` is now optional,
+   for compatibility with other ASN.1 parsers
+
 ## 0.12.2
 
  - Correct `core.Sequence.__setitem__()` so set `core.VOID` to an optional
