@@ -2382,12 +2382,22 @@ class Certificate(Sequence):
     def sha1(self):
         """
         :return:
-            The SHA1 hash of the DER-encoded bytes of this complete certificate
+            The SHA-1 hash of the DER-encoded bytes of this complete certificate
         """
 
         if self._sha1 is None:
             self._sha1 = hashlib.sha1(self.dump()).digest()
         return self._sha1
+
+    @property
+    def sha1_fingerprint(self):
+        """
+        :return:
+            A unicode string of the SHA-1 hash, formatted using hex encoding
+            with a space between each pair of characters, all uppercase
+        """
+
+        return ' '.join('%02X' % c for c in self.sha1)
 
     @property
     def sha256(self):
