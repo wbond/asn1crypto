@@ -65,7 +65,7 @@ setup(
         'Topic :: Security :: Cryptography',
     ],
 
-    keywords='asn1 crypto pki',
+    keywords='asn1 crypto pki x509 certificate rsa dsa ec',
 
     packages=find_packages(exclude=['tests*', 'dev*']),
 
