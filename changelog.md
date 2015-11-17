@@ -1,5 +1,9 @@
 # changelog
 
+## 0.14.0
+
+ - Added the `x509.Certificate.sha1_fingerprint` attribute
+
 ## 0.13.0
 
  - Backwards compatibility break: the native representation of some
