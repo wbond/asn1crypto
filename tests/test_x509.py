@@ -393,6 +393,10 @@ class X509Tests(unittest.TestCase):
         self.assertIsInstance(alt_names[5].chosen, x509.Name)
         self.assertEqual(alt_names[5].chosen.native, util.OrderedDict([('common_name', '127.0.0.3')]))
 
+    def test_sha1_fingerprint(self):
+        cert = self._load_cert('geotrust_certs/codex.crt')
+        self.assertEqual('78 1C 9F 87 59 93 52 08 D2 21 FA 70 6C C5 F9 76 12 C9 6D 8B', cert.sha1_fingerprint)
+
     def test_punycode_common_name(self):
         cert = self._load_cert('chromium/punycodetest.pem')
         self.assertEqual('xn--wgv71a119e.com', cert['tbs_certificate']['subject'].native['common_name'])

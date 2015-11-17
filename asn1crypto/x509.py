@@ -2397,7 +2397,7 @@ class Certificate(Sequence):
             with a space between each pair of characters, all uppercase
         """
 
-        return ' '.join('%02X' % c for c in self.sha1)
+        return ' '.join('%02X' % c for c in bytes_to_list(self.sha1))
 
     @property
     def sha256(self):
