@@ -1,5 +1,9 @@
 # changelog
 
+## 0.14.1
+
+ - Fixed a bug generating `x509.Certificate.sha1_fingerprint` on Python 2
+
 ## 0.14.0
 
  - Added the `x509.Certificate.sha1_fingerprint` attribute
