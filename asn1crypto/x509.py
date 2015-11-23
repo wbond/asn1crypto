@@ -1632,6 +1632,11 @@ class SubjectInfoAccessSyntax(SequenceOf):
     _child_spec = AccessDescription
 
 
+# https://tools.ietf.org/html/rfc7633
+class Features(SequenceOf):
+    _child_spec = Integer
+
+
 class EntrustVersionInfo(Sequence):
     _fields = [
         ('entrust_vers', GeneralString),
@@ -1672,6 +1677,8 @@ class ExtensionId(ObjectIdentifier):
         '2.5.29.54': 'inhibit_any_policy',
         '1.3.6.1.5.5.7.1.1': 'authority_information_access',
         '1.3.6.1.5.5.7.1.11': 'subject_information_access',
+        # https://tools.ietf.org/html/rfc7633
+        '1.3.6.1.5.5.7.1.24': 'tls_feature',
         '1.3.6.1.5.5.7.48.1.5': 'ocsp_no_check',
         '1.2.840.113533.7.65.0': 'entrust_version_extension',
         '2.16.840.1.113730.1.1': 'netscape_certificate_type',
@@ -1705,6 +1712,7 @@ class Extension(Sequence):
         'inhibit_any_policy': Integer,
         'authority_information_access': AuthorityInfoAccessSyntax,
         'subject_information_access': SubjectInfoAccessSyntax,
+        'tls_feature': Features,
         'ocsp_no_check': Null,
         'entrust_version_extension': EntrustVersionInfo,
         'netscape_certificate_type': NetscapeCertificateType,
@@ -1764,6 +1772,7 @@ class Certificate(Sequence):
     _extended_key_usage_value = None
     _authority_information_access_value = None
     _subject_information_access_value = None
+    _tls_feature_value = None
     _ocsp_no_check_value = None
     _issuer_serial = None
     _authority_issuer_serial = False
@@ -2051,6 +2060,20 @@ class Certificate(Sequence):
         if not self._processed_extensions:
             self._set_extensions()
         return self._subject_information_access_value
+
+    @property
+    def tls_feature_value(self):
+        """
+        This extension is used to list the TLS features a server must respond
+        with if a client initiates a request supporting them.
+
+        :return:
+            None or a Features object
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._tls_feature_value
 
     @property
     def ocsp_no_check_value(self):
