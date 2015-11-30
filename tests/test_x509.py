@@ -357,6 +357,27 @@ class X509Tests(unittest.TestCase):
         else:
             self.assertNotEqual(general_name_1, general_name_2)
 
+    def test_build_name_printable(self):
+        utf8_name = x509.Name.build(
+            {
+                'country_name': 'US',
+                'state_or_province_name': 'Massachusetts',
+                'common_name': 'Will Bond'
+            }
+        )
+        self.assertIsInstance(utf8_name.chosen[0][2]['value'].chosen, core.UTF8String)
+        self.assertEqual('common_name', utf8_name.chosen[0][2]['type'].native)
+        printable_name = x509.Name.build(
+            {
+                'country_name': 'US',
+                'state_or_province_name': 'Massachusetts',
+                'common_name': 'Will Bond'
+            },
+            use_printable=True
+        )
+        self.assertIsInstance(printable_name.chosen[0][2]['value'].chosen, core.PrintableString)
+        self.assertEqual('common_name', printable_name.chosen[0][2]['type'].native)
+
     def test_v1_cert(self):
         cert = self._load_cert('chromium/ndn.ca.crt')
         tbs_cert = cert['tbs_certificate']

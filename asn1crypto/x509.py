@@ -932,7 +932,7 @@ class Name(Choice):
     _sha256 = None
 
     @classmethod
-    def build(cls, name_dict):
+    def build(cls, name_dict, use_printable=False):
         """
         Creates a Name object from a dict of unicode string keys and values.
         The keys should be from NameType._map, or a dotted-integer OID unicode
@@ -942,11 +942,21 @@ class Name(Choice):
             A dict of name information, e.g. {"common_name": "Will Bond",
             "country_name": "US", "organization": "Codex Non Sufficit LC"}
 
+        :param use_printable:
+            A bool - if PrintableString should be used for encoding instead of
+            UTF8String. This is for backwards compatiblity with old software.
+
         :return:
             An x509.Name object
         """
 
         attributes = []
+        if not use_printable:
+            encoding_name = 'utf8_string'
+            encoding_class = UTF8String
+        else:
+            encoding_name = 'printable_string'
+            encoding_class = PrintableString
 
         for attribute_name in NameType.preferred_order:
             if attribute_name not in name_dict:
@@ -963,8 +973,8 @@ class Name(Choice):
                 )
             else:
                 value = DirectoryString(
-                    name='utf8_string',
-                    value=UTF8String(name_dict[attribute_name])
+                    name=encoding_name,
+                    value=encoding_class(name_dict[attribute_name])
                 )
 
             attributes.append(NameTypeAndValue({
