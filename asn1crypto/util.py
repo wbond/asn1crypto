@@ -10,6 +10,8 @@ from bytes and UTC timezone. Exports the following items:
  - timezone.utc
  - inet_ntop()
  - inet_pton()
+ - uri_to_iri()
+ - iri_to_uri()
 """
 
 from __future__ import unicode_literals, division, absolute_import, print_function
@@ -17,6 +19,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import math
 import sys
 
+from ._iri import iri_to_uri, uri_to_iri  # noqa
 from ._ordereddict import OrderedDict  # noqa
 
 if sys.platform == 'win32':
