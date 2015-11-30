@@ -471,7 +471,7 @@ class ValueMap():
         """
 
         cls = self.__class__
-        if cls._map is None:
+        if cls._map is None or cls._reverse_map is not None:
             return
         cls._reverse_map = {}
         for key, value in cls._map.items():
