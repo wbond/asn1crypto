@@ -1,5 +1,16 @@
 # changelog
 
+## 0.15.0
+
+ - Added support for the TLS feature extension from RFC 7633
+ - `x509.Name.build()` now accepts a keyword parameter `use_printable` to force
+   string encoding to be `core.PrintableString` instead of `core.UTF8String`
+ - Added the functions `util.uri_to_iri()` and `util.iri_to_uri()`
+ - Changed `algos.SignedDigestAlgorithmId` to use the preferred OIDs when
+   mapping a unicode string name to an OID. Previously there were multiple OIDs
+   for some algorithms, and different OIDs would sometimes be selected due to
+   the fact that the `_map` `dict` is not ordered.
+
 ## 0.14.1
 
  - Fixed a bug generating `x509.Certificate.sha1_fingerprint` on Python 2
