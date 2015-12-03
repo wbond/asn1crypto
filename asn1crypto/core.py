@@ -3415,12 +3415,24 @@ class Set(Sequence):
             child_map = {}
             contents_length = len(self.contents)
             child_pointer = 0
+            seen_field = 0
             while child_pointer < contents_length:
                 parts, num_bytes = _parse(self.contents, pointer=child_pointer)
 
                 id_ = (parts[0], parts[2])
 
-                field = self._field_ids[id_]
+                field = self._field_ids.get(id_)
+                if field is None:
+                    raise ValueError(unwrap(
+                        '''
+                        Data for field %s (%s class, %s method, tag %s) does
+                        not match any of the field definitions
+                        ''',
+                        seen_field,
+                        CLASS_NUM_TO_NAME_MAP.get(parts[0]),
+                        METHOD_NUM_TO_NAME_MAP.get(parts[1]),
+                        parts[2],
+                    ))
                 _, spec, field_params = self._fields[field]
                 parse_as = None
 
@@ -3443,6 +3455,7 @@ class Set(Sequence):
 
                 child_map[field] = child
                 child_pointer += num_bytes
+                seen_field += 1
 
             total_fields = len(self._fields)
 
