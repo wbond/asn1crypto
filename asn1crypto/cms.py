@@ -140,7 +140,7 @@ class CMSAttribute(Sequence):
     _oid_specs = {}
 
 
-class CMSAttributes(SequenceOf):
+class CMSAttributes(SetOf):
     _child_spec = CMSAttribute
 
 
