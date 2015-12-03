@@ -130,14 +130,24 @@ class SetOfTime(SetOf):
     _child_spec = Time
 
 
+class SetOfAny(SetOf):
+    _child_spec = Any
+
+
 class CMSAttribute(Sequence):
     _fields = [
         ('type', CMSAttributeType),
-        ('values', Any),
+        ('values', None),
     ]
 
-    _oid_pair = ('type', 'values')
     _oid_specs = {}
+
+    def _values_spec(self):
+        return self._oid_specs.get(self['type'].native, SetOfAny)
+
+    _spec_callbacks = {
+        'values': _values_spec
+    }
 
 
 class CMSAttributes(SetOf):
