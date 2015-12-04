@@ -1489,8 +1489,8 @@ class CertificatePolicies(SequenceOf):
 
 class PolicyMapping(Sequence):
     _fields = [
-        ('issuer_domain_policy', ObjectIdentifier),
-        ('subject_domain_policy', ObjectIdentifier),
+        ('issuer_domain_policy', PolicyIdentifier),
+        ('subject_domain_policy', PolicyIdentifier),
     ]
 
 
