@@ -15,6 +15,7 @@ from .core import (
     ObjectIdentifier,
     OctetString,
     Sequence,
+    SequenceOf,
     SetOf,
 )
 from .crl import CertificateList
@@ -48,11 +49,23 @@ class OtherRevInfo(Sequence):
     ]
 
 
+class SequenceOfCertificateList(SequenceOf):
+    _child_spec = CertificateList
+
+
+class SequenceOfOCSPResponse(SequenceOf):
+    _child_spec = OCSPResponse
+
+
+class SequenceOfOtherRevInfo(SequenceOf):
+    _child_spec = OtherRevInfo
+
+
 class RevocationInfoArchival(Sequence):
     _fields = [
-        ('crl', CertificateList, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('ocsp', OCSPResponse, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
-        ('other_rev_info', OtherRevInfo, {'tag_type': 'explicit', 'tag': 2, 'optional': True}),
+        ('crl', SequenceOfCertificateList, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+        ('ocsp', SequenceOfOCSPResponse, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
+        ('other_rev_info', SequenceOfOtherRevInfo, {'tag_type': 'explicit', 'tag': 2, 'optional': True}),
     ]
 
 
