@@ -528,7 +528,7 @@ class NameType(ObjectIdentifier):
             'domain_component': 'Domain Component',
             'name_distinguisher': 'Name Distinguisher',
             'organization_identifier': 'Organization Identifier',
-        }[self.native]
+        }.get(self.native, self.native)
 
 
 class NameTypeAndValue(Sequence):
