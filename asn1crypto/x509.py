@@ -455,6 +455,8 @@ class NameType(ObjectIdentifier):
         '1.3.6.1.4.1.311.60.2.1.3': 'incorporation_country',
         # https://tools.ietf.org/html/rfc2247#section-4
         '0.9.2342.19200300.100.1.25': 'domain_component',
+        # http://www.alvestrand.no/objectid/0.2.262.1.10.7.20.html
+        '0.2.262.1.10.7.20': 'name_distinguisher',
     }
 
     # This order is largely based on observed order seen in EV certs from
