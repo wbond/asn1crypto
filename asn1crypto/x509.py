@@ -442,12 +442,14 @@ class NameType(ObjectIdentifier):
         '2.5.4.12': 'title',
         '2.5.4.15': 'business_category',
         '2.5.4.17': 'postal_code',
+        '2.5.4.20': 'telephone_number',
         '2.5.4.41': 'name',
         '2.5.4.42': 'given_name',
         '2.5.4.43': 'initials',
         '2.5.4.44': 'generation_qualifier',
         '2.5.4.46': 'dn_qualifier',
         '2.5.4.65': 'pseudonym',
+        '2.5.4.97': 'organization_identifier',
         # https://tools.ietf.org/html/rfc2985#page-26
         '1.2.840.113549.1.9.1': 'email_address',
         # Page 10 of https://cabforum.org/wp-content/uploads/EV-V1_5_5.pdf
@@ -485,8 +487,11 @@ class NameType(ObjectIdentifier):
         'name',
         'pseudonym',
         'dn_qualifier',
+        'telephone_number',
         'email_address',
         'domain_component',
+        'name_distinguisher',
+        'organization_identifier',
     ]
 
     @property
@@ -509,6 +514,7 @@ class NameType(ObjectIdentifier):
             'title': 'Title',
             'business_category': 'Business Category',
             'postal_code': 'Postal Code',
+            'telephone_number': 'Telephone Number',
             'name': 'Name',
             'given_name': 'Given Name',
             'initials': 'Initials',
@@ -520,6 +526,8 @@ class NameType(ObjectIdentifier):
             'incorporation_state_or_province': 'Incorporation State/Province',
             'incorporation_country': 'Incorporation Country',
             'domain_component': 'Domain Component',
+            'name_distinguisher': 'Name Distinguisher',
+            'organization_identifier': 'Organization Identifier',
         }[self.native]
 
 
@@ -543,6 +551,7 @@ class NameTypeAndValue(Sequence):
         'title': DirectoryString,
         'business_category': DirectoryString,
         'postal_code': DirectoryString,
+        'telephone_number': PrintableString,
         'name': DirectoryString,
         'given_name': DirectoryString,
         'initials': DirectoryString,
@@ -556,6 +565,8 @@ class NameTypeAndValue(Sequence):
         'incorporation_state_or_province': DirectoryString,
         'incorporation_country': DirectoryString,
         'domain_component': DNSName,
+        'name_distinguisher': DirectoryString,
+        'organization_identifier': DirectoryString,
     }
 
     _prepped = None
