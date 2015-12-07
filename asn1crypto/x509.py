@@ -962,16 +962,21 @@ class Name(Choice):
 
         if self._human_friendly is None:
             data = OrderedDict()
+            last_field = None
             for rdn in self.chosen:
                 for type_val in rdn:
                     field_name = type_val['type'].human_friendly
+                    last_field = field_name
                     if field_name in data:
                         data[field_name] = [data[field_name]]
                         data[field_name].append(type_val['value'])
                     else:
                         data[field_name] = type_val['value']
             to_join = []
-            for key in data:
+            keys = data.keys()
+            if last_field == 'Country':
+                keys = reversed(list(keys))
+            for key in keys:
                 value = data[key]
                 if isinstance(value, list):
                     native_sub_values = []
