@@ -978,20 +978,8 @@ class Name(Choice):
                 keys = reversed(list(keys))
             for key in keys:
                 value = data[key]
-                if isinstance(value, list):
-                    native_sub_values = []
-                    for sub_value in value:
-                        if isinstance(sub_value, list):
-                            native_sub_value = ', '.join(
-                                reversed([sub_sub_value.native for sub_sub_value in sub_value])
-                            )
-                        else:
-                            native_sub_value = sub_value.native
-                        native_sub_values.append(native_sub_value)
-                    value = ', '.join(reversed(native_sub_values))
-                else:
-                    value = value.native
-                to_join.append('%s: %s' % (key, value))
+                native_value = self._recursive_humanize(value)
+                to_join.append('%s: %s' % (key, native_value))
 
             has_comma = False
             for element in to_join:
@@ -1003,6 +991,23 @@ class Name(Choice):
             self._human_friendly = separator.join(to_join[::-1])
 
         return self._human_friendly
+
+    def _recursive_humanize(self, value):
+        """
+        Recursively serializes data compiled from the RDNSequence
+
+        :param value:
+            An Asn1Value object, or a list of Asn1Value objects
+
+        :return:
+            A unicode string
+        """
+
+        if isinstance(value, list):
+            return', '.join(
+                reversed([self._recursive_humanize(sub_value) for sub_value in value])
+            )
+        return value.native
 
     @property
     def sha1(self):
