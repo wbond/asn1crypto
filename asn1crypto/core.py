@@ -126,6 +126,10 @@ class Asn1Value(object):
     # An integer 1 or greater indicating the tag number
     tag = None
 
+    # An alternate tag allowed for this type - used for handling broken
+    # structures where a string value is encoded using an incorrect tag
+    _bad_tag = None
+
     # A unicode string or None - "explicit" or "implicit" for
     # tagged values, None for normal
     tag_type = None
@@ -4024,7 +4028,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                     METHOD_NUM_TO_NAME_MAP.get(value.method),
                     METHOD_NUM_TO_NAME_MAP.get(method, method)
                 ))
-            if tag != value.tag:
+            if tag != value.tag and tag != value._bad_tag:
                 raise ValueError(unwrap(
                     '''
                     Error parsing %s - tag should have been %s, but %s was found

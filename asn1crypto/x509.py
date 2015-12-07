@@ -74,6 +74,7 @@ else:
 class DNSName(IA5String):
 
     _encoding = 'idna'
+    _bad_tag = 19
 
     def __ne__(self, other):
         return not self == other
