@@ -947,8 +947,10 @@ class Name(Choice):
                 for type_val in rdn:
                     field_name = type_val['type']
                     if field_name in self._native:
-                        self._native[field_name] = [self._native[field_name]]
-                        self._native[field_name].append(type_val['value'])
+                        existing = self._native[field_name]
+                        if not isinstance(existing, list):
+                            existing = self._native[field_name] = [existing]
+                        existing.append(type_val['value'])
                     else:
                         self._native[field_name] = type_val['value']
         return self._native
