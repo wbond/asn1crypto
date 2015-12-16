@@ -3124,3 +3124,19 @@ class X509Tests(unittest.TestCase):
             ],
             extensions.native
         )
+
+    def test_repeated_subject_fields(self):
+        cert = self._load_cert('self-signed-repeated-subject-fields.der')
+        self.assertEqual(
+            cert.subject.native,
+            util.OrderedDict([
+                ('country_name', 'RU'),
+                ('state_or_province_name', 'Some'),
+                ('locality_name', 'Any'),
+                ('organization_name', 'Org'),
+                ('organizational_unit_name', 'OrgUnit'),
+                ('common_name', 'zzz.yyy.domain.tld'),
+                ('email_address', 'no@email'),
+                ('domain_component', ['zzz', 'yyy', 'domain', 'tld'])
+            ])
+        )
