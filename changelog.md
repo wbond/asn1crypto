@@ -1,5 +1,25 @@
 # changelog
 
+## 0.15.1
+
+ - Fixed `cms.CMSAttributes` to be a `core.SetOf` instead of `core.SequenceOf`
+ - `cms.CMSAttribute` can now parse unknown attribute contrustruct without an
+   exception being raised
+ - `x509.PolicyMapping` now uses `x509.PolicyIdentifier` for field types
+ - Fixed `pdf.RevocationInfoArchival` so that all fields are now of the type
+   `core.SequenceOf` instead of a single value
+ - Added support for the `name_distinguisher`, `telephone_number` and
+   `organization_identifier` OIDs to `x509.Name`
+ - Fixed `x509.Name.native` to not accidentally create nested lists when three
+   of more values for a single type are part of the name
+ - `x509.Name.human_friendly` now reverses the order of fields when the data
+   in an `x509.Name` was encoded in most-specific to least-specific order, which
+   is the opposite of the standard way of least-specific to most-specific.
+ - `x509.NameType.human_friendly` no longer raises an exception when an
+   unknown OID is encountered
+ - Raise a `ValueError` when parsing a `core.Set` and an unknown field is
+   encountered
+
 ## 0.15.0
 
  - Added support for the TLS feature extension from RFC 7633
