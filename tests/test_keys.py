@@ -404,6 +404,15 @@ class KeysTests(unittest.TestCase):
         self.assertEqual(public_key['public_key'].native, private_key.public_key.native)
 
     @data('key_pairs', True)
+    def public_key_info_property(self, private_key_file, public_key_file, *_):
+        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
+            private_key = keys.PrivateKeyInfo.load(f.read())
+        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
+            public_key = keys.PublicKeyInfo.load(f.read())
+
+        self.assertEqual(public_key.dump(), private_key.public_key_info.dump())
+
+    @data('key_pairs', True)
     def algorithm_name(self, private_key_file, public_key_file, algorithm, _):
         with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
             private_key = keys.PrivateKeyInfo.load(f.read())

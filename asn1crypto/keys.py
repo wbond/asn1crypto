@@ -803,6 +803,16 @@ class PrivateKeyInfo(Sequence):
         return self._public_key
 
     @property
+    def public_key_info(self):
+        """
+        :return:
+            A PublicKeyInfo object derived from this private key.
+        """
+        params = self['private_key_algorithm']['parameters']
+
+        return PublicKeyInfo.wrap(self.public_key, self.algorithm, params)
+
+    @property
     def fingerprint(self):
         """
         Creates a fingerprint that can be compared with a public key to see if
@@ -943,15 +953,19 @@ class PublicKeyInfo(Sequence):
     _sha256 = None
 
     @classmethod
-    def wrap(cls, public_key, algorithm):
+    def wrap(cls, public_key, algorithm, parameters=Null()):
         """
         Wraps a public key in a PublicKeyInfo structure
 
         :param public_key:
-            A byte string or Asn1Value object of the public key
+            An RSAPublicKey, Integer, or ECPointBitString, according to the
+            algorithm.
 
         :param algorithm:
-            A unicode string of "rsa"
+            A unicode string of "rsa", "dsa", or "ec".
+
+        :param parameters:
+            An Asn1Value object for the algorithm parameters, if applicable.
 
         :return:
             A PublicKeyInfo object
@@ -965,23 +979,13 @@ class PublicKeyInfo(Sequence):
                 type_name(public_key)
             ))
 
-        if algorithm != 'rsa':
-            raise ValueError(unwrap(
-                '''
-                algorithm must "rsa", not %s
-                ''',
-                repr(algorithm)
-            ))
-
         algo = PublicKeyAlgorithm()
         algo['algorithm'] = PublicKeyAlgorithmId(algorithm)
-        algo['parameters'] = Null()
+        algo['parameters'] = parameters
 
         container = cls()
         container['algorithm'] = algo
-        if isinstance(public_key, Asn1Value):
-            public_key = public_key.untag().dump()
-        container['public_key'] = ParsableOctetBitString(public_key)
+        container['public_key'] = public_key
 
         return container
 
