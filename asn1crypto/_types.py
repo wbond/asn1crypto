@@ -10,10 +10,15 @@ if sys.version_info < (3,):
     byte_cls = str
     int_types = (int, long)  # noqa
 
+    def bytes_to_list(byte_string):
+        return [ord(b) for b in byte_string]
+
 else:
     str_cls = str
     byte_cls = bytes
     int_types = int
+
+    bytes_to_list = list
 
 
 def type_name(value):

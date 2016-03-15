@@ -15,14 +15,15 @@ import codecs
 import re
 import sys
 
+from ._errors import unwrap
+from ._types import byte_cls, str_cls, type_name, bytes_to_list
+
 if sys.version_info < (3,):
     from urlparse import urlsplit, urlunsplit
     from urllib import (
         quote as urlquote,
         unquote as unquote_to_bytes,
     )
-
-    bytes_to_list = lambda byte_string: [ord(b) for b in byte_string]
 
 else:
     from urllib.parse import (
@@ -31,11 +32,6 @@ else:
         urlsplit,
         urlunsplit,
     )
-
-    bytes_to_list = list
-
-from ._errors import unwrap
-from ._types import byte_cls, str_cls, type_name
 
 
 def iri_to_uri(value):

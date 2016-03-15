@@ -26,7 +26,7 @@ import unicodedata
 from ._errors import unwrap
 from ._iri import iri_to_uri, uri_to_iri
 from ._ordereddict import OrderedDict
-from ._types import type_name, str_cls
+from ._types import type_name, str_cls, bytes_to_list
 from .algos import SignedDigestAlgorithm
 from .core import (
     Any,
@@ -58,12 +58,6 @@ from .core import (
 )
 from .keys import PublicKeyInfo
 from .util import int_to_bytes, int_from_bytes, inet_ntop, inet_pton
-
-if sys.version_info < (3,):
-    bytes_to_list = lambda byte_string: [ord(b) for b in byte_string]
-
-else:
-    bytes_to_list = list
 
 
 # The structures in this file are taken from https://tools.ietf.org/html/rfc5280
