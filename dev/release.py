@@ -58,4 +58,10 @@ def run():
         setup_file,
         ['sdist', 'bdist_wheel', '--universal']
     )
+
     twine.cli.dispatch(['upload', 'dist/asn1crypto-%s*' % tag])
+
+    setuptools.sandbox.run_setup(
+        setup_file,
+        ['clean']
+    )
