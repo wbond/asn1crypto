@@ -34,6 +34,7 @@ from .algos import DigestAlgorithm, EncryptionAlgorithm
 from .core import (
     Any,
     Asn1Value,
+    BitString,
     Choice,
     Integer,
     IntegerOctetString,
@@ -876,6 +877,31 @@ class EncryptedPrivateKeyInfo(Sequence):
 
 # These structures are from https://tools.ietf.org/html/rfc3279
 
+class ValidationParms(Sequence):
+    """
+    Source: https://tools.ietf.org/html/rfc3279#page-10
+    """
+
+    _fields = [
+        ('seed', BitString),
+        ('pgen_counter', Integer),
+    ]
+
+
+class DomainParameters(Sequence):
+    """
+    Source: https://tools.ietf.org/html/rfc3279#page-10
+    """
+
+    _fields = [
+        ('p', Integer),
+        ('g', Integer),
+        ('q', Integer),
+        ('j', Integer, {'optional': True}),
+        ('validation_params', ValidationParms, {'optional': True}),
+    ]
+
+
 class PublicKeyAlgorithmId(ObjectIdentifier):
     """
     Original Name: None
@@ -889,6 +915,8 @@ class PublicKeyAlgorithmId(ObjectIdentifier):
         '1.2.840.10040.4.1': 'dsa',
         # https://tools.ietf.org/html/rfc3279#page-13
         '1.2.840.10045.2.1': 'ec',
+        # https://tools.ietf.org/html/rfc3279#page-10
+        '1.2.840.10046.2.1': 'dh',
     }
 
 
@@ -908,6 +936,7 @@ class PublicKeyAlgorithm(Sequence):
         'rsa': Null,
         'dsa': DSAParams,
         'ec': ECDomainParameters,
+        'dh': DomainParameters,
     }
 
 
@@ -930,6 +959,7 @@ class PublicKeyInfo(Sequence):
             # We override the field spec with ECPoint so that users can easily
             # decompose the byte string into the constituent X and Y coords
             'ec': (ECPointBitString, None),
+            'dh': Integer,
         }[algorithm]
 
     _spec_callbacks = {

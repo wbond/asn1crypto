@@ -336,6 +336,36 @@ class KdfAlgorithm(Sequence):
     }
 
 
+class DHParameters(Sequence):
+    """
+    Original Name: DHParameter
+    Source: ftp://ftp.rsasecurity.com/pub/pkcs/ascii/pkcs-3.asc section 9
+    """
+
+    _fields = [
+        ('p', Integer),
+        ('g', Integer),
+        ('private_value_length', Integer, {'optional': True}),
+    ]
+
+
+class KeyExchangeAlgorithmId(ObjectIdentifier):
+    _map = {
+        '1.2.840.113549.1.3.1': 'dh',
+    }
+
+
+class KeyExchangeAlgorithm(Sequence):
+    _fields = [
+        ('algorithm', KeyExchangeAlgorithmId),
+        ('parameters', Any, {'optional': True}),
+    ]
+    _oid_pair = ('algorithm', 'parameters')
+    _oid_specs = {
+        'dh': DHParameters,
+    }
+
+
 class Rc2Params(Sequence):
     _fields = [
         ('rc2_parameter_version', Integer, {'optional': True}),
