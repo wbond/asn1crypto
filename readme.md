@@ -30,6 +30,7 @@ a bunch of ASN.1 structures for use with various common cryptography standards:
 | PKCS#1 v2.1 (RSA keys) | [`asn1crypto.keys`](asn1crypto/keys.py)     | [RFC 3447](https://tools.ietf.org/html/rfc3447)                                                                        |
 | DSA keys               | [`asn1crypto.keys`](asn1crypto/keys.py)     | [RFC 3279](https://tools.ietf.org/html/rfc3279)                                                                        |
 | Elliptic curve keys    | [`asn1crypto.keys`](asn1crypto/keys.py)     | [SECG SEC1 V2](http://www.secg.org/sec1-v2.pdf)                                                                        |
+| PKCS#3 v1.4            | [`asn1crypto.algos`](asn1crypto/algos.py)   | [PKCS#3 v1.4](ftp://ftp.rsasecurity.com/pub/pkcs/ascii/pkcs-3.asc)                                                        |
 | PKCS#5 v2.1            | [`asn1crypto.algos`](asn1crypto/algos.py)   | [PKCS#5 v2.1](http://www.emc.com/collateral/white-papers/h11302-pkcs5v2-1-password-based-cryptography-standard-wp.pdf) |
 | CMS (and PKCS#7)       | [`asn1crypto.cms`](asn1crypto/cms.py)       | [RFC 5652](https://tools.ietf.org/html/rfc5652), [RFC 2315](https://tools.ietf.org/html/rfc2315)                       |
 | TSP                    | [`asn1crypto.tsp`](asn1crypto/tsp.py)       | [RFC 3161](https://tools.ietf.org/html/rfc3161)                                                                        |
@@ -103,7 +104,7 @@ faster to an order of magnitude of more.
 
 ## Current Release
 
-0.15.1 - [changelog](changelog.md)
+0.16.0 - [changelog](changelog.md)
 
 ## Dependencies
 

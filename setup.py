@@ -35,8 +35,9 @@ setup(
     version=asn1crypto.__version__,
 
     description=(
-        'Fast ASN.1 parser and serializer with definitions for private keys, public keys, '
-        'certificates, CRL, OCSP, CMS, PKCS#7, PKCS#8, PKCS#12, PKCS#5, X.509 and TSP'
+        'Fast ASN.1 parser and serializer with definitions for private keys, '
+        'public keys, certificates, CRL, OCSP, CMS, PKCS#3, PKCS#7, PKCS#8, '
+        'PKCS#12, PKCS#5, X.509 and TSP'
     ),
     long_description='Docs for this project are maintained at https://github.com/wbond/asn1crypto#readme.',
 
@@ -65,7 +66,7 @@ setup(
         'Topic :: Security :: Cryptography',
     ],
 
-    keywords='asn1 crypto pki x509 certificate rsa dsa ec',
+    keywords='asn1 crypto pki x509 certificate rsa dsa ec dh',
 
     packages=find_packages(exclude=['tests*', 'dev*']),
 

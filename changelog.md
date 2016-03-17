@@ -1,5 +1,13 @@
 # changelog
 
+## 0.16.0
+
+ - Added DH key exchange structures: `algos.KeyExchangeAlgorithm`,
+   `algos.KeyExchangeAlgorithmId` and `algos.DHParameters`.
+ - Added DH public key support to `keys.PublicKeyInfo`,
+   `keys.PublicKeyAlgorithm` and `keys.PublicKeyAlgorithmId`. New structures
+   include `keys.DomainParameters` and `keys.ValidationParms`.
+
 ## 0.15.1
 
  - Fixed `cms.CMSAttributes` to be a `core.SetOf` instead of `core.SequenceOf`
