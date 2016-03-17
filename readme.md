@@ -179,3 +179,11 @@ The following commands will run the linter and test coverage:
 python run.py lint
 python run.py coverage
 ```
+
+After creating a [semver](http://semver.org/) git tag, a `.tar.gz` and `.whl`
+of the package can be created and uploaded to
+[PyPi](https://pypi.python.org/pypi/asn1crypto) by executing:
+
+```bash
+python run.py release
+```
