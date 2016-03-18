@@ -804,6 +804,21 @@ class PrivateKeyInfo(Sequence):
         return self._public_key
 
     @property
+    def public_key_info(self):
+        """
+        :return:
+            A PublicKeyInfo object derived from this private key.
+        """
+
+        return PublicKeyInfo({
+            'algorithm': {
+                'algorithm': self.algorithm,
+                'parameters': self['private_key_algorithm']['parameters']
+            },
+            'public_key': self.public_key
+        })
+
+    @property
     def fingerprint(self):
         """
         Creates a fingerprint that can be compared with a public key to see if
