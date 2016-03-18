@@ -2597,7 +2597,7 @@ class Sequence(Asn1Value):
             A unicode string of the field name, or an integer of the field index
 
         :raises:
-            ValueError - when a field name or index is invalid
+            KeyError - when a field name or index is invalid
 
         :return:
             The Asn1Value object of the field specified
