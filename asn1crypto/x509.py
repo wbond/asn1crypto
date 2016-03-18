@@ -420,6 +420,8 @@ class DirectoryString(Choice):
         ('universal_string', UniversalString),
         ('utf8_string', UTF8String),
         ('bmp_string', BMPString),
+        # This is an invalid/bad alternative, but some broken certs use it
+        ('ia5_string', IA5String),
     ]
 
 
