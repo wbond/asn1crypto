@@ -3140,3 +3140,35 @@ class X509Tests(unittest.TestCase):
                 ('domain_component', ['zzz', 'yyy', 'domain', 'tld'])
             ])
         )
+
+    def test_trusted_certificate(self):
+        with open(os.path.join(fixtures_dir, 'sender_dummycorp.com.crt'), 'rb') as f:
+            cert_bytes = f.read()
+            if pem.detect(cert_bytes):
+                _, _, cert_bytes = pem.unarmor(cert_bytes)
+            trusted_cert = x509.TrustedCertificate.load(cert_bytes)
+
+        cert = trusted_cert[0]
+        aux = trusted_cert[1]
+
+        self.assertEqual(
+            cert.subject.native,
+            util.OrderedDict([
+                ('country_name', 'US'),
+                ('state_or_province_name', 'VA'),
+                ('locality_name', 'Herndon'),
+                ('organization_name', 'Internet Gadgets Pty Ltd'),
+                ('common_name', 'Fake Sender'),
+                ('email_address', 'sender@dummycorp.com'),
+            ])
+        )
+
+        self.assertEqual(
+            aux['trust'].native,
+            ['email_protection']
+        )
+
+        self.assertEqual(
+            aux['reject'].native,
+            ['client_auth', 'server_auth']
+        )

@@ -27,13 +27,14 @@ from ._errors import unwrap
 from ._iri import iri_to_uri, uri_to_iri
 from ._ordereddict import OrderedDict
 from ._types import type_name, str_cls, bytes_to_list
-from .algos import SignedDigestAlgorithm
+from .algos import AlgorithmIdentifier, SignedDigestAlgorithm
 from .core import (
     Any,
     BitString,
     BMPString,
     Boolean,
     Choice,
+    Concat,
     GeneralizedTime,
     GeneralString,
     IA5String,
@@ -2506,3 +2507,29 @@ class Certificate(Sequence):
             return True
 
         return False
+
+
+# The structures are taken from the OpenSSL source file x_x509a.c, and specify
+# extra information that is added to X.509 certificates to store trust
+# information about the certificate.
+
+class KeyPurposeIdentifiers(SequenceOf):
+    _child_spec = KeyPurposeId
+
+
+class SequenceOfAlgorithmIdentifiers(SequenceOf):
+    _child_spec = AlgorithmIdentifier
+
+
+class CertificateAux(Sequence):
+    _fields = [
+        ('trust', KeyPurposeIdentifiers, {'optional': True}),
+        ('reject', KeyPurposeIdentifiers, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('alias', UTF8String, {'optional': True}),
+        ('keyid', OctetString, {'optional': True}),
+        ('other', SequenceOfAlgorithmIdentifiers, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+    ]
+
+
+class TrustedCertificate(Concat):
+    _child_specs = [Certificate, CertificateAux]

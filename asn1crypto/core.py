@@ -948,6 +948,274 @@ class Choice(Asn1Value):
         return self._header + self.contents
 
 
+class Concat(object):
+    """
+    A class that contains two or more encoded child values concatentated
+    together. THIS IS NOT PART OF THE ASN.1 SPECIFICATION! This exists to handle
+    the x509.TrustedCertificate() class for OpenSSL certificates containing
+    extra information.
+    """
+
+    # A list of the specs of the concatenated values
+    _child_specs = None
+
+    _children = None
+
+    @classmethod
+    def load(cls, encoded_data):
+        """
+        Loads a BER/DER-encoded byte string using the current class as the spec
+
+        :param encoded_data:
+            A byte string of BER or DER encoded data
+
+        :return:
+            A Concat object
+        """
+
+        return cls(contents=encoded_data)
+
+    def __init__(self, contents=None):
+        """
+        :param contents:
+            A byte string of the encoded contents of the value
+
+        :raises:
+            ValueError - when an error occurs with one of the children
+            TypeError - when an error occurs with one of the children
+        """
+
+        try:
+            contents_len = len(contents)
+            self._children = []
+
+            offset = 0
+            for spec in self._child_specs:
+                if offset < contents_len:
+                    value, bytes_read = _parse_build(contents[offset:], spec=spec)
+                    offset += bytes_read
+                else:
+                    value = spec()
+                self._children.append(value)
+
+        except (ValueError, TypeError) as e:
+            args = e.args[1:]
+            e.args = (e.args[0] + '\n    while constructing %s' % type_name(self),) + args
+            raise e
+
+    def __str__(self):
+        """
+        Since str is differnt in Python 2 and 3, this calls the appropriate
+        method, __unicode__() or __bytes__()
+
+        :return:
+            A unicode string
+        """
+
+        if py2:
+            return self.__bytes__()
+        else:
+            return self.__unicode__()
+
+    def __bytes__(self):
+        """
+        A byte string of the DER-encoded contents
+        """
+
+        return self.dump()
+
+    def __unicode__(self):
+        """
+        :return:
+            A unicode string
+        """
+
+        return repr(self)
+
+    def __repr__(self):
+        """
+        :return:
+            A unicode string
+        """
+
+        return '<%s %s %s>' % (type_name(self), id(self), repr(self.dump()))
+
+    def __copy__(self):
+        """
+        Implements the copy.copy() interface
+
+        :return:
+            A new shallow copy of the Concat object
+        """
+
+        new_obj = self.__class__()
+        new_obj._copy(self, copy.copy)
+        return new_obj
+
+    def __deepcopy__(self, memo):
+        """
+        Implements the copy.deepcopy() interface
+
+        :param memo:
+            A dict for memoization
+
+        :return:
+            A new deep copy of the Concat object and all child objects
+        """
+
+        new_obj = self.__class__()
+        memo[id(self)] = new_obj
+        new_obj._copy(self, copy.deepcopy)
+        return new_obj
+
+    def copy(self):
+        """
+        Copies the object
+
+        :return:
+            A Concat object
+        """
+
+        return copy.deepcopy(self)
+
+    def _copy(self, other, copy_func):
+        """
+        Copies the contents of another Concat object to itself
+
+        :param object:
+            Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
+        """
+
+        if self.__class__ != other.__class__:
+            raise TypeError(unwrap(
+                '''
+                Can not copy values from %s object to %s object
+                ''',
+                type_name(other),
+                type_name(self)
+            ))
+
+        self._children = copy_func(other._children)
+
+    def debug(self, nest_level=1):
+        """
+        Show the binary data and parsed data in a tree structure
+        """
+
+        prefix = '  ' * nest_level
+        print('%s%s Object #%s' % (prefix, type_name(self), id(self)))
+        print('%s  Children:' % (prefix,))
+        for child in self._children:
+            child.debug(nest_level + 2)
+
+    def dump(self, force=False):
+        """
+        Encodes the value using DER
+
+        :param force:
+            If the encoded contents already exist, clear them and regenerate
+            to ensure they are in DER format instead of BER format
+
+        :return:
+            A byte string of the DER-encoded value
+        """
+
+        contents = b''
+        for child in self._children:
+            contents += child.dump(force=force)
+        return contents
+
+    @property
+    def contents(self):
+        """
+        :return:
+            A byte string of the DER-encoded contents of the children
+        """
+
+        return self.dump()
+
+    def __len__(self):
+        """
+        :return:
+            Integer
+        """
+
+        return len(self._children)
+
+    def __getitem__(self, key):
+        """
+        Allows accessing children by index
+
+        :param key:
+            An integer of the child index
+
+        :raises:
+            KeyError - when an index is invalid
+
+        :return:
+            The Asn1Value object of the child specified
+        """
+
+        if key > len(self._child_specs) - 1 or key < 0:
+            raise KeyError(unwrap(
+                '''
+                No child is definition for position %d of %s
+                ''',
+                key,
+                type_name(self)
+            ))
+
+        return self._children[key]
+
+    def __setitem__(self, key, value):
+        """
+        Allows settings children by index
+
+        :param key:
+            An integer of the child index
+
+        :param value:
+            An Asn1Value object to set the child to
+
+        :raises:
+            KeyError - when an index is invalid
+            ValueError - when the value is not an instance of Asn1Value
+        """
+
+        if key > len(self._child_specs) - 1 or key < 0:
+            raise KeyError(unwrap(
+                '''
+                No child is definition for position %d of %s
+                ''',
+                key,
+                type_name(self)
+            ))
+
+        if not isinstance(value, Asn1Value):
+            raise ValueError(unwrap(
+                '''
+                Value for child %s of %s is not an instance of
+                asn1crypto.core.Asn1Value
+                ''',
+                key,
+                type_name(self)
+            ))
+
+        self._children[key] = value
+
+    def __iter__(self):
+        """
+        :return:
+            An iterator of child values
+        """
+
+        return iter(self._children)
+
+
 class Primitive(Asn1Value):
     """
     Sets the class_ and method attributes for primitive, universal values
