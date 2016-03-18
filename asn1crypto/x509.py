@@ -1528,6 +1528,7 @@ class PolicyConstraints(Sequence):
 
 class KeyPurposeId(ObjectIdentifier):
     _map = {
+        # https://tools.ietf.org/html/rfc5280#page-45
         '2.5.29.37.0': 'any_extended_key_usage',
         '1.3.6.1.5.5.7.3.1': 'server_auth',
         '1.3.6.1.5.5.7.3.2': 'client_auth',
@@ -1538,7 +1539,53 @@ class KeyPurposeId(ObjectIdentifier):
         '1.3.6.1.5.5.7.3.7': 'ipsec_user',
         '1.3.6.1.5.5.7.3.8': 'time_stamping',
         '1.3.6.1.5.5.7.3.9': 'ocsp_signing',
-        '1.3.6.1.5.5.7.3.19': 'wireless_access_points',
+        # http://tools.ietf.org/html/rfc3029.html#page-9
+        '1.3.6.1.5.5.7.3.10': 'dvcs',
+        # http://tools.ietf.org/html/rfc6268.html#page-16
+        '1.3.6.1.5.5.7.3.13': 'eap_over_ppp',
+        '1.3.6.1.5.5.7.3.14': 'eap_over_lan',
+        # https://tools.ietf.org/html/rfc5055#page-76
+        '1.3.6.1.5.5.7.3.15': 'scvp_server',
+        '1.3.6.1.5.5.7.3.16': 'scvp_client',
+        # https://tools.ietf.org/html/rfc4945#page-31
+        '1.3.6.1.5.5.7.3.17': 'ipsec_ike',
+        # https://tools.ietf.org/html/rfc5415#page-38
+        '1.3.6.1.5.5.7.3.18': 'capwap_ac',
+        '1.3.6.1.5.5.7.3.19': 'capwap_wtp',
+        # https://tools.ietf.org/html/rfc5924#page-8
+        '1.3.6.1.5.5.7.3.20': 'sip_domain',
+        # https://tools.ietf.org/html/rfc6187#page-7
+        '1.3.6.1.5.5.7.3.21': 'secure_shell_client',
+        '1.3.6.1.5.5.7.3.22': 'secure_shell_server',
+        # https://tools.ietf.org/html/rfc6494#page-7
+        '1.3.6.1.5.5.7.3.23': 'send_router',
+        '1.3.6.1.5.5.7.3.24': 'send_proxied_router',
+        '1.3.6.1.5.5.7.3.25': 'send_owner',
+        '1.3.6.1.5.5.7.3.26': 'send_proxied_owner',
+        # https://tools.ietf.org/html/rfc6402#page-10
+        '1.3.6.1.5.5.7.3.27': 'cmc_ca',
+        '1.3.6.1.5.5.7.3.28': 'cmc_ra',
+        '1.3.6.1.5.5.7.3.29': 'cmc_archive',
+        # https://tools.ietf.org/html/draft-ietf-sidr-bgpsec-pki-profiles-15#page-6
+        '1.3.6.1.5.5.7.3.30': 'bgpspec_router',
+        # https://msdn.microsoft.com/en-us/library/windows/desktop/aa378132(v=vs.85).aspx
+        # and https://support.microsoft.com/en-us/kb/287547
+        '1.3.6.1.4.1.311.10.3.1': 'microsoft_trust_list_signing',
+        '1.3.6.1.4.1.311.10.3.2': 'microsoft_time_stamp_signing',
+        '1.3.6.1.4.1.311.10.3.3': 'microsoft_server_gated',
+        '1.3.6.1.4.1.311.10.3.3.1': 'microsoft_serialized',
+        '1.3.6.1.4.1.311.10.3.4': 'microsoft_efs',
+        '1.3.6.1.4.1.311.10.3.4.1': 'microsoft_efs_recovery',
+        '1.3.6.1.4.1.311.10.3.5': 'microsoft_whql',
+        '1.3.6.1.4.1.311.10.3.6': 'microsoft_nt5',
+        '1.3.6.1.4.1.311.10.3.7': 'microsoft_oem_whql',
+        '1.3.6.1.4.1.311.10.3.8': 'microsoft_embedded_nt',
+        '1.3.6.1.4.1.311.10.3.9': 'microsoft_root_list_signer',
+        '1.3.6.1.4.1.311.10.3.10': 'microsoft_qualified_subordination',
+        '1.3.6.1.4.1.311.10.3.11': 'microsoft_key_recovery',
+        '1.3.6.1.4.1.311.10.3.12': 'microsoft_document_signing',
+        '1.3.6.1.4.1.311.10.3.13': 'microsoft_lifetime_signing',
+        '1.3.6.1.4.1.311.10.3.14': 'microsoft_mobile_device_software',
     }
 
 
