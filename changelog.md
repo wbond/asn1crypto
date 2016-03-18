@@ -1,5 +1,15 @@
 # changelog
 
+## 0.17.0
+
+ - Added `x509.TrustedCertificate` for handling OpenSSL auxiliary certificate
+   information appended after a certificate
+ - Added `core.Concat` class for situations such as `x509.TrustedCertificate`
+ - Allow "broken" X.509 certificates to use `core.IA5String` where an
+   `x509.DirectoryString` should be used instead
+ - Added `keys.PrivateKeyInfo.public_key_info` attribute
+ - Added a bunch of OIDs to `x509.KeyPurposeId`
+
 ## 0.16.0
 
  - Added DH key exchange structures: `algos.KeyExchangeAlgorithm`,
