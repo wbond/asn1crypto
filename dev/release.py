@@ -52,7 +52,7 @@ def run():
         print('No git tag found on HEAD', file=sys.stderr)
         return False
 
-    tag = tag.decode('ascii')
+    tag = tag.decode('ascii').strip()
 
     setuptools.sandbox.run_setup(
         setup_file,
