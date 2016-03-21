@@ -177,7 +177,7 @@ class _ECPoint():
             A 2-element tuple containing integers (X, Y)
         """
 
-        data = self.native
+        data = self.contents
         first_byte = data[0:1]
 
         # Uncompressed
