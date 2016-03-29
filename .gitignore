@@ -8,3 +8,4 @@ tests/output/
 .DS_Store
 tmp/
 .coverage
+.tox
