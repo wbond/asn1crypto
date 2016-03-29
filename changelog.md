@@ -1,5 +1,10 @@
 # changelog
 
+## 0.17.1
+
+ - Fix a bug in `x509.URI` parsing IRIs containing explicit port numbers on
+   Python 3.x
+
 ## 0.17.0
 
  - Added `x509.TrustedCertificate` for handling OpenSSL auxiliary certificate
