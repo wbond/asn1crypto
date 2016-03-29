@@ -16,7 +16,7 @@ import re
 import sys
 
 from ._errors import unwrap
-from ._types import byte_cls, str_cls, type_name, bytes_to_list
+from ._types import byte_cls, str_cls, type_name, bytes_to_list, int_types
 
 if sys.version_info < (3,):
     from urlparse import urlsplit, urlunsplit
@@ -127,7 +127,7 @@ def uri_to_iri(value):
     if hostname:
         hostname = hostname.decode('idna')
     port = parsed.port
-    if port:
+    if port and not isinstance(port, int_types):
         port = port.decode('ascii')
 
     netloc = ''
@@ -139,7 +139,7 @@ def uri_to_iri(value):
     if hostname is not None:
         netloc += hostname
     if port is not None:
-        netloc += ':' + port
+        netloc += ':' + str_cls(port)
 
     path = _urlunquote(parsed.path, remap=['/'], preserve=True)
     query = _urlunquote(parsed.query, remap=['&', '='], preserve=True)

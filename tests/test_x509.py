@@ -3172,3 +3172,36 @@ class X509Tests(unittest.TestCase):
             aux['reject'].native,
             ['client_auth', 'server_auth']
         )
+
+    def test_iri_with_port(self):
+        with open(os.path.join(fixtures_dir, 'admin.ch.crt'), 'rb') as f:
+            cert_bytes = f.read()
+            if pem.detect(cert_bytes):
+                _, _, cert_bytes = pem.unarmor(cert_bytes)
+            cert = x509.Certificate.load(cert_bytes)
+
+        self.assertEqual(
+            [dp.native for dp in cert.crl_distribution_points],
+            [
+                util.OrderedDict([
+                    ('distribution_point', ['http://www.pki.admin.ch/crl/SSLCA01.crl']),
+                    ('reasons', None),
+                    ('crl_issuer', None)
+                ]),
+                util.OrderedDict([
+                    (
+                        'distribution_point',
+                        [
+                            'ldap://admindir.admin.ch:389/'
+                            'cn=Swiss Government SSL CA 01,'
+                            'ou=Certification Authorities,'
+                            'ou=Services,'
+                            'o=Admin,'
+                            'c=CH'
+                        ]
+                    ),
+                    ('reasons', None),
+                    ('crl_issuer', None)
+                ])
+            ]
+        )
