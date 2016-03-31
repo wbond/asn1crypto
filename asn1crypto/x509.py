@@ -1873,8 +1873,8 @@ class Certificate(Sequence):
             None or an x509.GeneralNames object
         """
 
-        if self._processed_extensions is False:
-            self._processed_extensions()
+        if not self._processed_extensions:
+            self._set_extensions()
         return self._issuer_alt_name_value
 
     @property
