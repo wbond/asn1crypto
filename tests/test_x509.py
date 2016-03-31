@@ -3066,6 +3066,13 @@ class X509Tests(unittest.TestCase):
             subject_public_key.native
         )
         self.assertEqual(
+            (
+                63036330335395236932063564494857090016633168203412940864166337576590847793152,
+                66640105439272245186116058015235631147470323594355535909132387303736913911809
+            ),
+            subject_public_key.to_coords()
+        )
+        self.assertEqual(
             None,
             tbs_certificate['issuer_unique_id'].native
         )
