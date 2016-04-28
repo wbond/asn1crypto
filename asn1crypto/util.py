@@ -23,7 +23,7 @@ from ._iri import iri_to_uri, uri_to_iri  # noqa
 from ._ordereddict import OrderedDict  # noqa
 
 if sys.platform == 'win32':
-    from ._win._ws2_32 import inet_ntop, inet_pton
+    from ._inet import inet_ntop, inet_pton
 else:
     from socket import inet_ntop, inet_pton  # noqa
 
