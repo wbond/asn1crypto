@@ -537,6 +537,11 @@ class CMSTests(unittest.TestCase):
             signer['signature'].native
         )
 
+    def test_parse_cms_signed_date_indefinite_length(self):
+        with open(os.path.join(fixtures_dir, 'cms-signed-indefinite-length.der'), 'rb') as f:
+            info = cms.ContentInfo.load(f.read())
+            signed_data = info['content']
+
     def test_parse_content_info_cms_signed_digested_data(self):
         with open(os.path.join(fixtures_dir, 'cms-signed-digested.der'), 'rb') as f:
             info = cms.ContentInfo.load(f.read())
