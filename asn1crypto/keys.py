@@ -772,6 +772,9 @@ class PrivateKeyInfo(Sequence):
             elif self.algorithm == 'ec':
                 prime = self['private_key'].parsed['private_key'].native
             self._bit_size = int(math.ceil(math.log(prime, 2)))
+            modulus = self._bit_size % 8
+            if modulus != 0:
+                self._bit_size += 8 - modulus
         return self._bit_size
 
     @property
@@ -1145,6 +1148,9 @@ class PublicKeyInfo(Sequence):
                 elif self.algorithm == 'dsa':
                     prime = self['algorithm']['parameters']['p'].native
                 self._bit_size = int(math.ceil(math.log(prime, 2)))
+                modulus = self._bit_size % 8
+                if modulus != 0:
+                    self._bit_size += 8 - modulus
 
         return self._bit_size
 
