@@ -541,6 +541,7 @@ class CMSTests(unittest.TestCase):
         with open(os.path.join(fixtures_dir, 'cms-signed-indefinite-length.der'), 'rb') as f:
             info = cms.ContentInfo.load(f.read())
             signed_data = info['content']
+            self.assertIsInstance(signed_data.native, util.OrderedDict)
 
     def test_parse_content_info_cms_signed_digested_data(self):
         with open(os.path.join(fixtures_dir, 'cms-signed-digested.der'), 'rb') as f:

@@ -4397,9 +4397,9 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     return value
 
 
-def _parse(encoded_data, pointer=0):
+def _parse_header(encoded_data, pointer):
     """
-    Parses a byte string into component parts
+    Parses the header of an ASN.1 encoded value
 
     :param encoded_data:
         A byte string that contains BER-encoded data
@@ -4408,17 +4408,15 @@ def _parse(encoded_data, pointer=0):
         The index in the byte string to parse from
 
     :return:
-        A 2-element tuple:
-         - 0: A tuple of (class_, method, tag, header, content, trailer)
-         - 1: An integer indicating how many bytes were consumed
+        A 4-element tuple:
+         - 0: A byte string of the header
+         - 1: The integer length of the contents
+         - 2: A boolean if the value was indefinite length
+         - 3: A tuple of (class_, method, tag)
     """
 
-    if len(encoded_data) == 0:
-        return ((None, None, None, None, None, None), 0)
-
-    encoded_length = len(encoded_data)
-
     start = pointer
+    encoded_length = len(encoded_data)
 
     first_octet = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
     pointer += 1
@@ -4447,6 +4445,9 @@ def _parse(encoded_data, pointer=0):
             encoded_length
         ))
     length_octet = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
+
+    if first_octet == 0 and length_octet == 0:
+        return (b'\x00\x00', 0, False, (0, 0, 0))
 
     pointer += 1
     length_type = length_octet >> 7
@@ -4479,33 +4480,67 @@ def _parse(encoded_data, pointer=0):
         ))
     header = encoded_data[start:pointer]
 
-    # Indefinite length
-    if length_type == 1 and length == 0:
-        end_token = encoded_data.find(b'\x00\x00', pointer)
-        if end_token > encoded_length:
-            raise ValueError(unwrap(
-                '''
-                Insufficient data - %s bytes requested but only %s available
-                ''',
-                end_token,
-                encoded_length
-            ))
-        contents = encoded_data[pointer:end_token]
-        pointer = end_token + 2
-        trailer = b'\x00\x00'
+    indefinite = False
 
+    if length_type == 1 and length == 0:
+        indefinite = True
+        # To properly parse indefinite length values, we need to scan forward
+        # parsing headers until we find a value with a length of zero. If we
+        # just scanned looking for \x00\x00, nested indefinite length values
+        # would not work.
+        end_token_pointer = pointer
+        while end_token_pointer < encoded_length:
+            sub_header, sub_length, _, _ = _parse_header(encoded_data, end_token_pointer)
+            end_token_pointer += len(sub_header) + sub_length
+            if sub_length == 0:
+                break
+        length = end_token_pointer - pointer
+
+    return (header, length, indefinite, (class_, method, tag))
+
+
+def _parse(encoded_data, pointer=0):
+    """
+    Parses a byte string into component parts
+
+    :param encoded_data:
+        A byte string that contains BER-encoded data
+
+    :param pointer:
+        The index in the byte string to parse from
+
+    :return:
+        A 2-element tuple:
+         - 0: A tuple of (class_, method, tag, header, content, trailer)
+         - 1: An integer indicating how many bytes were consumed
+    """
+
+    if len(encoded_data) == 0:
+        return ((None, None, None, None, None, None), 0)
+
+    encoded_length = len(encoded_data)
+
+    start = pointer
+
+    header, length, indefinite, info = _parse_header(encoded_data, pointer)
+    class_, method, tag = info
+    pointer += len(header)
+
+    if pointer + length > encoded_length:
+        raise ValueError(unwrap(
+            '''
+            Insufficient data - %s bytes requested but only %s available
+            ''',
+            pointer + length,
+            encoded_length
+        ))
+    if indefinite:
+        contents = encoded_data[pointer:pointer + length - 2]
+        trailer = b'\x00\x00'
     else:
-        if pointer + length > encoded_length:
-            raise ValueError(unwrap(
-                '''
-                Insufficient data - %s bytes requested but only %s available
-                ''',
-                pointer + length,
-                encoded_length
-            ))
         contents = encoded_data[pointer:pointer + length]
-        pointer += length
         trailer = b''
+    pointer += length
 
     return ((class_, method, tag, header, contents, trailer), pointer - start)
 
