@@ -2219,6 +2219,9 @@ class ObjectIdentifier(Primitive, ValueMap):
 
     tag = 6
 
+    # A unicode string of the dotted form of the object identifier
+    _dotted = None
+
     def set(self, value):
         """
         Sets the value of the object
@@ -2274,24 +2277,37 @@ class ObjectIdentifier(Primitive, ValueMap):
         :return:
             A unicode string
         """
-        output = []
 
-        part = 0
-        for byte in self.contents:
-            if py2:
-                byte = ord(byte)
-            part = part * 128
-            part += byte & 127
-            # Last byte in subidentifier has the eighth bit set to 0
-            if byte & 0x80 == 0:
-                if len(output) == 0:
-                    output.append(str_cls(part // 40))
-                    output.append(str_cls(part % 40))
-                else:
-                    output.append(str_cls(part))
-                part = 0
+        return self.dotted
 
-        return '.'.join(output)
+    @property
+    def dotted(self):
+        """
+        :return:
+            A unicode string of the object identifier in dotted notation, thus
+            ignoring any mapped value
+        """
+
+        if self._dotted is None:
+            output = []
+
+            part = 0
+            for byte in self.contents:
+                if py2:
+                    byte = ord(byte)
+                part = part * 128
+                part += byte & 127
+                # Last byte in subidentifier has the eighth bit set to 0
+                if byte & 0x80 == 0:
+                    if len(output) == 0:
+                        output.append(str_cls(part // 40))
+                        output.append(str_cls(part % 40))
+                    else:
+                        output.append(str_cls(part))
+                    part = 0
+
+            self._dotted = '.'.join(output)
+        return self._dotted
 
     @property
     def native(self):
@@ -2308,7 +2324,7 @@ class ObjectIdentifier(Primitive, ValueMap):
             return None
 
         if self._native is None:
-            self._native = self.__unicode__()
+            self._native = self.dotted
             if self._map is not None and self._native in self._map:
                 self._native = self._map[self._native]
         return self._native
