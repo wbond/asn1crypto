@@ -116,10 +116,12 @@ class PrimePoint():
 
         # self.curve is allowed to be None only for INFINITY:
         if self.curve:
-            assert self.curve.contains(self)
+            if not self.curve.contains(self):
+                raise ValueError('Invalid EC point')
 
         if self.order:
-            assert self * self.order == INFINITY
+            if self * self.order != INFINITY:
+                raise ValueError('Invalid EC point')
 
     def __cmp__(self, other):
         """
