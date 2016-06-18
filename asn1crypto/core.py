@@ -105,6 +105,9 @@ METHOD_NUM_TO_NAME_MAP = {
 }
 
 
+_OID_RE = re.compile('^\d+(\.\d+)*$')
+
+
 # A global tracker to ensure that _setup() is called for every class, even
 # if is has been called for a parent class. This allows different _fields
 # definitions for child classes. Without such a construct, the child classes
@@ -1576,7 +1579,7 @@ class BitString(Primitive, ValueMap, object):
             if self._map is None:
                 raise ValueError(unwrap(
                     '''
-                    %s _map has not been defined
+                    %s._map has not been defined
                     ''',
                     type_name(self)
                 ))
@@ -1673,7 +1676,7 @@ class BitString(Primitive, ValueMap, object):
             if not isinstance(self._map, dict):
                 raise ValueError(unwrap(
                     '''
-                    %s _map has not been defined
+                    %s._map has not been defined
                     ''',
                     type_name(self)
                 ))
@@ -1681,7 +1684,7 @@ class BitString(Primitive, ValueMap, object):
             if key not in self._reverse_map:
                 raise ValueError(unwrap(
                     '''
-                    %s _map does not contain an entry for "%s"
+                    %s._map does not contain an entry for "%s"
                     ''',
                     type_name(self),
                     key
@@ -1719,7 +1722,7 @@ class BitString(Primitive, ValueMap, object):
             if self._map is None:
                 raise ValueError(unwrap(
                     '''
-                    %s _map has not been defined
+                    %s._map has not been defined
                     ''',
                     type_name(self)
                 ))
@@ -1727,7 +1730,7 @@ class BitString(Primitive, ValueMap, object):
             if key not in self._reverse_map:
                 raise ValueError(unwrap(
                     '''
-                    %s _map does not contain an entry for "%s"
+                    %s._map does not contain an entry for "%s"
                     ''',
                     type_name(self),
                     key
@@ -2231,6 +2234,90 @@ class ObjectIdentifier(Primitive, ValueMap):
 
     # A unicode string of the dotted form of the object identifier
     _dotted = None
+
+    @classmethod
+    def map(cls, value):
+        """
+        Converts a dotted unicode string OID into a mapped unicode string
+
+        :param value:
+            A dotted unicode string OID
+
+        :raises:
+            ValueError - when no _map dict has been defined on the class
+            TypeError - when value is not a unicode string
+
+        :return:
+            A mapped unicode string
+        """
+
+        if cls._map is None:
+            raise ValueError(unwrap(
+                '''
+                %s._map has not been defined
+                ''',
+                type_name(cls)
+            ))
+
+        if not isinstance(value, str_cls):
+            raise TypeError(unwrap(
+                '''
+                value must be a unicode string, not %s
+                ''',
+                type_name(value)
+            ))
+
+        return cls._map.get(value, value)
+
+    @classmethod
+    def unmap(cls, value):
+        """
+        Converts a mapped unicode string value into a dotted unicode string OID
+
+        :param value:
+            A mapped unicode string OR dotted unicode string OID
+
+        :raises:
+            ValueError - when no _map dict has been defined on the class or the value can't be unmapped
+            TypeError - when value is not a unicode string
+
+        :return:
+            A dotted unicode string OID
+        """
+
+        if cls not in _SETUP_CLASSES:
+            cls()._setup()
+            _SETUP_CLASSES[cls] = True
+
+        if cls._map is None:
+            raise ValueError(unwrap(
+                '''
+                %s._map has not been defined
+                ''',
+                type_name(cls)
+            ))
+
+        if not isinstance(value, str_cls):
+            raise TypeError(unwrap(
+                '''
+                value must be a unicode string, not %s
+                ''',
+                type_name(value)
+            ))
+
+        if value in cls._reverse_map:
+            return cls._reverse_map[value]
+
+        if not _OID_RE.match(value):
+            raise ValueError(unwrap(
+                '''
+                %s._map does not contain an entry for "%s"
+                ''',
+                type_name(cls),
+                value
+            ))
+
+        return value
 
     def set(self, value):
         """

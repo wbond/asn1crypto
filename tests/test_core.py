@@ -82,6 +82,13 @@ class ConcatTest(core.Concat):
     _child_specs = [Seq, core.Integer]
 
 
+class MyOids(core.ObjectIdentifier):
+    _map = {
+        '1.2.3': 'abc',
+        '4.5.6': 'def',
+    }
+
+
 @data_decorator
 class CoreTests(unittest.TestCase):
 
@@ -350,3 +357,14 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(child1, parent[0])
         self.assertEqual(child2, parent[1])
         self.assertEqual(child1.dump() + child2.dump(), parent.dump())
+
+    def test_oid_map_unmap(self):
+        self.assertEqual('abc', MyOids.map('1.2.3'))
+        self.assertEqual('def', MyOids.map('4.5.6'))
+        self.assertEqual('7.8.9', MyOids.map('7.8.9'))
+        self.assertEqual('1.2.3', MyOids.unmap('abc'))
+        self.assertEqual('4.5.6', MyOids.unmap('def'))
+        self.assertEqual('7.8.9', MyOids.unmap('7.8.9'))
+
+        with self.assertRaises(ValueError):
+            MyOids.unmap('no_such_mapping')
