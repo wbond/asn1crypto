@@ -975,8 +975,11 @@ class Concat(object):
 
         return cls(contents=encoded_data)
 
-    def __init__(self, contents=None):
+    def __init__(self, value=None, contents=None):
         """
+        :param value:
+            A native Python datatype to initialize the object value with
+
         :param contents:
             A byte string of the encoded contents of the value
 
@@ -985,23 +988,30 @@ class Concat(object):
             TypeError - when an error occurs with one of the children
         """
 
-        try:
-            contents_len = len(contents)
-            self._children = []
+        if contents is not None:
+            try:
+                contents_len = len(contents)
+                self._children = []
 
-            offset = 0
-            for spec in self._child_specs:
-                if offset < contents_len:
-                    value, bytes_read = _parse_build(contents[offset:], spec=spec)
-                    offset += bytes_read
-                else:
-                    value = spec()
-                self._children.append(value)
+                offset = 0
+                for spec in self._child_specs:
+                    if offset < contents_len:
+                        child_value, bytes_read = _parse_build(contents[offset:], spec=spec)
+                        offset += bytes_read
+                    else:
+                        child_value = spec()
+                    self._children.append(child_value)
 
-        except (ValueError, TypeError) as e:
-            args = e.args[1:]
-            e.args = (e.args[0] + '\n    while constructing %s' % type_name(self),) + args
-            raise e
+            except (ValueError, TypeError) as e:
+                args = e.args[1:]
+                e.args = (e.args[0] + '\n    while constructing %s' % type_name(self),) + args
+                raise e
+
+        if value is not None:
+            if self._children is None:
+                self._children = [None] * len(self._child_specs)
+            for index, data in enumerate(value):
+                self.__setitem__(index, data)
 
     def __str__(self):
         """
@@ -1189,7 +1199,7 @@ class Concat(object):
         if key > len(self._child_specs) - 1 or key < 0:
             raise KeyError(unwrap(
                 '''
-                No child is definition for position %d of %s
+                No child is defined for position %d of %s
                 ''',
                 key,
                 type_name(self)

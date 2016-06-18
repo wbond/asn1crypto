@@ -78,6 +78,10 @@ class SeqChoice(core.Choice):
     ]
 
 
+class ConcatTest(core.Concat):
+    _child_specs = [Seq, core.Integer]
+
+
 @data_decorator
 class CoreTests(unittest.TestCase):
 
@@ -332,3 +336,17 @@ class CoreTests(unittest.TestCase):
         choice_copy = choice.copy()
         choice.chosen['name'] = 'bar'
         self.assertNotEqual(choice.chosen['name'], choice_copy.chosen['name'])
+
+    def test_concat(self):
+        child1 = Seq({
+            'id': '1.2.3',
+            'value': 1
+        })
+        child2 = core.Integer(0)
+        parent = ConcatTest([
+            child1,
+            child2
+        ])
+        self.assertEqual(child1, parent[0])
+        self.assertEqual(child2, parent[1])
+        self.assertEqual(child1.dump() + child2.dump(), parent.dump())
