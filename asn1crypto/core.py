@@ -3058,7 +3058,7 @@ class Sequence(Asn1Value):
                 self.children = [VOID] * len(self._fields)
                 for index, (_, _, params) in enumerate(self._fields):
                     if 'default' in params:
-                        if cls._precomputed_specs[field]:
+                        if cls._precomputed_specs[index]:
                             field_name, field_spec, value_spec, field_params, _ = cls._precomputed_specs[index]
                         else:
                             field_name, field_spec, value_spec, field_params, _ = self._determine_spec(index)
@@ -3079,7 +3079,8 @@ class Sequence(Asn1Value):
                 again = child_pointer < contents_length
 
                 if field < field_len:
-                    _, field_spec, value_spec, field_params, spec_override = cls._precomputed_specs[field] or self._determine_spec(field)
+                    _, field_spec, value_spec, field_params, spec_override = (
+                        cls._precomputed_specs[field] or self._determine_spec(field))
 
                     # If the next value is optional or default, allow it to be absent
                     if field_params and ('optional' in field_params or 'default' in field_params):
