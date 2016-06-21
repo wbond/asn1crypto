@@ -861,7 +861,7 @@ class Choice(Asn1Value):
                     type_name(self)
                 ))
 
-            ((class_, _, tag, _, _, _), _) = _parse(contents)
+            ((class_, _, tag, _, _, _), _) = _parse(contents, len(contents))
             id_ = (class_, tag)
 
         if id_ in self._id_map:
@@ -999,8 +999,7 @@ class Concat(object):
                 offset = 0
                 for spec in self._child_specs:
                     if offset < contents_len:
-                        child_value, bytes_read = _parse_build(contents[offset:], spec=spec)
-                        offset += bytes_read
+                        child_value, offset = _parse_build(contents, pointer=offset, spec=spec)
                     else:
                         child_value = spec()
                     self._children.append(child_value)
@@ -1595,7 +1594,7 @@ class BitString(Primitive, ValueMap, object):
 
             value = ''.join(map(str_cls, bits))
 
-        elif isinstance(value, tuple):
+        elif value.__class__ == tuple:
             if self._map is None:
                 self._native = value
             else:
@@ -2591,6 +2590,9 @@ class Sequence(Asn1Value):
     # A 2-element tuple of the indexes in _fields of the OID and value fields
     _oid_nums = None
 
+    # Predetermined field specs to optimize away calls to _determine_spec()
+    _precomputed_specs = None
+
     def __init__(self, value=None, default=None, **kwargs):
         """
         Allows setting field values before passing everything else along to
@@ -2686,9 +2688,8 @@ class Sequence(Asn1Value):
         """
 
         child = self.children[index]
-        if isinstance(child, tuple):
-            child = _build(*child)
-            self.children[index] = child
+        if child.__class__ == tuple:
+            child = self.children[index] = _build(*child)
         return child
 
     def __len__(self):
@@ -2877,7 +2878,7 @@ class Sequence(Asn1Value):
             child = self.children[index]
             if child is None:
                 child_dump = b''
-            elif isinstance(child, tuple):
+            elif child.__class__ == tuple:
                 if force:
                     child_dump = self._lazy_child(index).dump(force=force)
                 else:
@@ -2904,6 +2905,7 @@ class Sequence(Asn1Value):
         cls = self.__class__
         cls._field_map = {}
         cls._field_ids = []
+        cls._precomputed_specs = []
         for index, field in enumerate(cls._fields):
             if len(field) < 3:
                 field = field + ({},)
@@ -2913,6 +2915,14 @@ class Sequence(Asn1Value):
 
         if cls._oid_pair is not None:
             cls._oid_nums = (cls._field_map[cls._oid_pair[0]], cls._field_map[cls._oid_pair[1]])
+
+        for index, field in enumerate(cls._fields):
+            has_callback = cls._spec_callbacks is not None and field[0] in cls._spec_callbacks
+            is_mapped_oid = cls._oid_nums is not None and cls._oid_nums[1] == index
+            if has_callback or is_mapped_oid:
+                cls._precomputed_specs.append(None)
+            else:
+                cls._precomputed_specs.append((field[0], field[1], field[1], field[2], None))
 
     def _determine_spec(self, index):
         """
@@ -2940,7 +2950,7 @@ class Sequence(Asn1Value):
             if spec_override:
                 # Allow a spec callback to specify both the base spec and
                 # the override, for situations such as OctetString and parse_as
-                if isinstance(spec_override, tuple) and len(spec_override) == 2:
+                if spec_override.__class__ == tuple and len(spec_override) == 2:
                     field_spec, value_spec = spec_override
                     if value_spec is None:
                         value_spec = field_spec
@@ -3042,12 +3052,16 @@ class Sequence(Asn1Value):
             ValueError - when an error occurs parsing child objects
         """
 
+        cls = self.__class__
         if self._contents is None:
             if self._fields:
                 self.children = [VOID] * len(self._fields)
                 for index, (_, _, params) in enumerate(self._fields):
                     if 'default' in params:
-                        field_name, field_spec, value_spec, field_params, _ = self._determine_spec(index)
+                        if cls._precomputed_specs[field]:
+                            field_name, field_spec, value_spec, field_params, _ = cls._precomputed_specs[index]
+                        else:
+                            field_name, field_spec, value_spec, field_params, _ = self._determine_spec(index)
                         self.children[index] = self._make_value(field_name, field_spec, value_spec, field_params, None)
             return
 
@@ -3056,21 +3070,20 @@ class Sequence(Asn1Value):
             contents_length = len(self._contents)
             child_pointer = 0
             field = 0
-            seen_field = 1
             field_len = len(self._fields)
-            while child_pointer < contents_length:
-                parts, num_bytes = _parse(self._contents, pointer=child_pointer)
+            parts = None
+            again = child_pointer < contents_length
+            while again:
+                if parts is None:
+                    parts, child_pointer = _parse(self._contents, contents_length, pointer=child_pointer)
+                again = child_pointer < contents_length
 
                 if field < field_len:
-                    _, field_spec, value_spec, field_params, spec_override = self._determine_spec(field)
+                    _, field_spec, value_spec, field_params, spec_override = cls._precomputed_specs[field] or self._determine_spec(field)
 
                     # If the next value is optional or default, allow it to be absent
-                    if 'optional' in field_params or 'default' in field_params:
-                        id_ = (parts[0], parts[2])
-
-                        no_id_match = self._field_ids[field] != id_
-                        not_any = field_spec != Any
-                        if no_id_match and not_any:
+                    if field_params and ('optional' in field_params or 'default' in field_params):
+                        if self._field_ids[field] != (parts[0], parts[2]) and field_spec != Any:
 
                             # See if the value is a valid choice before assuming
                             # that we have a missing optional or default value
@@ -3078,7 +3091,7 @@ class Sequence(Asn1Value):
                             if issubclass(field_spec, Choice):
                                 try:
                                     tester = field_spec(**field_params)
-                                    tester.validate(id_[0], id_[1], parts[4])
+                                    tester.validate(parts[0], parts[2], parts[4])
                                     choice_match = True
                                 except (ValueError):
                                     pass
@@ -3089,6 +3102,7 @@ class Sequence(Asn1Value):
                                 else:
                                     self.children.append(field_spec(**field_params))
                                 field += 1
+                                again = True
                                 continue
 
                     if field_spec is None or (spec_override and issubclass(field_spec, Any)):
@@ -3101,7 +3115,7 @@ class Sequence(Asn1Value):
                         child = parts + (field_spec, field_params)
 
                 # Handle situations where an optional or defaulted field definition is incorrect
-                elif field_len > 0 and seen_field <= field_len:
+                elif field_len > 0 and field + 1 <= field_len:
                     missed_fields = []
                     prev_field = field - 1
                     while prev_field >= 0:
@@ -3118,7 +3132,7 @@ class Sequence(Asn1Value):
                         Data for field %s (%s class, %s method, tag %s) does
                         not match the field definition%s of %s
                         ''',
-                        seen_field,
+                        field + 1,
                         CLASS_NUM_TO_NAME_MAP.get(parts[0]),
                         METHOD_NUM_TO_NAME_MAP.get(parts[1]),
                         parts[2],
@@ -3135,9 +3149,8 @@ class Sequence(Asn1Value):
                         child._parse_children(recurse=True)
 
                 self.children.append(child)
-                child_pointer += num_bytes
                 field += 1
-                seen_field += 1
+                parts = None
 
             index = len(self.children)
             while index < field_len:
@@ -3217,7 +3230,7 @@ class Sequence(Asn1Value):
                 self._parse_children(recurse=True)
             self._native = OrderedDict()
             for index, child in enumerate(self.children):
-                if isinstance(child, tuple):
+                if child.__class__ == tuple:
                     child = _build(*child)
                     self.children[index] = child
                 try:
@@ -3253,7 +3266,7 @@ class Sequence(Asn1Value):
         if self.children is not None:
             self.children = []
             for child in other.children:
-                if isinstance(child, tuple):
+                if child.__class__ == tuple:
                     self.children.append(child)
                 else:
                     self.children.append(child.copy())
@@ -3404,7 +3417,7 @@ class SequenceOf(Asn1Value):
         """
 
         child = self.children[index]
-        if isinstance(child, tuple):
+        if child.__class__ == tuple:
             child = _build(*child)
             self.children[index] = child
         return child
@@ -3643,7 +3656,7 @@ class SequenceOf(Asn1Value):
             contents_length = len(self._contents)
             child_pointer = 0
             while child_pointer < contents_length:
-                parts, num_bytes = _parse(self._contents, pointer=child_pointer)
+                parts, child_pointer = _parse(self._contents, contents_length, pointer=child_pointer)
                 if self._child_spec:
                     child = parts + (self._child_spec,)
                 else:
@@ -3653,7 +3666,6 @@ class SequenceOf(Asn1Value):
                     if isinstance(child, (Sequence, SequenceOf)):
                         child._parse_children(recurse=True)
                 self.children.append(child)
-                child_pointer += num_bytes
         except (ValueError, TypeError) as e:
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
@@ -3715,7 +3727,7 @@ class SequenceOf(Asn1Value):
         if self.children is not None:
             self.children = []
             for child in other.children:
-                if isinstance(child, tuple):
+                if child.__class__ == tuple:
                     self.children.append(child)
                 else:
                     self.children.append(child.copy())
@@ -3802,7 +3814,7 @@ class Set(Sequence):
             child_pointer = 0
             seen_field = 0
             while child_pointer < contents_length:
-                parts, num_bytes = _parse(self.contents, pointer=child_pointer)
+                parts, child_pointer = _parse(self.contents, contents_length, pointer=child_pointer)
 
                 id_ = (parts[0], parts[2])
 
@@ -3839,7 +3851,6 @@ class Set(Sequence):
                         child._parse_children(recurse=True)
 
                 child_map[field] = child
-                child_pointer += num_bytes
                 seen_field += 1
 
             total_fields = len(self._fields)
@@ -4298,6 +4309,38 @@ def _build_id_tuple(params, spec):
     return (required_class, required_tag)
 
 
+_UNIVERSAL_SPECS = {
+    1: Boolean,
+    2: Integer,
+    3: BitString,
+    4: OctetString,
+    5: Null,
+    6: ObjectIdentifier,
+    7: ObjectDescriptor,
+    8: InstanceOf,
+    9: Real,
+    10: Enumerated,
+    11: EmbeddedPdv,
+    12: UTF8String,
+    13: RelativeOid,
+    16: Sequence,
+    17: Set,
+    18: NumericString,
+    19: PrintableString,
+    20: TeletexString,
+    21: VideotexString,
+    22: IA5String,
+    23: UTCTime,
+    24: GeneralizedTime,
+    25: GraphicString,
+    26: VisibleString,
+    27: GeneralString,
+    28: UniversalString,
+    29: CharacterString,
+    30: BMPString
+}
+
+
 def _build(class_, method, tag, header, contents, trailer, spec=None, spec_params=None, nested_spec=None):
     """
     Builds an Asn1Value object generically, or using a spec with optional params
@@ -4349,9 +4392,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         else:
             value = spec(contents=contents)
 
-        is_choice = isinstance(value, Choice)
-
-        if spec == Any:
+        if spec is Any:
             pass
 
         elif value.tag_type == 'explicit':
@@ -4385,9 +4426,26 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                     value.explicit_tag,
                     tag
                 ))
+            original_value = value
+            info, _ = _parse(contents, len(contents))
+            value = _build(*info, spec=spec)
+            value._header = header + info[3]
+            value._trailer += trailer or b''
+            value.tag_type = 'explicit'
+            value.explicit_class = original_value.explicit_class
+            value.explicit_tag = original_value.explicit_tag
 
-        elif is_choice:
+        elif isinstance(value, Choice):
             value.validate(class_, tag, contents)
+            try:
+                # Force parsing the Choice now
+                value.contents = header + value.contents
+                header = b''
+                value.parse()
+            except (ValueError, TypeError) as e:
+                args = e.args[1:]
+                e.args = (e.args[0] + '\n    while parsing %s' % type_name(value),) + args
+                raise e
 
         else:
             if class_ != value.class_:
@@ -4423,43 +4481,19 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     # since we will be parsing the contents and discarding the outer object
     # anyway a little further on
     elif spec_params and 'tag_type' in spec_params and spec_params['tag_type'] == 'explicit':
-        value = Asn1Value(contents=contents, **spec_params)
-        is_choice = False
+        original_value = Asn1Value(contents=contents, **spec_params)
+        info, _ = _parse(contents, len(contents))
+        value = _build(*info, spec=spec)
+        value._header = header + info[3]
+        value._trailer += trailer or b''
+        value.tag_type = 'explicit'
+        value.explicit_class = original_value.explicit_class
+        value.explicit_tag = original_value.explicit_tag
 
     # If no spec was specified, allow anything and just process what
     # is in the input data
     else:
-        universal_specs = {
-            1: Boolean,
-            2: Integer,
-            3: BitString,
-            4: OctetString,
-            5: Null,
-            6: ObjectIdentifier,
-            7: ObjectDescriptor,
-            8: InstanceOf,
-            9: Real,
-            10: Enumerated,
-            11: EmbeddedPdv,
-            12: UTF8String,
-            13: RelativeOid,
-            16: Sequence,
-            17: Set,
-            18: NumericString,
-            19: PrintableString,
-            20: TeletexString,
-            21: VideotexString,
-            22: IA5String,
-            23: UTCTime,
-            24: GeneralizedTime,
-            25: GraphicString,
-            26: VisibleString,
-            27: GeneralString,
-            28: UniversalString,
-            29: CharacterString,
-            30: BMPString
-        }
-        if tag not in universal_specs:
+        if tag not in _UNIVERSAL_SPECS:
             raise ValueError(unwrap(
                 '''
                 Unknown element - %s class, %s method, tag %s
@@ -4469,73 +4503,60 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 tag
             ))
 
-        spec = universal_specs[tag]
+        spec = _UNIVERSAL_SPECS[tag]
 
         value = spec(contents=contents, class_=class_)
-        is_choice = False
 
     value._header = header
-    if trailer is not None and trailer != b'':
-        value._trailer = trailer
+    value._trailer = trailer or b''
 
     # Destroy any default value that our contents have overwritten
     value._native = None
 
-    # For explicitly tagged values, parse the inner value and pull it out
-    if value.tag_type == 'explicit':
-        original_value = value
-        (class_, method, tag, header, contents, trailer), _ = _parse(value.contents)
-        value = _build(class_, method, tag, header, contents, trailer, spec=spec)
-        value._header = original_value._header + header
-        value._trailer += original_value._trailer
-        value.tag_type = 'explicit'
-        value.explicit_class = original_value.explicit_class
-        value.explicit_tag = original_value.explicit_tag
-    elif is_choice:
-        value.contents = value._header + value.contents
-        value._header = b''
-
-    try:
-        # Force parsing the Choice now
-        if is_choice:
-            value.parse()
-
-        if nested_spec:
+    if nested_spec:
+        try:
             value.parse(nested_spec)
-    except (ValueError, TypeError) as e:
-        args = e.args[1:]
-        e.args = (e.args[0] + '\n    while parsing %s' % type_name(value),) + args
-        raise e
+        except (ValueError, TypeError) as e:
+            args = e.args[1:]
+            e.args = (e.args[0] + '\n    while parsing %s' % type_name(value),) + args
+            raise e
 
     return value
 
 
-def _parse_header(encoded_data, pointer):
+_MEMOIZED_PARSINGS = {}
+
+
+def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
     """
-    Parses the header of an ASN.1 encoded value
+    Parses a byte string into component parts
 
     :param encoded_data:
         A byte string that contains BER-encoded data
 
+    :param data_len:
+        The integer length of the encoded data
+
     :param pointer:
         The index in the byte string to parse from
 
+    :param lengths_only:
+        A boolean to cause the call to return a 2-element tuple of the integer
+        number of bytes in the header and the integer number of bytes in the
+        contents. Internal use only.
+
     :return:
-        A 4-element tuple:
-         - 0: A byte string of the header
-         - 1: The integer length of the contents
-         - 2: A boolean if the value was indefinite length
-         - 3: A tuple of (class_, method, tag)
+        A 2-element tuple:
+         - 0: A tuple of (class_, method, tag, header, content, trailer)
+         - 1: An integer indicating how many bytes were consumed
     """
 
-    start = pointer
-    encoded_length = len(encoded_data)
+    if data_len == 0:
+        return ((None, None, None, None, None, None), pointer)
 
+    start = pointer
     first_octet = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
     pointer += 1
-
-    class_ = first_octet >> 6
-    method = (first_octet >> 5) & 1
 
     tag = first_octet & 31
     # Base 128 length using 8th bit as continuation indicator
@@ -4549,113 +4570,73 @@ def _parse_header(encoded_data, pointer):
             if num >> 7 == 0:
                 break
 
-    if pointer + 1 > encoded_length:
-        raise ValueError(unwrap(
-            '''
-            Insufficient data - %s bytes requested but only %s available
-            ''',
-            pointer + 1,
-            encoded_length
-        ))
     length_octet = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
-
-    if first_octet == 0 and length_octet == 0:
-        return (b'\x00\x00', 0, False, (0, 0, 0))
-
     pointer += 1
-    length_type = length_octet >> 7
-    if length_type == 1:
-        length = 0
-        remaining_length_octets = length_octet & 127
-        while remaining_length_octets > 0:
-            length *= 256
-            if pointer + 1 > encoded_length:
+
+    if length_octet >> 7 == 0:
+        if lengths_only:
+            return (pointer, pointer + (length_octet & 127))
+        contents_end = pointer + (length_octet & 127)
+
+    else:
+        length_octets = length_octet & 127
+        if length_octets:
+            pointer += length_octets
+            contents_end = pointer + int_from_bytes(encoded_data[pointer - length_octets:pointer], signed=False)
+            if lengths_only:
+                return (pointer, contents_end)
+
+        else:
+            # To properly parse indefinite length values, we need to scan forward
+            # parsing headers until we find a value with a length of zero. If we
+            # just scanned looking for \x00\x00, nested indefinite length values
+            # would not work.
+            contents_end = pointer
+            while contents_end < data_len:
+                sub_header_end, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True)
+                if contents_end == sub_header_end:
+                    break
+            if lengths_only:
+                return (pointer, contents_end)
+            if contents_end > data_len:
                 raise ValueError(unwrap(
                     '''
                     Insufficient data - %s bytes requested but only %s available
                     ''',
-                    pointer + 1,
-                    encoded_length
+                    contents_end,
+                    data_len
                 ))
-            length += ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
-            pointer += 1
-            remaining_length_octets -= 1
-    else:
-        length = length_octet & 127
+            return (
+                (
+                    first_octet >> 6,
+                    (first_octet >> 5) & 1,
+                    tag,
+                    encoded_data[start:pointer],
+                    encoded_data[pointer:contents_end - 2],
+                    b'\x00\x00'
+                ),
+                contents_end
+            )
 
-    if pointer > encoded_length:
+    if contents_end > data_len:
         raise ValueError(unwrap(
             '''
             Insufficient data - %s bytes requested but only %s available
             ''',
-            pointer,
-            encoded_length
+            contents_end,
+            data_len
         ))
-    header = encoded_data[start:pointer]
-
-    indefinite = False
-
-    if length_type == 1 and length == 0:
-        indefinite = True
-        # To properly parse indefinite length values, we need to scan forward
-        # parsing headers until we find a value with a length of zero. If we
-        # just scanned looking for \x00\x00, nested indefinite length values
-        # would not work.
-        end_token_pointer = pointer
-        while end_token_pointer < encoded_length:
-            sub_header, sub_length, _, _ = _parse_header(encoded_data, end_token_pointer)
-            end_token_pointer += len(sub_header) + sub_length
-            if sub_length == 0:
-                break
-        length = end_token_pointer - pointer
-
-    return (header, length, indefinite, (class_, method, tag))
-
-
-def _parse(encoded_data, pointer=0):
-    """
-    Parses a byte string into component parts
-
-    :param encoded_data:
-        A byte string that contains BER-encoded data
-
-    :param pointer:
-        The index in the byte string to parse from
-
-    :return:
-        A 2-element tuple:
-         - 0: A tuple of (class_, method, tag, header, content, trailer)
-         - 1: An integer indicating how many bytes were consumed
-    """
-
-    if len(encoded_data) == 0:
-        return ((None, None, None, None, None, None), 0)
-
-    encoded_length = len(encoded_data)
-
-    start = pointer
-
-    header, length, indefinite, info = _parse_header(encoded_data, pointer)
-    class_, method, tag = info
-    pointer += len(header)
-
-    if pointer + length > encoded_length:
-        raise ValueError(unwrap(
-            '''
-            Insufficient data - %s bytes requested but only %s available
-            ''',
-            pointer + length,
-            encoded_length
-        ))
-    if indefinite:
-        contents = encoded_data[pointer:pointer + length - 2]
-        trailer = b'\x00\x00'
-    else:
-        contents = encoded_data[pointer:pointer + length]
-        trailer = b''
-    pointer += length
-
-    return ((class_, method, tag, header, contents, trailer), pointer - start)
+    return (
+        (
+            first_octet >> 6,
+            (first_octet >> 5) & 1,
+            tag,
+            encoded_data[start:pointer],
+            encoded_data[pointer:contents_end],
+            b''
+        ),
+        contents_end
+    )
 
 
 def _parse_build(encoded_data, pointer=0, spec=None, spec_params=None):
@@ -4684,6 +4665,5 @@ def _parse_build(encoded_data, pointer=0, spec=None, spec_params=None):
          - 1: An integer indicating how many bytes were consumed
     """
 
-    (class_, method, tag, header, contents, trailer), num_bytes = _parse(encoded_data, pointer)
-    value = _build(class_, method, tag, header, contents, trailer, spec=spec, spec_params=spec_params)
-    return (value, num_bytes)
+    info, new_pointer = _parse(encoded_data, len(encoded_data), pointer)
+    return (_build(*info, spec=spec, spec_params=spec_params), new_pointer)
