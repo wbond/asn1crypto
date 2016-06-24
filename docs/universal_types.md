@@ -334,6 +334,12 @@ The mapping of OID strings to name strings is configured via the `_map`
 property, which is a `dict` object with keys being unicode OID string and the
 values being a unicode string.
 
+The `.dotted` attribute will always return a unicode string of the dotted
+integer form of the OID.
+
+The class methods `.map()` and `.unmap()` will convert a dotted integer unicode
+string to the user-friendly name, and vice-versa.
+
 ```python
 from asn1crypto.core import ObjectIdentifier
 
@@ -346,8 +352,17 @@ class MyType(ObjectIdentifier):
 # Will print: "value_name"
 print(MyType('1.8.2.1.23').native)
 
+# Will print: "1.8.2.1.23"
+print(MyType('1.8.2.1.23').dotted)
+
 # Will print: "1.8.2.1.25"
 print(MyType('1.8.2.1.25').native)
+
+# Will print "value_name"
+print(MyType.map('1.8.2.1.23'))
+
+# Will print "1.8.2.1.23"
+print(MyType.unmap('value_name'))
 ```
 
 ## BitString
