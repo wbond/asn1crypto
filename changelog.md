@@ -1,5 +1,21 @@
 # changelog
 
+## 0.18.0
+
+ - Improved general parsing performance by 10-15%
+ - Add support for Windows XP
+ - Added `core.ObjectIdentifier.dotted` attribute to always return dotted
+   integer unicode string
+ - Added `core.ObjectIdentifier.map()` and `core.ObjectIdentifier.unmap()`
+   class methods to map dotted integer unicode strings to user-friendly unicode
+   strings and back
+ - Added various Apple OIDs to `x509.KeyPurposeId`
+ - Fixed a bug parsing nested indefinite-length-encoded values
+ - Fixed a bug with `x509.Certificate.issuer_alt_name_value` if it is the first
+   extension queried
+ - `keys.PublicKeyInfo.bit_size` and `keys.PrivateKeyInfo.bit_size` values are
+   now rounded up to the next closest multiple of 8
+
 ## 0.17.1
 
  - Fix a bug in `x509.URI` parsing IRIs containing explicit port numbers on
