@@ -38,7 +38,7 @@ class AdobeTimestamp(Sequence):
     _fields = [
         ('version', Integer),
         ('location', GeneralName),
-        ('requires_auth', Boolean),
+        ('requires_auth', Boolean, {'optional': True, 'default': False}),
     ]
 
 
