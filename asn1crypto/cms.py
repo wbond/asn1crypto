@@ -33,6 +33,7 @@ from .algos import (
 )
 from .core import (
     Any,
+    BitString,
     Choice,
     Enumerated,
     GeneralizedTime,
@@ -45,11 +46,12 @@ from .core import (
     SequenceOf,
     SetOf,
     UTCTime,
+    UTF8String,
 )
 from .crl import CertificateList
 from .keys import PublicKeyInfo
 from .ocsp import OCSPResponse
-from .x509 import Attributes, Certificate, Extensions, GeneralNames, Name
+from .x509 import Attributes, Certificate, Extensions, GeneralName, GeneralNames, Name
 
 
 # These structures are taken from
@@ -247,6 +249,176 @@ class AttCertIssuer(Choice):
     ]
 
 
+class IetfAttrValue(Choice):
+    _alternatives = [
+        ('octets', OctetString),
+        ('oid', ObjectIdentifier),
+        ('string', UTF8String),
+    ]
+
+
+class IetfAttrValues(SequenceOf):
+    _child_spec = IetfAttrValue
+
+
+class IetfAttrSyntax(Sequence):
+    _fields = [
+        ('policy_authority', GeneralNames, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('values', IetfAttrValues),
+    ]
+
+
+class SetOfIetfAttrSyntax(SetOf):
+    _child_spec = IetfAttrSyntax
+
+
+class SvceAuthInfo(Sequence):
+    _fields = [
+        ('service', GeneralName),
+        ('ident', GeneralName),
+        ('auth_info', OctetString, {'optional': True}),
+    ]
+
+
+class SetOfSvceAuthInfo(SetOf):
+    _child_spec = SvceAuthInfo
+
+
+class RoleSyntax(Sequence):
+    _fields = [
+        ('role_authority', GeneralNames, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('role_name', GeneralName, {'tag_type': 'implicit', 'tag': 1}),
+    ]
+
+
+class SetOfRoleSyntax(SetOf):
+    _child_spec = RoleSyntax
+
+
+class ClassList(BitString):
+    _map = {
+        0: 'unmarked',
+        1: 'unclassified',
+        2: 'restricted',
+        3: 'confidential',
+        4: 'secret',
+        5: 'top_secret',
+    }
+
+
+class SecurityCategory(Sequence):
+    _fields = [
+        ('type', ObjectIdentifier, {'tag_type': 'implicit', 'tag': 0}),
+        ('value', Any, {'tag_type': 'implicit', 'tag': 1}),
+    ]
+
+
+class SetOfSecurityCategory(SetOf):
+    _child_spec = SecurityCategory
+
+
+class Clearance(Sequence):
+    _fields = [
+        ('policy_id', ObjectIdentifier, {'tag_type': 'implicit', 'tag': 0}),
+        ('class_list', ClassList, {'tag_type': 'implicit', 'tag': 1, 'default': 'unclassified'}),
+        ('security_categories', SetOfSecurityCategory, {'tag_type': 'implicit', 'tag': 2, 'optional': True}),
+    ]
+
+
+class SetOfClearance(SetOf):
+    _child_spec = Clearance
+
+
+class BigTime(Sequence):
+    _fields = [
+        ('major', Integer),
+        ('fractional_seconds', Integer),
+        ('sign', Integer, {'optional': True}),
+    ]
+
+
+class LeapData(Sequence):
+    _fields = [
+        ('leap_time', BigTime),
+        ('action', Integer),
+    ]
+
+
+class SetOfLeapData(SetOf):
+    _child_spec = LeapData
+
+
+class TimingMetrics(Sequence):
+    _fields = [
+        ('ntp_time', BigTime),
+        ('offset', BigTime),
+        ('delay', BigTime),
+        ('expiration', BigTime),
+        ('leap_event', SetOfLeapData, {'optional': True}),
+    ]
+
+
+class SetOfTimingMetrics(SetOf):
+    _child_spec = TimingMetrics
+
+
+class TimingPolicy(Sequence):
+    _fields = [
+        ('policy_id', SequenceOf, {'spec': ObjectIdentifier}),
+        ('max_offset', BigTime, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+        ('max_delay', BigTime, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
+    ]
+
+
+class SetOfTimingPolicy(SetOf):
+    _child_spec = TimingPolicy
+
+
+class AttCertAttributeType(ObjectIdentifier):
+    _map = {
+        '1.3.6.1.5.5.7.10.1': 'authentication_info',
+        '1.3.6.1.5.5.7.10.2': 'access_identity',
+        '1.3.6.1.5.5.7.10.3': 'charging_identity',
+        '1.3.6.1.5.5.7.10.4': 'group',
+        '2.5.4.72': 'role',
+        '2.5.4.55': 'clearance',
+        '1.3.6.1.4.1.601.10.4.1': 'timing_metrics',
+        '1.3.6.1.4.1.601.10.4.2': 'timing_policy',
+    }
+
+
+class AttCertAttribute(Sequence):
+    _fields = [
+        ('type', AttCertAttributeType),
+        ('values', None),
+    ]
+
+    _oid_specs = {
+        'authentication_info': SetOfSvceAuthInfo,
+        'access_identity': SetOfSvceAuthInfo,
+        'charging_identity': SetOfIetfAttrSyntax,
+        'group': SetOfIetfAttrSyntax,
+        'role': SetOfRoleSyntax,
+        'clearance': SetOfClearance,
+        'timing_metrics': SetOfTimingMetrics,
+        'timing_policy': SetOfTimingPolicy,
+    }
+
+    def _values_spec(self):
+        spec = self._oid_specs.get(self['type'].native, SetOfAny)
+        if spec == SetOfAny:
+            print('UNKNOWN OID: %s' % self['type'].native)
+        return spec
+
+    _spec_callbacks = {
+        'values': _values_spec
+    }
+
+
+class AttCertAttributes(SequenceOf):
+    _child_spec = AttCertAttribute
+
+
 class AttributeCertificateInfoV2(Sequence):
     _fields = [
         ('version', AttCertVersion),
@@ -255,7 +427,7 @@ class AttributeCertificateInfoV2(Sequence):
         ('signature', SignedDigestAlgorithm),
         ('serial_number', Integer),
         ('att_cert_validity_period', AttCertValidityPeriod),
-        ('attributes', Attributes),
+        ('attributes', AttCertAttributes),
         ('issuer_unique_id', OctetBitString, {'optional': True}),
         ('extensions', Extensions, {'optional': True}),
     ]
