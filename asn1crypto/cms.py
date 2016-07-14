@@ -94,6 +94,8 @@ class CMSAttributeType(ObjectIdentifier):
         '1.2.840.113549.1.9.4': 'message_digest',
         '1.2.840.113549.1.9.5': 'signing_time',
         '1.2.840.113549.1.9.6': 'counter_signature',
+        # https://tools.ietf.org/html/rfc3161#page-20
+        '1.2.840.113549.1.9.16.2.14': 'signature_time_stamp_token',
     }
 
 
@@ -296,6 +298,10 @@ class ContentInfo(Sequence):
 
     _oid_pair = ('content_type', 'content')
     _oid_specs = {}
+
+
+class SetOfContentInfo(SetOf):
+    _child_spec = ContentInfo
 
 
 class EncapsulatedContentInfo(Sequence):
@@ -707,4 +713,5 @@ CMSAttribute._oid_specs = {
     'message_digest': SetOfOctetString,
     'signing_time': SetOfTime,
     'counter_signature': SignerInfos,
+    'signature_time_stamp_token': SetOfContentInfo,
 }
