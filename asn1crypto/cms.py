@@ -434,6 +434,9 @@ class AttributeCertificateInfoV2(Sequence):
 
 
 class AttributeCertificateV2(Sequence):
+    # Handle the situation where a V2 cert is encoded as V1
+    _bad_tag = 1
+
     _fields = [
         ('ac_info', AttributeCertificateInfoV2),
         ('signature_algorithm', SignedDigestAlgorithm),
@@ -456,6 +459,31 @@ class CertificateChoices(Choice):
         ('v2_attr_cert', AttributeCertificateV2, {'tag_type': 'implicit', 'tag': 2}),
         ('other', OtherCertificateFormat, {'tag_type': 'implicit', 'tag': 3}),
     ]
+
+    def validate(self, class_, tag, contents):
+        """
+        Ensures that the class and tag specified exist as an alternative. This
+        custom version fixes parsing broken encodings there a V2 attribute
+        # certificate is encoded as a V1
+
+        :param class_:
+            The integer class_ from the encoded value header
+
+        :param tag:
+            The integer tag from the encoded value header
+
+        :param contents:
+            A byte string of the contents of the value - used when the object
+            is explicitly tagged
+
+        :raises:
+            ValueError - when value is not a valid alternative
+        """
+
+        super(CertificateChoices, self).validate(class_, tag, contents)
+        if self._choice == 2:
+            if AttCertVersion.load(Sequence.load(contents)[0].dump()).native == 'v2':
+                self._choice = 3
 
 
 class CertificateSet(SetOf):
