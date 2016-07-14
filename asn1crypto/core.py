@@ -3227,9 +3227,9 @@ class Sequence(Asn1Value):
             return None
 
         if self._native is None:
+            if self.children is None:
+                self._parse_children(recurse=True)
             try:
-                if self.children is None:
-                    self._parse_children(recurse=True)
                 self._native = OrderedDict()
                 for index, child in enumerate(self.children):
                     if child.__class__ == tuple:
@@ -3702,9 +3702,9 @@ class SequenceOf(Asn1Value):
             return None
 
         if self._native is None:
+            if self.children is None:
+                self._parse_children(recurse=True)
             try:
-                if self.children is None:
-                    self._parse_children(recurse=True)
                 self._native = [child.native for child in self]
             except (ValueError, TypeError) as e:
                 args = e.args[1:]
