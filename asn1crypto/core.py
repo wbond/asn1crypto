@@ -3227,18 +3227,23 @@ class Sequence(Asn1Value):
             return None
 
         if self._native is None:
-            if self.children is None:
-                self._parse_children(recurse=True)
-            self._native = OrderedDict()
-            for index, child in enumerate(self.children):
-                if child.__class__ == tuple:
-                    child = _build(*child)
-                    self.children[index] = child
-                try:
-                    name = self._fields[index][0]
-                except (IndexError):
-                    name = str_cls(index)
-                self._native[name] = child.native
+            try:
+                if self.children is None:
+                    self._parse_children(recurse=True)
+                self._native = OrderedDict()
+                for index, child in enumerate(self.children):
+                    if child.__class__ == tuple:
+                        child = _build(*child)
+                        self.children[index] = child
+                    try:
+                        name = self._fields[index][0]
+                    except (IndexError):
+                        name = str_cls(index)
+                    self._native[name] = child.native
+            except (ValueError, TypeError) as e:
+                args = e.args[1:]
+                e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
+                raise e
         return self._native
 
     def _copy(self, other, copy_func):
@@ -3697,9 +3702,14 @@ class SequenceOf(Asn1Value):
             return None
 
         if self._native is None:
-            if self.children is None:
-                self._parse_children(recurse=True)
-            self._native = [child.native for child in self]
+            try:
+                if self.children is None:
+                    self._parse_children(recurse=True)
+                self._native = [child.native for child in self]
+            except (ValueError, TypeError) as e:
+                args = e.args[1:]
+                e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
+                raise e
         return self._native
 
     def _copy(self, other, copy_func):
