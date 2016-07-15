@@ -34,6 +34,7 @@ THE SOFTWARE.
 from __future__ import unicode_literals, division, absolute_import, print_function
 
 import math
+import platform
 
 from ._ffi import (
     buffer_from_bytes,
@@ -44,13 +45,13 @@ from ._ffi import (
 )
 from .util import int_to_bytes, int_from_bytes
 
-
-# First try to use ctypes or cffi with OpenSSL for better performance
+# First try to use ctypes with OpenSSL for better performance
 try:
-    try:
-        from ._perf._big_num_cffi import libcrypto
-    except (FFIEngineError) as e:
-        from ._perf._big_num_ctypes import libcrypto
+    # Some versions of PyPy have segfault issues, so we just punt on PyPy
+    if platform.python_implementation() == 'PyPy':
+        raise EnvironmentError()
+
+    from ._perf._big_num_ctypes import libcrypto
 
     def inverse_mod(a, p):
         """
@@ -97,7 +98,7 @@ try:
         return result
 
 # If there was an issue using OpenSSL, we fall back to pure python
-except (LibraryNotFoundError, FFIEngineError):
+except (LibraryNotFoundError, FFIEngineError, EnvironmentError):
 
     def inverse_mod(a, p):
         """
