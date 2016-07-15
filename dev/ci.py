@@ -4,7 +4,8 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import sys
 
 from .tests import run as run_tests
-from .lint import run as run_lint
+if sys.version_info > (2, 6):
+    from .lint import run as run_lint
 
 
 def run():
@@ -16,8 +17,11 @@ def run():
     """
 
     print('Python ' + sys.version.replace('\n', ''))
-    print('')
-    lint_result = run_lint()
+    if sys.version_info > (2, 6):
+        print('')
+        lint_result = run_lint()
+    else:
+        lint_result = True
     print('\nRunning tests')
     sys.stdout.flush()
     tests_result = run_tests()

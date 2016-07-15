@@ -54,10 +54,10 @@ install:
                 export PYTHON_BIN=/usr/local/bin/python3;
             else
                 if [ "$TRAVIS_PYTHON_VERSION" == "2.7" ]; then
-                    sudo /usr/bin/easy_install-2.7 flake8==2.6.2;
+                    curl --silent --show-error https://bootstrap.pypa.io/get-pip.py | sudo /usr/bin/python2.7;
+                    sudo /usr/bin/python2.7 -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'flake8'])";
                     export PYTHON_BIN=/usr/bin/python2.7;
                 else
-                    sudo /usr/bin/easy_install-2.6 flake8==2.6.2;
                     export PYTHON_BIN=/usr/bin/python2.6;
                 fi
             fi
