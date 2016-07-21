@@ -23,9 +23,11 @@ from .core import (
     Any,
     Choice,
     Integer,
+    Null,
     ObjectIdentifier,
     OctetString,
     Sequence,
+    Void,
 )
 
 
@@ -216,10 +218,40 @@ class SignedDigestAlgorithm(Sequence):
         ('parameters', Any, {'optional': True}),
     ]
 
-    _oid_pair = ('algorithm', 'parameters')
-    _oid_specs = {
-        'rsa_pss': RSASSAPSSParams,
+    # The following attribute, plus the parameters spec callback and custom
+    # __setitem__ are all to handle a situation where parameters should not be
+    # optional and must be Null for certain OIDs. More info at
+    # https://tools.ietf.org/html/rfc4055#page-15
+    _null_algos = set(['sha224_rsa', 'sha256_rsa', 'sha384_rsa', 'sha512_rsa'])
+
+    def _parameters_spec(self):
+        algo = self['algorithm'].native
+        if algo == 'rsassa_pss':
+            return RSASSAPSSParams
+        if algo in self._null_algos:
+            return Null
+        return None
+
+    _spec_callbacks = {
+        'parameters': _parameters_spec
     }
+
+    # We have to override this since the spec callback uses the value of
+    # algorithm to determine the parameter spec, however default values are
+    # assigned before setting a field, so a default value can't be based on
+    # another field value (unless it is a default also). Thus we have to
+    # manually check to see if the algorithm was set and parameters is unset,
+    # and then fix the value as appropriate.
+    def __setitem__(self, key, value):
+        res = super(SignedDigestAlgorithm, self).__setitem__(key, value)
+        if key != 'algorithm':
+            return res
+        if self['algorithm'].native not in self._null_algos:
+            return res
+        if self['parameters'].__class__ != Void:
+            return res
+        self['parameters'] = Null()
+        return res
 
     @property
     def signature_algo(self):

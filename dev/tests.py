@@ -4,6 +4,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import unittest
 import re
 
+from tests.test_algos import AlgoTests
 from tests.test_cms import CMSTests
 from tests.test_crl import CRLTests
 from tests.test_csr import CSRTests
@@ -15,7 +16,18 @@ from tests.test_x509 import X509Tests
 from tests.test_core import CoreTests
 
 
-test_classes = [CMSTests, CRLTests, CSRTests, KeysTests, OCSPTests, PEMTests, TSPTests, X509Tests, CoreTests]
+test_classes = [
+    AlgoTests,
+    CMSTests,
+    CRLTests,
+    CSRTests,
+    KeysTests,
+    OCSPTests,
+    PEMTests,
+    TSPTests,
+    X509Tests,
+    CoreTests
+]
 
 
 def make_suite():
