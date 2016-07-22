@@ -365,8 +365,8 @@ class X509Tests(unittest.TestCase):
                 'common_name': 'Will Bond'
             }
         )
-        self.assertIsInstance(utf8_name.chosen[0][2]['value'].chosen, core.UTF8String)
-        self.assertEqual('common_name', utf8_name.chosen[0][2]['type'].native)
+        self.assertIsInstance(utf8_name.chosen[2][0]['value'].chosen, core.UTF8String)
+        self.assertEqual('common_name', utf8_name.chosen[2][0]['type'].native)
         printable_name = x509.Name.build(
             {
                 'country_name': 'US',
@@ -375,8 +375,8 @@ class X509Tests(unittest.TestCase):
             },
             use_printable=True
         )
-        self.assertIsInstance(printable_name.chosen[0][2]['value'].chosen, core.PrintableString)
-        self.assertEqual('common_name', printable_name.chosen[0][2]['type'].native)
+        self.assertIsInstance(printable_name.chosen[2][0]['value'].chosen, core.PrintableString)
+        self.assertEqual('common_name', printable_name.chosen[2][0]['type'].native)
 
     def test_v1_cert(self):
         cert = self._load_cert('chromium/ndn.ca.crt')
@@ -2590,6 +2590,62 @@ class X509Tests(unittest.TestCase):
     def self_signed(self, relative_path, self_signed):
         cert = self._load_cert(relative_path)
         self.assertEqual(self_signed, cert.self_signed)
+
+    @staticmethod
+    def cert_list():
+        return (
+            (
+                'keys/test-der.crt',
+            ),
+            (
+                'keys/test-inter-der.crt',
+            ),
+            (
+                'keys/test-third-der.crt',
+            ),
+            (
+                'geotrust_certs/GeoTrust_Universal_CA.crt',
+            ),
+            (
+                'geotrust_certs/GeoTrust_Primary_CA.crt',
+            ),
+            (
+                'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
+            ),
+            (
+                'geotrust_certs/codex.crt',
+            ),
+            (
+                'lets_encrypt/isrgrootx1.pem',
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx1.pem',
+            ),
+            (
+                'lets_encrypt/letsencryptauthorityx2.pem',
+            ),
+            (
+                'globalsign_example_keys/IssuingCA-der.cer',
+            ),
+            (
+                'globalsign_example_keys/rootCA.cer',
+            ),
+            (
+                'globalsign_example_keys/SSL1.cer',
+            ),
+            (
+                'globalsign_example_keys/SSL2.cer',
+            ),
+            (
+                'globalsign_example_keys/SSL3.cer',
+            ),
+        )
+
+    @data('cert_list')
+    def name_is_rdn_squence_of_single_child_sets(self, relative_path):
+        cert = self._load_cert(relative_path)
+        for child in cert.subject.chosen:
+            self.assertEqual(1, len(child))
 
     def test_parse_certificate(self):
         cert = self._load_cert('keys/test-der.crt')

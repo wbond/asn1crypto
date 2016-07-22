@@ -868,7 +868,7 @@ class Name(Choice):
             An x509.Name object
         """
 
-        attributes = []
+        rdns = []
         if not use_printable:
             encoding_name = 'utf8_string'
             encoding_class = UTF8String
@@ -895,14 +895,14 @@ class Name(Choice):
                     value=encoding_class(name_dict[attribute_name])
                 )
 
-            attributes.append(NameTypeAndValue({
-                'type': attribute_name,
-                'value': value
-            }))
+            rdns.append(RelativeDistinguishedName([
+                NameTypeAndValue({
+                    'type': attribute_name,
+                    'value': value
+                })
+            ]))
 
-        rdn = RelativeDistinguishedName(attributes)
-        sequence = RDNSequence([rdn])
-        return cls(name='', value=sequence)
+        return cls(name='', value=RDNSequence(rdns))
 
     @property
     def hashable(self):
