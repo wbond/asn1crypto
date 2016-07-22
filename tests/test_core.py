@@ -78,6 +78,17 @@ class SeqChoice(core.Choice):
     ]
 
 
+class SetTest(core.Set):
+    _fields = [
+        ('two', core.Integer, {'tag_type': 'implicit', 'tag': 2}),
+        ('one', core.Integer, {'tag_type': 'implicit', 'tag': 1}),
+    ]
+
+
+class SetOfTest(core.SetOf):
+    _child_spec = core.Integer
+
+
 class ConcatTest(core.Concat):
     _child_specs = [Seq, core.Integer]
 
@@ -368,3 +379,11 @@ class CoreTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             MyOids.unmap('no_such_mapping')
+
+    def test_dump_set(self):
+        st = SetTest({'two': 2, 'one': 1})
+        self.assertEqual(b'1\x06\x81\x01\x01\x82\x01\x02', st.dump())
+
+    def test_dump_set_of(self):
+        st = SetOfTest([3, 2, 1])
+        self.assertEqual(b'1\x09\x02\x01\x01\x02\x01\x02\x02\x01\x03', st.dump())

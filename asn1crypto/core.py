@@ -3796,6 +3796,7 @@ class Set(Sequence):
         cls = self.__class__
         cls._field_map = {}
         cls._field_ids = {}
+        cls._precomputed_specs = []
         for index, field in enumerate(cls._fields):
             if len(field) < 3:
                 field = field + ({},)
@@ -3805,6 +3806,14 @@ class Set(Sequence):
 
         if cls._oid_pair is not None:
             cls._oid_nums = (cls._field_map[cls._oid_pair[0]], cls._field_map[cls._oid_pair[1]])
+
+        for index, field in enumerate(cls._fields):
+            has_callback = cls._spec_callbacks is not None and field[0] in cls._spec_callbacks
+            is_mapped_oid = cls._oid_nums is not None and cls._oid_nums[1] == index
+            if has_callback or is_mapped_oid:
+                cls._precomputed_specs.append(None)
+            else:
+                cls._precomputed_specs.append((field[0], field[1], field[1], field[2], None))
 
     def _parse_children(self, recurse=False):
         """
@@ -3818,6 +3827,18 @@ class Set(Sequence):
         :raises:
             ValueError - when an error occurs parsing child objects
         """
+
+        if self._contents is None:
+            if self._fields:
+                self.children = [VOID] * len(self._fields)
+                for index, (_, _, params) in enumerate(self._fields):
+                    if 'default' in params:
+                        if cls._precomputed_specs[index]:
+                            field_name, field_spec, value_spec, field_params, _ = cls._precomputed_specs[index]
+                        else:
+                            field_name, field_spec, value_spec, field_params, _ = self._determine_spec(index)
+                        self.children[index] = self._make_value(field_name, field_spec, value_spec, field_params, None)
+            return
 
         try:
             child_map = {}
@@ -3900,6 +3921,39 @@ class Set(Sequence):
             e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
             raise e
 
+    def _set_contents(self, force=False):
+        """
+        Encodes all child objects into the contents for this object.
+
+        This method is overridden because a Set needs to be encoded by
+        removing defaulted fields and then sorting the fields by tag.
+
+        :param force:
+            Ensure all contents are in DER format instead of possibly using
+            cached BER-encoded data
+        """
+
+        if self.children is None:
+            self._parse_children()
+
+        child_tag_encodings = []
+        for index, child in enumerate(self.children):
+            child_encoding = child.dump(force=force)
+
+            # Skip encoding defaulted children
+            name, spec, field_params = self._fields[index]
+            if 'default' in field_params:
+                if spec(**field_params).dump() == child_encoding:
+                    continue
+
+            child_tag_encodings.append((child.tag, child_encoding))
+        child_tag_encodings.sort(key=lambda ct: ct[0])
+
+        self._contents = b''.join([ct[1] for ct in child_tag_encodings])
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
+
 
 class SetOf(SequenceOf):
     """
@@ -3908,6 +3962,30 @@ class SetOf(SequenceOf):
     """
 
     tag = 17
+
+    def _set_contents(self, force=False):
+        """
+        Encodes all child objects into the contents for this object.
+
+        This method is overridden because a SetOf needs to be encoded by
+        sorting the child encodings.
+
+        :param force:
+            Ensure all contents are in DER format instead of possibly using
+            cached BER-encoded data
+        """
+
+        if self.children is None:
+            self._parse_children()
+
+        child_encodings = []
+        for child in self:
+            child_encodings.append(child.dump(force=force))
+
+        self._contents = b''.join(sorted(child_encodings))
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
 
 
 class EmbeddedPdv(Sequence):
