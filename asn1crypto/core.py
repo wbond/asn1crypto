@@ -3828,6 +3828,7 @@ class Set(Sequence):
             ValueError - when an error occurs parsing child objects
         """
 
+        cls = self.__class__
         if self._contents is None:
             if self._fields:
                 self.children = [VOID] * len(self._fields)
@@ -3862,20 +3863,18 @@ class Set(Sequence):
                         METHOD_NUM_TO_NAME_MAP.get(parts[1]),
                         parts[2],
                     ))
-                _, spec, field_params = self._fields[field]
-                parse_as = None
 
-                if self._oid_nums is not None and self._oid_nums[1] == field:
-                    oid = self.children[self._oid_nums[0]].native
-                    if isinstance(spec, Any):
-                        spec = self._oid_specs[oid]
-                    else:
-                        parse_as = self._oid_specs[oid]
+                _, field_spec, value_spec, field_params, spec_override = (
+                    cls._precomputed_specs[field] or self._determine_spec(field))
 
-                if parse_as:
-                    child = parts + (spec, field_params, parse_as)
+                if field_spec is None or (spec_override and issubclass(field_spec, Any)):
+                    field_spec = value_spec
+                    spec_override = None
+
+                if spec_override:
+                    child = parts + (field_spec, field_params, value_spec)
                 else:
-                    child = parts + (spec, field_params)
+                    child = parts + (field_spec, field_params)
 
                 if recurse:
                     child = _build(*child)
@@ -3890,7 +3889,13 @@ class Set(Sequence):
             for index in range(0, total_fields):
                 if index in child_map:
                     continue
-                name, spec, field_params = self._fields[index]
+
+                name, field_spec, value_spec, field_params, spec_override = (
+                    cls._precomputed_specs[index] or self._determine_spec(index))
+
+                if field_spec is None or (spec_override and issubclass(field_spec, Any)):
+                    field_spec = value_spec
+                    spec_override = None
 
                 missing = False
 
@@ -3901,7 +3906,7 @@ class Set(Sequence):
                 elif 'optional' in field_params:
                     child_map[index] = VOID
                 elif 'default' in field_params:
-                    child_map[index] = spec(**field_params)
+                    child_map[index] = field_spec(**field_params)
 
                 if missing:
                     raise ValueError(unwrap(
