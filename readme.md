@@ -108,7 +108,7 @@ faster to an order of magnitude of more.
 
 ## Dependencies
 
-Python 2.6, 2.7, 3.2, 3.3, 3.4, 3.5, pypy or pypy3. *No third-party packages
+Python 2.6, 2.7, 3.2, 3.3, 3.4, 3.5 or pypy. *No third-party packages
 required.*
 
 ## Installation
