@@ -1,5 +1,22 @@
 # changelog
 
+## 0.18.1
+
+ - Fixed DER encoding of `core.Set` and `core.SetOf`
+ - Fixed a bug in `x509.Name.build()` that could generate invalid DER encoding
+ - Improved exception messages when parsing nested structures via the `.native`
+   attribute
+ - `algos.SignedDigestAlgorithm` now ensures the `parameters` are set to
+   `Null` when `algorithm` is `sha224_rsa`, `sha256_rsa`, `sha384_rsa` or
+   `sha512_rsa`, per RFC 4055
+ - Corrected the definition of `pdf.AdobeTimestamp` to mark the
+   `requires_auth` field as optional
+ - Add support for the OID `1.2.840.113549.1.9.16.2.14` to
+   `cms.CMSAttributeType`
+ - Improve attribute support for `cms.AttributeCertificateV2`
+ - Handle `cms.AttributeCertificateV2` when incorrectly tagged as
+   `cms.AttributeCertificateV1` in `cms.CertificateChoices`
+
 ## 0.18.0
 
  - Improved general parsing performance by 10-15%
