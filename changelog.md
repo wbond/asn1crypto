@@ -1,5 +1,9 @@
 # changelog
 
+## 0.18.2
+
+ - Allow `_perf` submodule to be removed from source tree when embedding
+
 ## 0.18.1
 
  - Fixed DER encoding of `core.Set` and `core.SetOf`
