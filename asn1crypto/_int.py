@@ -98,7 +98,7 @@ try:
         return result
 
 # If there was an issue using OpenSSL, we fall back to pure python
-except (LibraryNotFoundError, FFIEngineError, EnvironmentError):
+except (LibraryNotFoundError, FFIEngineError, EnvironmentError, ImportError):
 
     def inverse_mod(a, p):
         """
