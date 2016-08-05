@@ -557,6 +557,8 @@ class PrivateKeyInfo(Sequence):
         elif algorithm == 'ec':
             if not isinstance(private_key, ECPrivateKey):
                 private_key = ECPrivateKey.load(private_key)
+            else:
+                private_key = private_key.copy()
             params = private_key['parameters']
             del private_key['parameters']
         else:
