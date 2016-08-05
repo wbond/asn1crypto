@@ -1982,8 +1982,7 @@ class IntegerOctetString(Primitive):
             ))
 
         self._native = value
-        # Set the unused bits to 0
-        self.contents = int_to_bytes(value, signed=True)
+        self.contents = int_to_bytes(value, signed=False)
         self._header = None
         if self._trailer != b'':
             self._trailer = b''
