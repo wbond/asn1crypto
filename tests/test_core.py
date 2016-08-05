@@ -213,17 +213,17 @@ class CoreTests(unittest.TestCase):
         return (
             (
                 (0, 1, 1),
-                b'\x03\x02\x00\x60',
+                b'\x03\x02\x05\x60',
                 set(['one', 'two'])
             ),
             (
                 (0,),
-                b'\x03\x02\x00\x00',
+                b'\x03\x02\x07\x00',
                 set()
             ),
             (
                 set(['one', 'two']),
-                b'\x03\x02\x00\x60',
+                b'\x03\x02\x05\x60',
                 set(['one', 'two'])
             )
         )

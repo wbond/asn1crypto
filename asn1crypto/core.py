@@ -1626,7 +1626,16 @@ class BitString(Primitive, ValueMap, object):
                     size,
                     len(value)
                 ))
-            value += '0' * (size - len(value))
+            # A NamedBitList must have trailing zero bit truncated. See
+            # https://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
+            # section 11.2,
+            # https://tools.ietf.org/html/rfc5280#page-134 and
+            # https://www.ietf.org/mail-archive/web/pkix/current/msg10443.html
+            value = value.rstrip('0')
+            size = len(value)
+            if size == 0:
+                value = '0'
+                size = 1
         else:
             size = len(value)
 
