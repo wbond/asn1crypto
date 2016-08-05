@@ -1,5 +1,18 @@
 # changelog
 
+## 0.18.3
+
+ - Fixed DER encoding of `core.BitString` when a `_map` is specified (i.e. a
+   "named bit list") to omit trailing zero bits. This fixes compliance of
+   various `x509` structures with RFC 5280.
+ - Corrected a side effect in `keys.PrivateKeyInfo.wrap()` that would cause the
+   original `keys.ECPrivateKey` structure to become corrupt
+ - `core.IntegerOctetString` now correctly encodes the integer as an unsigned
+   value when converting to bytes. Previously decoding was unsigned, but
+   encoding was signed.
+ - Fix `util.int_from_bytes()` on Python 2 to return `0` from an empty byte
+   string
+
 ## 0.18.2
 
  - Allow `_perf` submodule to be removed from source tree when embedding
