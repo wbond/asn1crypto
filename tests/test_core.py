@@ -218,7 +218,7 @@ class CoreTests(unittest.TestCase):
             ),
             (
                 (0,),
-                b'\x03\x02\x07\x00',
+                b'\x03\x01\x00',
                 set()
             ),
             (

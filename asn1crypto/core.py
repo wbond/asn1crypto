@@ -1616,14 +1616,13 @@ class BitString(Primitive, ValueMap, object):
             ))
 
         if self._map is not None:
-            size = self._size
-            if len(value) > size:
+            if len(value) > self._size:
                 raise ValueError(unwrap(
                     '''
                     %s value must be at most %s bits long, specified was %s long
                     ''',
                     type_name(self),
-                    size,
+                    self._size,
                     len(value)
                 ))
             # A NamedBitList must have trailing zero bit truncated. See
@@ -1632,12 +1631,7 @@ class BitString(Primitive, ValueMap, object):
             # https://tools.ietf.org/html/rfc5280#page-134 and
             # https://www.ietf.org/mail-archive/web/pkix/current/msg10443.html
             value = value.rstrip('0')
-            size = len(value)
-            if size == 0:
-                value = '0'
-                size = 1
-        else:
-            size = len(value)
+        size = len(value)
 
         size_mod = size % 8
         extra_bits = 0
