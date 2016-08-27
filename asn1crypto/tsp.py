@@ -278,7 +278,7 @@ class SetOfSigningCertificates(SetOf):
 
 class ESSCertIDv2(Sequence):
     _fields = [
-        ('hash_algorithm', DigestAlgorithm, {'default': 'sha256'}),
+        ('hash_algorithm', DigestAlgorithm, {'default': {'algorithm': 'sha256'}}),
         ('cert_hash', OctetString),
         ('issuer_serial', IssuerSerial, {'optional': True}),
     ]

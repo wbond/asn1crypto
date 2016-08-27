@@ -26,4 +26,4 @@ class AlgoTests(unittest.TestCase):
 
     def test_signed_digest_parameters(self):
         sha256_rsa = algos.SignedDigestAlgorithm({'algorithm': 'sha256_rsa'})
-        self.assertEqual(core.Null,sha256_rsa['parameters'].__class__)
+        self.assertEqual(core.Null, sha256_rsa['parameters'].__class__)
