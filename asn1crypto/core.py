@@ -421,7 +421,10 @@ class Asn1Value(object):
         elif hasattr(self, 'chosen'):
             self.chosen.debug(nest_level + 2)
         else:
-            print('%s    Native: %s' % (prefix, self.native))
+            if py2 and isinstance(self.native, byte_cls):
+                print('%s    Native: b%s' % (prefix, repr(self.native)))
+            else:
+                print('%s    Native: %s' % (prefix, self.native))
 
     def dump(self, force=False):
         """
