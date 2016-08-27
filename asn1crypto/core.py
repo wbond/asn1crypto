@@ -2629,8 +2629,10 @@ class Sequence(Asn1Value):
                 # before the OID field, resulting in invalid value object creation.
                 if self._fields:
                     keys = [info[0] for info in self._fields]
+                    unused_keys = set(value.keys())
                 else:
                     keys = value.keys()
+                    unused_keys = set(keys)
 
                 for key in keys:
                     # If we are setting defaults, but a real value has already
@@ -2638,10 +2640,23 @@ class Sequence(Asn1Value):
                     if check_existing:
                         index = self._field_map[key]
                         if index < len(self.children) and self.children[index] is not VOID:
+                            if key in unused_keys:
+                                unused_keys.remove(key)
                             continue
 
                     if key in value:
                         self.__setitem__(key, value[key])
+                        unused_keys.remove(key)
+
+                if len(unused_keys):
+                    raise ValueError(unwrap(
+                        '''
+                        One or more unknown fields was passed to the constructor
+                        of %s: %s
+                        ''',
+                        type_name(self),
+                        ', '.join(sorted(list(unused_keys)))
+                    ))
 
             except (ValueError, TypeError) as e:
                 args = e.args[1:]
