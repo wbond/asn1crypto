@@ -16,6 +16,48 @@ fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 class CMSTests(unittest.TestCase):
 
+    def test_create_content_info_data(self):
+        data = cms.SignedData({
+            'version': 'v1',
+            'encap_content_info': {
+                'content_type': 'data',
+                'content': b'Hello',
+            }
+        })
+        info = data['encap_content_info']
+
+        self.assertEqual('v1', data['version'].native)
+        self.assertEqual(
+            'data',
+            info['content_type'].native
+        )
+        self.assertEqual(
+            b'Hello',
+            info['content'].native
+        )
+        self.assertIsInstance(info, cms.ContentInfo)
+
+    def test_create_content_info_data_v2(self):
+        data = cms.SignedData({
+            'version': 'v2',
+            'encap_content_info': {
+                'content_type': 'data',
+                'content': b'Hello',
+            }
+        })
+        info = data['encap_content_info']
+
+        self.assertEqual('v2', data['version'].native)
+        self.assertEqual(
+            'data',
+            info['content_type'].native
+        )
+        self.assertEqual(
+            b'Hello',
+            info['content'].native
+        )
+        self.assertIsInstance(info, cms.EncapsulatedContentInfo)
+
     def test_parse_content_info_data(self):
         with open(os.path.join(fixtures_dir, 'message.der'), 'rb') as f:
             info = cms.ContentInfo.load(f.read())

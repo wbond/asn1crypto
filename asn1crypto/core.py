@@ -2975,6 +2975,11 @@ class Sequence(Asn1Value):
                     if value_spec is None:
                         value_spec = field_spec
                         spec_override = None
+                # When no field spec is specified, use a single return value as that
+                elif field_spec is None:
+                    field_spec = spec_override
+                    value_spec = field_spec
+                    spec_override = None
                 else:
                     value_spec = spec_override
 
