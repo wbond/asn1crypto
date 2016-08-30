@@ -25,6 +25,7 @@ except (ImportError):
     zlib = None
 
 from .algos import (
+    _ForceNullParameters,
     DigestAlgorithm,
     EncryptionAlgorithm,
     HmacAlgorithm,
@@ -645,7 +646,7 @@ class KeyEncryptionAlgorithmId(ObjectIdentifier):
     }
 
 
-class KeyEncryptionAlgorithm(Sequence):
+class KeyEncryptionAlgorithm(_ForceNullParameters, Sequence):
     _fields = [
         ('algorithm', KeyEncryptionAlgorithmId),
         ('parameters', Any, {'optional': True}),

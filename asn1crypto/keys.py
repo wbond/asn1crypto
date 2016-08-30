@@ -30,7 +30,7 @@ from ._elliptic_curve import (
 )
 from ._errors import unwrap
 from ._types import type_name, str_cls, byte_cls
-from .algos import DigestAlgorithm, EncryptionAlgorithm
+from .algos import _ForceNullParameters, DigestAlgorithm, EncryptionAlgorithm
 from .core import (
     Any,
     Asn1Value,
@@ -470,7 +470,7 @@ class PrivateKeyAlgorithmId(ObjectIdentifier):
     }
 
 
-class PrivateKeyAlgorithm(Sequence):
+class PrivateKeyAlgorithm(_ForceNullParameters, Sequence):
     """
     Original Name: PrivateKeyAlgorithmIdentifier
     Source: https://tools.ietf.org/html/rfc5208#page-3
@@ -483,7 +483,6 @@ class PrivateKeyAlgorithm(Sequence):
 
     _oid_pair = ('algorithm', 'parameters')
     _oid_specs = {
-        'rsa': Null,
         'dsa': DSAParams,
         'ec': ECDomainParameters,
     }
@@ -940,7 +939,7 @@ class PublicKeyAlgorithmId(ObjectIdentifier):
     }
 
 
-class PublicKeyAlgorithm(Sequence):
+class PublicKeyAlgorithm(_ForceNullParameters, Sequence):
     """
     Original Name: AlgorithmIdentifier
     Source: https://tools.ietf.org/html/rfc5280#page-18
@@ -953,7 +952,6 @@ class PublicKeyAlgorithm(Sequence):
 
     _oid_pair = ('algorithm', 'parameters')
     _oid_specs = {
-        'rsa': Null,
         'dsa': DSAParams,
         'ec': ECDomainParameters,
         'dh': DomainParameters,
