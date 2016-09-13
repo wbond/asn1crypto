@@ -1,5 +1,9 @@
 # changelog
 
+## 0.18.5
+
+ - Don't fail importing if `ctypes` or `_ctypes` is not available
+
 ## 0.18.4
 
  - `core.Sequence` will now raise an exception when an unknown field is provided

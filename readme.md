@@ -104,7 +104,7 @@ faster to an order of magnitude of more.
 
 ## Current Release
 
-0.18.4 - [changelog](changelog.md)
+0.18.5 - [changelog](changelog.md)
 
 ## Dependencies
 
