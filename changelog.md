@@ -1,5 +1,16 @@
 # changelog
 
+## 0.18.4
+
+ - `core.Sequence` will now raise an exception when an unknown field is provided
+ - Prevent `UnicodeDecodeError` on Python 2 when calling
+   `core.OctetString.debug()`
+ - Corrected the default value for the `hash_algorithm` field of
+   `tsp.ESSCertIDv2`
+ - Fixed a bug constructing a `cms.SignedData` object
+ - Ensure that specific RSA OIDs are always paired with `parameters` set to
+   `core.Null`
+
 ## 0.18.3
 
  - Fixed DER encoding of `core.BitString` when a `_map` is specified (i.e. a
