@@ -5,7 +5,7 @@ import unittest
 import os
 from datetime import datetime
 
-from asn1crypto import cms, util
+from asn1crypto import cms, util, core
 from ._unittest_compat import patch
 
 patch()
@@ -107,6 +107,40 @@ class CMSTests(unittest.TestCase):
             b'This is the message to encapsulate in PKCS#7/CMS\n',
             compressed_data.decompressed
         )
+
+    def test_parse_content_info_compressed_data2(self):
+        with open(os.path.join(fixtures_dir, 'meca2_compressed.der'), 'rb') as f:
+            info = cms.ContentInfo.load(f.read())
+
+        compressed_data = info['content']
+
+        self.assertEqual(
+            'compressed_data',
+            info['content_type'].native
+        )
+        self.assertEqual(
+            'v0',
+            compressed_data['version'].native
+        )
+        self.assertEqual(
+            'zlib',
+            compressed_data['compression_algorithm']['algorithm'].native
+        )
+        self.assertEqual(
+            None,
+            compressed_data['compression_algorithm']['parameters'].native
+        )
+        self.assertEqual(
+            'data',
+            compressed_data['encap_content_info']['content_type'].native
+        )
+        encap_data = compressed_data['encap_content_info']['content'].native
+        read = 0
+        chunks = 0
+        while read < len(encap_data):
+            value, read = core._parse_build(encap_data, read)
+            chunks += 1
+        self.assertEqual(10, chunks)
 
     def test_parse_content_info_digested_data(self):
         with open(os.path.join(fixtures_dir, 'cms-digested.der'), 'rb') as f:

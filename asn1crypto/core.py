@@ -4631,14 +4631,18 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                     CLASS_NUM_TO_NAME_MAP.get(class_, class_)
                 ))
             if method != value.method:
-                raise ValueError(unwrap(
-                    '''
-                    Error parsing %s - method should have been %s, but %s was found
-                    ''',
-                    type_name(value),
-                    METHOD_NUM_TO_NAME_MAP.get(value.method),
-                    METHOD_NUM_TO_NAME_MAP.get(method, method)
-                ))
+                # Allow parsing a primitive method as constructed if the value
+                # is indefinite length. This is to allow parsing BER.
+                ber_indef = method == 1 and value.method == 0 and trailer == b'\x00\x00'
+                if not ber_indef:
+                    raise ValueError(unwrap(
+                        '''
+                        Error parsing %s - method should have been %s, but %s was found
+                        ''',
+                        type_name(value),
+                        METHOD_NUM_TO_NAME_MAP.get(value.method),
+                        METHOD_NUM_TO_NAME_MAP.get(method, method)
+                    ))
             if tag != value.tag and tag != value._bad_tag:
                 raise ValueError(unwrap(
                     '''
