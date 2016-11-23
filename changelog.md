@@ -1,5 +1,18 @@
 # changelog
 
+## 0.19.0
+
+ - Force `algos.DigestAlgorithm` to encoding `parameters` as `Null` when the
+   `algorithm` is `sha1`, `sha224`, `sha256`, `sha384` or `sha512` per RFC 4055
+ - Resolved an issue where a BER-encoded indefinite-length value could not be
+   properly parsed when embedded inside of a `core.Sequence` or `core.Set`
+ - Fix `x509.Name.build()` to properly handle dotted OID type values
+ - `core.Choice` can now be constructed from a single-element `dict` or a
+   two-element `tuple` to allow for better usability when constructing values
+   from native Python values
+ - All `core` objects can now be passed to `print()` with an exception being
+   raised
+
 ## 0.18.5
 
  - Don't fail importing if `ctypes` or `_ctypes` is not available
