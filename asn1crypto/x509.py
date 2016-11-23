@@ -502,6 +502,8 @@ class NameType(ObjectIdentifier):
             An orderable value.
 
         """
+
+        attr_name = cls.map(attr_name)
         if attr_name in cls.preferred_order:
             ordinal = cls.preferred_order.index(attr_name)
         else:
@@ -894,7 +896,7 @@ class Name(Choice):
             encoding_name = 'printable_string'
             encoding_class = PrintableString
 
-        # Sort the attributes according to NameType.preferred_order.
+        # Sort the attributes according to NameType.preferred_order
         name_dict = OrderedDict(
             sorted(
                 name_dict.items(),
@@ -903,6 +905,7 @@ class Name(Choice):
         )
 
         for attribute_name, attribute_value in name_dict.items():
+            attribute_name = NameType.map(attribute_name)
             if attribute_name == 'email_address':
                 value = EmailAddress(attribute_value)
             elif attribute_name == 'domain_component':

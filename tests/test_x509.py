@@ -337,6 +337,26 @@ class X509Tests(unittest.TestCase):
                 })
             ),
             (
+                True,
+                x509.Name.build({
+                    '2.5.4.3': 'Will Bond',
+                }),
+                x509.Name.build({
+                    'common_name': 'Will Bond',
+                }),
+            ),
+            (
+                True,
+                x509.Name.build({
+                    '2.5.4.6': 'US',
+                    'common_name': 'Will Bond'
+                }),
+                x509.Name.build({
+                    'country_name': 'US',
+                    'common_name': 'Will Bond'
+                })
+            ),
+            (
                 False,
                 x509.Name.build({
                     'common_name': 'Will Bond',
