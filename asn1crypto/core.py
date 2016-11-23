@@ -297,7 +297,30 @@ class Asn1Value(object):
             A unicode string
         """
 
-        return '<%s %s %s>' % (type_name(self), id(self), repr(self.dump()))
+        if py2:
+            return '<%s %s b%s>' % (type_name(self), id(self), repr(self.dump()))
+        else:
+            return '<%s %s %s>' % (type_name(self), id(self), repr(self.dump()))
+
+    def __bytes__(self):
+        """
+        A fall-back method for print() in Python 2
+
+        :return:
+            A byte string of the output of repr()
+        """
+
+        return self.__repr__().encode('utf-8')
+
+    def __unicode__(self):
+        """
+        A fall-back method for print() in Python 3
+
+        :return:
+            A unicode string of the output of repr()
+        """
+
+        return self.__repr__()
 
     def _new_instance(self):
         """
