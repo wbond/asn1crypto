@@ -962,8 +962,6 @@ class Name(Choice):
 
     @property
     def native(self):
-        if self.contents is None:
-            return None
         if self._native is None:
             self._native = OrderedDict()
             for rdn in self.chosen.native:
