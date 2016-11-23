@@ -339,6 +339,16 @@ class X509Tests(unittest.TestCase):
             (
                 False,
                 x509.Name.build({
+                    'common_name': 'Will Bond',
+                    '0.9.2342.19200300.100.1.1': 'wbond'
+                }),
+                x509.Name.build({
+                    'common_name': 'Will Bond',
+                }),
+            ),
+            (
+                False,
+                x509.Name.build({
                     'country_name': 'US',
                     'common_name': 'Will Bond'
                 }),

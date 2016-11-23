@@ -491,6 +491,24 @@ class NameType(ObjectIdentifier):
         'organization_identifier',
     ]
 
+    @classmethod
+    def preferred_ordinal(cls, attr_name):
+        """
+        Returns an ordering value for a particular attribute key.
+
+        Unrecognized attributes and OIDs will be sorted lexically at the end.
+
+        :return:
+            An orderable value.
+
+        """
+        if attr_name in cls.preferred_order:
+            ordinal = cls.preferred_order.index(attr_name)
+        else:
+            ordinal = len(cls.preferred_order)
+
+        return (ordinal, attr_name)
+
     @property
     def human_friendly(self):
         """
@@ -876,23 +894,28 @@ class Name(Choice):
             encoding_name = 'printable_string'
             encoding_class = PrintableString
 
-        for attribute_name in NameType.preferred_order:
-            if attribute_name not in name_dict:
-                continue
+        # Sort the attributes according to NameType.preferred_order.
+        name_dict = OrderedDict(
+            sorted(
+                name_dict.items(),
+                key=lambda item: NameType.preferred_ordinal(item[0])
+            )
+        )
 
+        for attribute_name, attribute_value in name_dict.items():
             if attribute_name == 'email_address':
-                value = EmailAddress(name_dict[attribute_name])
+                value = EmailAddress(attribute_value)
             elif attribute_name == 'domain_component':
-                value = DNSName(name_dict[attribute_name])
+                value = DNSName(attribute_value)
             elif attribute_name in set(['dn_qualifier', 'country_name', 'serial_number']):
                 value = DirectoryString(
                     name='printable_string',
-                    value=PrintableString(name_dict[attribute_name])
+                    value=PrintableString(attribute_value)
                 )
             else:
                 value = DirectoryString(
                     name=encoding_name,
-                    value=encoding_class(name_dict[attribute_name])
+                    value=encoding_class(attribute_value)
                 )
 
             rdns.append(RelativeDistinguishedName([
