@@ -334,6 +334,28 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(a.contents, b.contents)
         self.assertNotEqual(a.dump(), b.dump())
 
+    def test_choice_dict_name(self):
+        a = CopySeq({'name': 'foo', 'pair': {'id': '1.2.3', 'value': 5}})
+        choice = SeqChoice({'one': a})
+        self.assertEqual('one', choice.name)
+
+        with self.assertRaises(ValueError):
+            SeqChoice({})
+
+        with self.assertRaises(ValueError):
+            SeqChoice({'one': a, 'two': a})
+
+    def test_choice_tuple_name(self):
+        a = CopySeq({'name': 'foo', 'pair': {'id': '1.2.3', 'value': 5}})
+        choice = SeqChoice(('one', a))
+        self.assertEqual('one', choice.name)
+
+        with self.assertRaises(ValueError):
+            SeqChoice(('one',))
+
+        with self.assertRaises(ValueError):
+            SeqChoice(('one', a, None))
+
     def test_fix_tagging_choice(self):
         correct = core.Integer(200, tag_type='explicit', tag=2)
         choice = NumChoice(

@@ -758,7 +758,10 @@ class Choice(Asn1Value):
         incompatible with Choice, then forwards on to Asn1Value.__init__()
 
         :param name:
-            The name of the alternative to be set - used with value
+            The name of the alternative to be set - used with value.
+            Alternatively this may be a dict with a single key being the name
+            and the value being the value, or a two-element tuple of the the
+            name and the value.
 
         :param value:
             The alternative value to set - used with name
@@ -784,6 +787,33 @@ class Choice(Asn1Value):
                 ))
 
             if name is not None:
+                if isinstance(name, dict):
+                    if len(name) != 1:
+                        raise ValueError(unwrap(
+                            '''
+                            When passing a dict as the "name" argument to %s,
+                            it must have a single key/value - however %d were
+                            present
+                            ''',
+                            type_name(self),
+                            len(name)
+                        ))
+                    name, value = list(name.items())[0]
+
+                if isinstance(name, tuple):
+                    if len(name) != 2:
+                        raise ValueError(unwrap(
+                            '''
+                            When passing a tuple as the "name" argument to %s,
+                            it must have two elements, the name and value -
+                            however %d were present
+                            ''',
+                            type_name(self),
+                            len(name)
+                        ))
+                    value = name[1]
+                    name = name[0]
+
                 if name not in self._name_map:
                     raise ValueError(unwrap(
                         '''
