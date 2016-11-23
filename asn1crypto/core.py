@@ -297,7 +297,7 @@ class Asn1Value(object):
             A unicode string
         """
 
-        return '<%s %s %s>' % (type_name(self), id(self), repr(self.contents or b''))
+        return '<%s %s %s>' % (type_name(self), id(self), repr(self.dump()))
 
     def _new_instance(self):
         """
