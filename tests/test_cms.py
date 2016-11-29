@@ -3,12 +3,19 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import unittest
 import os
+import zlib
+import sys
 from datetime import datetime
 
 from asn1crypto import cms, util, core
 from ._unittest_compat import patch
 
 patch()
+
+if sys.version_info < (3,):
+    byte_cls = str
+else:
+    byte_cls = bytes
 
 tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
@@ -108,7 +115,12 @@ class CMSTests(unittest.TestCase):
             compressed_data.decompressed
         )
 
-    def test_parse_content_info_compressed_data2(self):
+    def test_parse_content_info_jibberish(self):
+        # This DER data isn't really DER, but BER because it uses indefinite
+        # length encoding. Additionally, the CompressedData isn't actually
+        # real CompressedData, but a number of OctetString values concatenated
+        # together that can have their native values concatenated and then
+        # run through zlib.
         with open(os.path.join(fixtures_dir, 'meca2_compressed.der'), 'rb') as f:
             info = cms.ContentInfo.load(f.read())
 
@@ -137,10 +149,13 @@ class CMSTests(unittest.TestCase):
         encap_data = compressed_data['encap_content_info']['content'].native
         read = 0
         chunks = 0
+        data = b''
         while read < len(encap_data):
             value, read = core._parse_build(encap_data, read)
+            data += value.native
             chunks += 1
         self.assertEqual(10, chunks)
+        self.assertIsInstance(zlib.decompress(data), byte_cls)
 
     def test_parse_content_info_digested_data(self):
         with open(os.path.join(fixtures_dir, 'cms-digested.der'), 'rb') as f:
