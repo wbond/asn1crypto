@@ -444,6 +444,7 @@ class NameType(ObjectIdentifier):
         '2.5.4.42': 'given_name',
         '2.5.4.43': 'initials',
         '2.5.4.44': 'generation_qualifier',
+        '2.5.4.45': 'unique_identifier',
         '2.5.4.46': 'dn_qualifier',
         '2.5.4.65': 'pseudonym',
         '2.5.4.97': 'organization_identifier',
@@ -536,6 +537,7 @@ class NameType(ObjectIdentifier):
             'given_name': 'Given Name',
             'initials': 'Initials',
             'generation_qualifier': 'Generation Qualifier',
+            'unique_identifier': 'Unique Identifier',
             'dn_qualifier': 'DN Qualifier',
             'pseudonym': 'Pseudonym',
             'email_address': 'Email Address',
@@ -573,6 +575,7 @@ class NameTypeAndValue(Sequence):
         'given_name': DirectoryString,
         'initials': DirectoryString,
         'generation_qualifier': DirectoryString,
+        'unique_identifier': OctetBitString,
         'dn_qualifier': DirectoryString,
         'pseudonym': DirectoryString,
         # https://tools.ietf.org/html/rfc2985#page-26
