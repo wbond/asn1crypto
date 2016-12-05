@@ -92,6 +92,33 @@ function the same as `OctetString` and `OctetBitString`, however they also
 have an attribute `.parsed` and a method `.parse()` that allows for
 parsing the content as ASN.1 structures.
 
+All of these overrides can be used with the `cast()` method to convert between
+them. The only requirement is that the class being casted to has the same tag
+as the original class. No re-encoding is done, rather the contents are simply
+re-interpreted.
+
+```python
+from asn1crypto.core import BitString, OctetBitString, IntegerBitString
+
+bit = BitString({
+    0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 1, 0,
+})
+
+# Will print (0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0)
+print(bit.native)
+
+octet = bit.cast(OctetBitString)
+
+# Will print b'\x01\x02'
+print(octet.native)
+
+i = bit.cast(IntegerBitString)
+
+# Will print 258
+print(i.native)
+```
+
 ## Basic Usage
 
 All of the universal types implement four methods, a class method `.load()` and

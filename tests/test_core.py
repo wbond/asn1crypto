@@ -203,6 +203,24 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(der_bytes, bs.dump())
         self.assertEqual(native, core.BitString.load(der_bytes).native)
 
+    def test_cast(self):
+        a = core.OctetBitString(b'\x00\x01\x02\x03')
+        self.assertEqual(b'\x00\x01\x02\x03', a.native)
+        b = a.cast(core.BitString)
+        self.assertIsInstance(b, core.BitString)
+        self.assertEqual(
+            (
+                0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 1,
+                0, 0, 0, 0, 0, 0, 1, 0,
+                0, 0, 0, 0, 0, 0, 1, 1
+            ),
+            b.native
+        )
+        c = a.cast(core.IntegerBitString)
+        self.assertIsInstance(c, core.IntegerBitString)
+        self.assertEqual(66051, c.native)
+
     def test_bit_string_item_access(self):
         named = core.BitString()
         named[0] = True

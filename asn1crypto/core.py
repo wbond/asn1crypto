@@ -511,6 +511,48 @@ class ValueMap():
             cls._reverse_map[value] = key
 
 
+class Castable():
+    """
+    A mixin to handle converting an object between different classes that
+    represent the same encoded value, but with different rules for converting
+    to and from native Python values
+    """
+
+    def cast(self, other_class):
+        """
+        Converts the current object into an object of a different class. The
+        new class must use the ASN.1 encoding for the value.
+
+        :param other_class:
+            The class to instantiate the new object from
+
+        :return:
+            An instance of the type other_class
+        """
+
+        if other_class.tag != self.__class__.tag:
+            raise TypeError(unwrap(
+                '''
+                Can not covert a value from %s object to %s object since they
+                use different tags: %d versus %d
+                ''',
+                type_name(other_class),
+                type_name(self),
+                other_class.tag,
+                self.__class__.tag
+            ))
+
+        new_obj = other_class()
+        new_obj.tag_type = self.tag_type
+        new_obj.class_ = self.class_
+        new_obj.explicit_class = self.explicit_class
+        new_obj.explicit_tag = self.explicit_tag
+        new_obj._header = self._header
+        new_obj.contents = self.contents
+        new_obj._trailer = self._trailer
+        return new_obj
+
+
 class Void(Asn1Value):
     """
     A representation of an optional value that is not present. Has .native
@@ -1599,7 +1641,7 @@ class Integer(Primitive, ValueMap):
         return self._native
 
 
-class BitString(Primitive, ValueMap, object):
+class BitString(Castable, Primitive, ValueMap, object):
     """
     Represents a bit string from ASN.1 as a Python tuple of 1s and 0s
     """
@@ -1868,7 +1910,7 @@ class BitString(Primitive, ValueMap, object):
         return self._native
 
 
-class OctetBitString(Primitive):
+class OctetBitString(Castable, Primitive):
     """
     Represents a bit string in ASN.1 as a Python byte string
     """
@@ -1931,7 +1973,7 @@ class OctetBitString(Primitive):
         return self._native
 
 
-class IntegerBitString(Primitive):
+class IntegerBitString(Castable, Primitive):
     """
     Represents a bit string in ASN.1 as a Python integer
     """
@@ -1988,7 +2030,7 @@ class IntegerBitString(Primitive):
         return self._native
 
 
-class OctetString(Primitive):
+class OctetString(Castable, Primitive):
     """
     Represents a byte string in both ASN.1 and Python
     """
@@ -2020,7 +2062,7 @@ class OctetString(Primitive):
         return self._native
 
 
-class IntegerOctetString(Primitive):
+class IntegerOctetString(Castable, Primitive):
     """
     Represents a byte string in ASN.1 as a Python integer
     """
@@ -2070,7 +2112,7 @@ class IntegerOctetString(Primitive):
         return self._native
 
 
-class ParsableOctetString(Primitive):
+class ParsableOctetString(Castable, Primitive):
 
     tag = 4
 
