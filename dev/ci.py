@@ -7,7 +7,7 @@ if sys.version_info >= (2, 7):
     from .lint import run as run_lint
 if sys.version_info < (3, 0) or sys.version_info >= (3, 3):
     from .coverage import run as run_coverage
-else
+else:
     from .tests import run as run_tests
 
 
@@ -30,7 +30,7 @@ def run():
         print('\nRunning tests (via coverage.py)')
         sys.stdout.flush()
         tests_result = run_coverage(write_xml=True)
-    else
+    else:
         print('\nRunning tests')
         sys.stdout.flush()
         tests_result = run_tests()
