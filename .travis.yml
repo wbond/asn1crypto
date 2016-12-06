@@ -89,17 +89,17 @@ install:
                     curl --silent --show-error https://bootstrap.pypa.io/get-pip.py | sudo /usr/bin/python2.7;
                     sudo /usr/bin/python2.6 -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'coverage'])";
                     export PYTHON_BIN=/usr/bin/python2.6;
-                fi
-            fi
-        fi
+                fi;
+            fi;
+        fi;
     else
         if [ "$PYTHON_VERSION" == "3.2" ]; then
             pip install flake8;
         else
             pip install flake8 coverage;
-        fi
+        fi;
         export PYTHON_BIN=python;
-    fi
+    fi;
 script:
   - $PYTHON_BIN run.py ci
 after_success:

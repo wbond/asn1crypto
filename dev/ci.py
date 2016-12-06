@@ -6,7 +6,8 @@ import sys
 from .tests import run as run_tests
 if sys.version_info >= (2, 7):
     from .lint import run as run_lint
-from .coverage import run as run_coverage
+if sys.version_info < (3, 0) or sys.version_info >= (3, 3):
+    from .coverage import run as run_coverage
 
 
 def run():
