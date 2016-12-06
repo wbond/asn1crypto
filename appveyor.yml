@@ -53,13 +53,18 @@ install:
           (New-Object Net.WebClient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', "${env:PYTMP}\get-pip.py");
         }
         & "${env:PYTHON}\pypy.exe" "${env:PYTMP}\get-pip.py";
-        & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install flake8;
+        & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install flake8 coverage;
 
       } elseif ("${env:PYTHON_ID}" -eq "26" -or "${env:PYTHON_ID}" -eq "26-x64") {
-        # Skip flake8 for 2.6 since pip, flake8 and pycodestyle have all deprecated support for it
+        if (!(Test-Path "${env:PYTMP}\get-pip.py")) {
+          (New-Object Net.WebClient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', "${env:PYTMP}\get-pip.py");
+        }
+        & "${env:PYTHON}\python.exe" "${env:PYTMP}\get-pip.py";
+        # Skip flake8 for 2.6 since flake8 and pycodestyle have deprecated support for it
+        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install coverage;
 
       } else {
-        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install flake8;
+        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install flake8 coverage;
       }
 
       & "C:\Python27-x64\Scripts\pip.exe" --disable-pip-version-check --quiet install codecov;
