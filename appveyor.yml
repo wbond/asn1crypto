@@ -1,7 +1,7 @@
 version: "{build}"
 skip_tags: true
 environment:
-  CODECOV_ENV: PYTHON_VERSION,PLATFORM
+  CODECOV_ENV: "PYTHON_VERSION,PLATFORM"
   matrix:
     - PYTHON: "C:\\Python26"
       PYTHON_ID: "26"
