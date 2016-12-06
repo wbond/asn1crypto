@@ -103,4 +103,4 @@ install:
 script:
   - $PYTHON_BIN run.py ci
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -X gcov -X xcode -X search -f coverage.xml -e PYTHON_VERSION,PLATFORM
+  - bash <(curl -s https://codecov.io/bash) -X gcov -f coverage.xml -e PYTHON_VERSION,PLATFORM
