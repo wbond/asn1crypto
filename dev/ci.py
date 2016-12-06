@@ -6,6 +6,7 @@ import sys
 from .tests import run as run_tests
 if sys.version_info >= (2, 7):
     from .lint import run as run_lint
+from .coverage import run as run_coverage
 
 
 def run():
@@ -25,5 +26,8 @@ def run():
     print('\nRunning tests')
     sys.stdout.flush()
     tests_result = run_tests()
+
+    print('\nRunning coverage.py')
+    run_coverage(write_xml=True)
 
     return lint_result and tests_result

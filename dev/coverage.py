@@ -4,7 +4,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import coverage
 
 
-def run():
+def run(write_xml=False):
     """
     Runs the tests while measuring coverage
 
@@ -23,5 +23,7 @@ def run():
     cov.save()
 
     cov.report(show_missing=False)
+    if write_xml:
+        cov.xml_report()
 
     return result
