@@ -9,3 +9,4 @@ tests/output/
 tmp/
 .coverage
 .tox
+coverage.xml
