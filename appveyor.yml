@@ -1,6 +1,7 @@
 version: "{build}"
 skip_tags: true
 environment:
+  CODECOV_ENV: PYTHON_VERSION,PLATFORM
   matrix:
     - PYTHON: "C:\\Python26"
       PYTHON_ID: "26"
@@ -75,4 +76,4 @@ build: off
 test_script:
   - cmd: "%PYTHON_EXE% run.py ci"
 after_test:
-  - C:\Python27-x64\Scripts\codecov -X search -f coverage.xml -e PYTHON_VERSION,PLATFORM
+  - C:\Python27-x64\Scripts\codecov -X search -f coverage.xml
