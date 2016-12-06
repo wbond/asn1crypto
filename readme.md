@@ -17,6 +17,7 @@ A fast, pure Python library for parsing and serializing ASN.1 structures.
 [![Travis CI](https://api.travis-ci.org/wbond/asn1crypto.svg?branch=master)](https://travis-ci.org/wbond/asn1crypto)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/wbond/asn1crypto?branch=master&svg=true)](https://ci.appveyor.com/project/wbond/asn1crypto)
 [![Codecov](https://codecov.io/gh/wbond/asn1crypto/branch/master/graph/badge.svg)](https://codecov.io/gh/wbond/asn1crypto)
+[![PyPI](https://img.shields.io/pypi/v/asn1crypto.svg)](https://pypi.python.org/pypi/asn1crypto)
 
 ## Features
 
