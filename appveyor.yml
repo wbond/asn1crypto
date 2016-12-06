@@ -59,9 +59,9 @@ install:
         if (!(Test-Path "${env:PYTMP}\get-pip.py")) {
           (New-Object Net.WebClient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', "${env:PYTMP}\get-pip.py");
         }
-        & "${env:PYTHON}\python.exe" "${env:PYTMP}\get-pip.py";
+        & "${env:PYTHON}\python.exe" -W ignore "${env:PYTMP}\get-pip.py";
         # Skip flake8 for 2.6 since flake8 and pycodestyle have deprecated support for it
-        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install coverage;
+        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'coverage'])";
 
       } else {
         & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install flake8 coverage;

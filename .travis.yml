@@ -93,7 +93,11 @@ install:
             fi
         fi
     else
-        pip install flake8 coverage;
+        if [ "$PYTHON_VERSION" == "3.2" ]; then
+            pip install flake8;
+        else
+            pip install flake8 coverage;
+        fi
         export PYTHON_BIN=python;
     fi
 script:

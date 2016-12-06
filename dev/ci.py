@@ -27,7 +27,8 @@ def run():
     sys.stdout.flush()
     tests_result = run_tests()
 
-    print('\nRunning coverage.py')
-    run_coverage(write_xml=True)
+    if sys.version_info < (3, 0) or sys.version_info >= (3, 3):
+        print('\nRunning coverage.py')
+        run_coverage(write_xml=True)
 
     return lint_result and tests_result
