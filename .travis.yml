@@ -86,7 +86,7 @@ install:
                     sudo /usr/bin/python2.7 -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'flake8', 'coverage'])";
                     export PYTHON_BIN=/usr/bin/python2.7;
                 else
-                    curl --silent --show-error https://bootstrap.pypa.io/get-pip.py | sudo /usr/bin/python2.6;
+                    curl --silent --show-error https://bootstrap.pypa.io/get-pip.py | sudo /usr/bin/python2.6 -W ignore;
                     sudo /usr/bin/python2.6 -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'coverage'])";
                     export PYTHON_BIN=/usr/bin/python2.6;
                 fi;
