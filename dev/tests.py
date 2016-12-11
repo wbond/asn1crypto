@@ -4,47 +4,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import unittest
 import re
 
-from tests.test_algos import AlgoTests
-from tests.test_cms import CMSTests
-from tests.test_crl import CRLTests
-from tests.test_csr import CSRTests
-from tests.test_keys import KeysTests
-from tests.test_ocsp import OCSPTests
-from tests.test_pem import PEMTests
-from tests.test_tsp import TSPTests
-from tests.test_x509 import X509Tests
-from tests.test_core import CoreTests
-
-
-test_classes = [
-    AlgoTests,
-    CMSTests,
-    CRLTests,
-    CSRTests,
-    KeysTests,
-    OCSPTests,
-    PEMTests,
-    TSPTests,
-    X509Tests,
-    CoreTests
-]
-
-
-def make_suite():
-    """
-    Constructs a unittest.TestSuite() of all tests for the package. For use
-    with setuptools.
-
-    :return:
-        A unittest.TestSuite() object
-    """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    return suite
+from tests import test_classes
 
 
 def run(matcher=None):
@@ -61,7 +21,7 @@ def run(matcher=None):
 
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
-    for test_class in test_classes:
+    for test_class in test_classes():
         if matcher:
             names = loader.getTestCaseNames(test_class)
             for name in names:
