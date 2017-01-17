@@ -58,7 +58,7 @@ from . import _teletex_codec
 from ._errors import unwrap
 from ._ordereddict import OrderedDict
 from ._types import type_name, str_cls, byte_cls, int_types
-from .util import int_to_bytes, int_from_bytes, timezone
+from .util import int_to_bytes, int_from_bytes, timezone, extended_datetime
 
 # Python 2
 if sys.version_info <= (3,):
@@ -4277,7 +4277,7 @@ class UTCTime(AbstractTime):
 class GeneralizedTime(AbstractTime):
     """
     Represents a generalized time from ASN.1 as a Python datetime.datetime
-    object in UTC
+    object or asn1crypto.util.extended_datetime object in UTC
     """
 
     tag = 24
@@ -4287,13 +4287,14 @@ class GeneralizedTime(AbstractTime):
         Sets the value of the object
 
         :param value:
-            A unicode string or a datetime.datetime object
+            A unicode string, a datetime.datetime object or an
+            asn1crypto.util.extended_datetime object
 
         :raises:
             ValueError - when an invalid value is passed
         """
 
-        if isinstance(value, datetime):
+        if isinstance(value, (datetime, extended_datetime)):
             value = value.strftime('%Y%m%d%H%M%SZ')
             if py2:
                 value = value.decode('ascii')
@@ -4311,22 +4312,37 @@ class GeneralizedTime(AbstractTime):
             A unicode string to parse
 
         :return:
-            A datetime.datetime object or a unicode string
+            A datetime.datetime object, asn1crypto.util.extended_datetime object or
+            a unicode string
         """
 
         strlen = len(string)
 
+        date_format = None
         if strlen == 10:
-            return datetime.strptime(string, '%Y%m%d%H')
+            date_format = '%Y%m%d%H'
+        elif strlen == 12:
+            date_format = '%Y%m%d%H%M'
+        elif strlen == 14:
+            date_format = '%Y%m%d%H%M%S'
+        elif strlen == 18:
+            date_format = '%Y%m%d%H%M%S.%f'
 
-        if strlen == 12:
-            return datetime.strptime(string, '%Y%m%d%H%M')
-
-        if strlen == 14:
-            return datetime.strptime(string, '%Y%m%d%H%M%S')
-
-        if strlen == 18:
-            return datetime.strptime(string, '%Y%m%d%H%M%S.%f')
+        if date_format:
+            if len(string) >= 4 and string[0:4] == '0000':
+                # Year 28 shares a calendar with year 0, and is supported natively
+                t = datetime.strptime('0028' + string[4:], date_format)
+                return extended_datetime(
+                    0,
+                    t.month,
+                    t.day,
+                    t.hour,
+                    t.minute,
+                    t.second,
+                    t.microsecond,
+                    t.tzinfo
+                )
+            return datetime.strptime(string, date_format)
 
         return string
 

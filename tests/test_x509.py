@@ -3298,3 +3298,10 @@ class X509Tests(unittest.TestCase):
                 ])
             ]
         )
+
+    def test_extended_datetime(self):
+        cert = self._load_cert('9999-years-rsa-cert.pem')
+        self.assertEqual(
+            cert['tbs_certificate']['validity']['not_before'].native,
+            util.extended_datetime(0, 1, 1, 0, 0, 1, tzinfo=util.timezone.utc)
+        )
