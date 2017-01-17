@@ -243,27 +243,20 @@ class extended_date(object):
         """
 
         format = format.replace('%Y', '0000')
-        format = format.replace('%y', '00')
         # Year 0 is 1BC and a leap year. Leap years repeat themselves
-        # every 28 years. Thus the simplest way to format is to use
-        # the calendar from year 980
-        temp = date(980, self.month, self.day)
+        # every 28 years. Because of adjustments and the proleptic gregorian
+        # calendar, the simplest way to format is to substitute year 2000.
+        temp = date(2000, self.month, self.day)
         if '%c' in format:
             c_out = temp.strftime('%c')
             # Handle full years
-            c_out = c_out.replace('0980', '0000')
-            # libc on Linux seems to omit the leading zero
-            c_out = c_out.replace('980', '0000')
+            c_out = c_out.replace('2000', '0000')
             c_out = c_out.replace('%', '%%')
             format = format.replace('%c', c_out)
         if '%x' in format:
             x_out = temp.strftime('%x')
-            # Handle format such as 08/16/80
-            x_out = re.sub(r'\b80$', '00', x_out)
-            # Handle formats such as 08/16/0980 or 16.08.0980
-            x_out = x_out.replace('0980', '0000')
-            # libc on Linux seems to omit the leading zero
-            x_out = x_out.replace('980', '0000')
+            # Handle formats such as 08/16/2000 or 16.08.2000
+            x_out = x_out.replace('2000', '0000')
             x_out = x_out.replace('%', '%%')
             format = format.replace('%x', x_out)
         return temp.strftime(format)
@@ -482,7 +475,7 @@ class extended_datetime(object):
 
         if self.tzinfo is None:
             return None
-        return self.tzinfo.utcoffset(self.replace(year=980))
+        return self.tzinfo.utcoffset(self.replace(year=2000))
 
     def dst(self):
         """
@@ -492,7 +485,7 @@ class extended_datetime(object):
 
         if self.tzinfo is None:
             return None
-        return self.tzinfo.dst(self.replace(year=980))
+        return self.tzinfo.dst(self.replace(year=2000))
 
     def tzname(self):
         """
@@ -503,7 +496,7 @@ class extended_datetime(object):
 
         if self.tzinfo is None:
             return None
-        return self.tzinfo.tzname(self.replace(year=980))
+        return self.tzinfo.tzname(self.replace(year=2000))
 
     def _format(self, format):
         """
@@ -517,12 +510,11 @@ class extended_datetime(object):
         """
 
         format = format.replace('%Y', '0000')
-        format = format.replace('%y', '00')
         # Year 0 is 1BC and a leap year. Leap years repeat themselves
-        # every 28 years. Thus the simplest way to format is to use
-        # the calendar from year 980
+        # every 28 years. Because of adjustments and the proleptic gregorian
+        # calendar, the simplest way to format is to substitute year 2000.
         temp = datetime(
-            980,
+            2000,
             self.month,
             self.day,
             self.hour,
@@ -534,19 +526,13 @@ class extended_datetime(object):
         if '%c' in format:
             c_out = temp.strftime('%c')
             # Handle full years
-            c_out = c_out.replace('0980', '0000')
-            # libc on Linux seems to omit the leading zero
-            c_out = c_out.replace('980', '0000')
+            c_out = c_out.replace('2000', '0000')
             c_out = c_out.replace('%', '%%')
             format = format.replace('%c', c_out)
         if '%x' in format:
             x_out = temp.strftime('%x')
-            # Handle format such as 08/16/80
-            x_out = re.sub(r'\b80$', '00', x_out)
-            # Handle formats such as 08/16/0980 or 16.08.0980
-            x_out = x_out.replace('0980', '0000')
-            # libc on Linux seems to omit the leading zero
-            x_out = x_out.replace('980', '0000')
+            # Handle formats such as 08/16/2000 or 16.08.2000
+            x_out = x_out.replace('2000', '0000')
             x_out = x_out.replace('%', '%%')
             format = format.replace('%x', x_out)
         return temp.strftime(format)

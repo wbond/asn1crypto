@@ -32,32 +32,18 @@ utc = util.timezone.utc
 class UtilTests(unittest.TestCase):
 
     def test_extended_date_strftime(self):
-        def do_run():
-            self.assertEqual('0000-01-01', util.extended_date(0, 1, 1).strftime('%Y-%m-%d'))
-            self.assertEqual('Sat Saturday Jan January', util.extended_date(0, 1, 1).strftime('%a %A %b %B'))
-            self.assertEqual('Tue Tuesday Feb February 29', util.extended_date(0, 2, 29).strftime('%a %A %b %B %d'))
-            self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_date(0, 1, 1).strftime('%c'))
-            self.assertEqual('01/01/00', util.extended_date(0, 1, 1).strftime('%x'))
-        # Python 2 doesn't allow strftime on years before 1900
-        if py2:
-            with self.assertRaises(ValueError):
-                do_run()
-        else:
-            do_run()
+        self.assertEqual('0000-01-01', util.extended_date(0, 1, 1).strftime('%Y-%m-%d'))
+        self.assertEqual('Sat Saturday Jan January', util.extended_date(0, 1, 1).strftime('%a %A %b %B'))
+        self.assertEqual('Tue Tuesday Feb February 29', util.extended_date(0, 2, 29).strftime('%a %A %b %B %d'))
+        self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_date(0, 1, 1).strftime('%c'))
+        self.assertEqual('01/01/00', util.extended_date(0, 1, 1).strftime('%x'))
 
     def test_extended_datetime_strftime(self):
-        def do_run():
-            self.assertEqual('0000-01-01 00:00:00', util.extended_datetime(0, 1, 1).strftime('%Y-%m-%d %H:%M:%S'))
-            self.assertEqual('Sat Saturday Jan January', util.extended_datetime(0, 1, 1).strftime('%a %A %b %B'))
-            self.assertEqual('Tue Tuesday Feb February 29', util.extended_datetime(0, 2, 29).strftime('%a %A %b %B %d'))
-            self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_datetime(0, 1, 1).strftime('%c'))
-            self.assertEqual('01/01/00', util.extended_datetime(0, 1, 1).strftime('%x'))
-        # Python 2 doesn't allow strftime on years before 1900
-        if py2:
-            with self.assertRaises(ValueError):
-                do_run()
-        else:
-            do_run()
+        self.assertEqual('0000-01-01 00:00:00', util.extended_datetime(0, 1, 1).strftime('%Y-%m-%d %H:%M:%S'))
+        self.assertEqual('Sat Saturday Jan January', util.extended_datetime(0, 1, 1).strftime('%a %A %b %B'))
+        self.assertEqual('Tue Tuesday Feb February 29', util.extended_datetime(0, 2, 29).strftime('%a %A %b %B %d'))
+        self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_datetime(0, 1, 1).strftime('%c'))
+        self.assertEqual('01/01/00', util.extended_datetime(0, 1, 1).strftime('%x'))
 
     def test_extended_date_compare(self):
         self.assertTrue(util.extended_date(0, 1, 1) < date(1, 1, 1))
