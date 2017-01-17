@@ -16,9 +16,9 @@ matrix:
         PYTHON_VERSION=2.7
         PLATFORM=osx
     - os: osx
-      python: "3.5"
+      python: "3.6"
       env:
-        PYTHON_VERSION=3.5
+        PYTHON_VERSION=3.6
         PLATFORM=osx
     - os: osx
       python: "pypy"
@@ -63,6 +63,12 @@ matrix:
         PLATFORM=linux
     - os: linux
       language: python
+      python: "3.6"
+      env:
+        PYTHON_VERSION=3.6
+        PLATFORM=linux
+    - os: linux
+      language: python
       python: "pypy"
       env:
         PYTHON_VERSION=pypy
@@ -75,7 +81,7 @@ install:
             /usr/local/bin/pip_pypy install flake8 coverage;
             export PYTHON_BIN=/usr/local/bin/pypy;
         else
-            if [ "$PYTHON_VERSION" == "3.5" ]; then
+            if [ "$PYTHON_VERSION" == "3.6" ]; then
                 brew update;
                 brew install python3;
                 /usr/local/bin/pip3 install flake8 coverage;
