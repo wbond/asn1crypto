@@ -1,5 +1,15 @@
 # changelog
 
+## 0.20.0
+
+ - Added support for year 0
+ - Added the OID for unique identifier to `x509.NameType`
+ - Fixed a bug creating the native representation of a `core.BitString` with
+   leading null bytes
+ - Added a `.cast()` method to allow converting between different
+   representations of the same data, e.g. `core.BitString` and
+   `core.OctetBitString`
+
 ## 0.19.0
 
  - Force `algos.DigestAlgorithm` to encoding `parameters` as `Null` when the
