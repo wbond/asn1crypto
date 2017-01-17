@@ -35,14 +35,20 @@ class UtilTests(unittest.TestCase):
         self.assertEqual('0000-01-01', util.extended_date(0, 1, 1).strftime('%Y-%m-%d'))
         self.assertEqual('Sat Saturday Jan January', util.extended_date(0, 1, 1).strftime('%a %A %b %B'))
         self.assertEqual('Tue Tuesday Feb February 29', util.extended_date(0, 2, 29).strftime('%a %A %b %B %d'))
-        self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_date(0, 1, 1).strftime('%c'))
+        if sys.platform == 'win32':
+            self.assertEqual('01/01/00 00:00:00', util.extended_date(0, 1, 1).strftime('%c'))
+        else:
+            self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_date(0, 1, 1).strftime('%c'))
         self.assertEqual('01/01/00', util.extended_date(0, 1, 1).strftime('%x'))
 
     def test_extended_datetime_strftime(self):
         self.assertEqual('0000-01-01 00:00:00', util.extended_datetime(0, 1, 1).strftime('%Y-%m-%d %H:%M:%S'))
         self.assertEqual('Sat Saturday Jan January', util.extended_datetime(0, 1, 1).strftime('%a %A %b %B'))
         self.assertEqual('Tue Tuesday Feb February 29', util.extended_datetime(0, 2, 29).strftime('%a %A %b %B %d'))
-        self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_datetime(0, 1, 1).strftime('%c'))
+        if sys.platform == 'win32':
+            self.assertEqual('01/01/00 00:00:00', util.extended_datetime(0, 1, 1).strftime('%c'))
+        else:
+            self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_datetime(0, 1, 1).strftime('%c'))
         self.assertEqual('01/01/00', util.extended_datetime(0, 1, 1).strftime('%x'))
 
     def test_extended_date_compare(self):

@@ -18,7 +18,6 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import math
 import sys
-import re
 from datetime import datetime, date, time
 
 from ._errors import unwrap
