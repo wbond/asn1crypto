@@ -4330,8 +4330,8 @@ class GeneralizedTime(AbstractTime):
 
         if date_format:
             if len(string) >= 4 and string[0:4] == '0000':
-                # Year 28 shares a calendar with year 0, and is supported natively
-                t = datetime.strptime('0028' + string[4:], date_format)
+                # Year 980 shares a calendar with year 0, and is supported natively
+                t = datetime.strptime('0980' + string[4:], date_format)
                 return extended_datetime(
                     0,
                     t.month,
