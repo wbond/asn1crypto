@@ -67,12 +67,12 @@ install:
       }
 
       cd "c:\projects\";
-      git clone https://github.com/wbond/oscrypto.git;
-      git clone https://github.com/wbond/certbuilder.git;
-      git clone https://github.com/wbond/certvalidator.git;
-      git clone https://github.com/wbond/crlbuilder.git;
-      git clone https://github.com/wbond/csrbuilder.git;
-      git clone https://github.com/wbond/ocspbuilder.git;
+      & git clone https://github.com/wbond/oscrypto.git 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/certbuilder.git 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/certvalidator.git 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/crlbuilder.git 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/csrbuilder.git 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/ocspbuilder.git 2>&1 | % { $_.ToString() };
 
       & "C:\Python27-x64\Scripts\pip.exe" --disable-pip-version-check --quiet install https://github.com/codecov/codecov-python/archive/v2.0.6.zip;
   - "SET PATH=%PYTHON%;%PATH%"
