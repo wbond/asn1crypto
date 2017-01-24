@@ -5,6 +5,7 @@ import coverage
 import imp
 import os
 import unittest
+import sys
 
 
 def run(write_xml=False):
@@ -30,8 +31,10 @@ def run(write_xml=False):
 
     if suite.countTestCases() > 0:
         print('Running tests from other modularcrypto packages')
+        sys.stdout.flush()
         other_result = unittest.TextTestRunner(verbosity=1).run(suite).wasSuccessful()
         print()
+        sys.stdout.flush()
     else:
         other_result = True
 
