@@ -3,7 +3,7 @@ import shutil
 
 from setuptools import setup, find_packages, Command
 
-import asn1crypto
+from asn1crypto import version
 
 
 class CleanCommand(Command):
@@ -34,7 +34,7 @@ class CleanCommand(Command):
 
 setup(
     name='asn1crypto',
-    version=asn1crypto.__version__,
+    version=version.__version__,
 
     description=(
         'Fast ASN.1 parser and serializer with definitions for private keys, '
