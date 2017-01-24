@@ -61,6 +61,7 @@ install:
         }
         & "${env:PYTHON}\python.exe" -W ignore "${env:PYTMP}\get-pip.py";
         # Skip flake8 for 2.6 since flake8 and pycodestyle have deprecated support for it
+        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'coverage'])";
 
       } else {
         & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install flake8 coverage;
