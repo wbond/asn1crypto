@@ -54,12 +54,6 @@ install:
         }
         & "${env:PYTHON}\pypy.exe" "${env:PYTMP}\get-pip.py";
         & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install flake8 coverage;
-        & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/oscrypto/archive/master.zip;
-        & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/certbuilder/archive/master.zip;
-        & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/certvalidator/archive/master.zip;
-        & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/csrbuilder/archive/master.zip;
-        & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/crlbuilder/archive/master.zip;
-        & "${env:PYTHON}\bin\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/ocspbuilder/archive/master.zip;
 
       } elseif ("${env:PYTHON_ID}" -eq "26" -or "${env:PYTHON_ID}" -eq "26-x64") {
         if (!(Test-Path "${env:PYTMP}\get-pip.py")) {
@@ -67,23 +61,18 @@ install:
         }
         & "${env:PYTHON}\python.exe" -W ignore "${env:PYTMP}\get-pip.py";
         # Skip flake8 for 2.6 since flake8 and pycodestyle have deprecated support for it
-        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'coverage'])";
-        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'https://github.com/wbond/oscrypto/archive/master.zip'])";
-        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'https://github.com/wbond/certbuilder/archive/master.zip'])";
-        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'https://github.com/wbond/certvalidator/archive/master.zip'])";
-        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'https://github.com/wbond/csrbuilder/archive/master.zip'])";
-        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'https://github.com/wbond/crlbuilder/archive/master.zip'])";
-        & "${env:PYTHON}\python.exe" -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'https://github.com/wbond/ocspbuilder/archive/master.zip'])";
 
       } else {
         & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install flake8 coverage;
-        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/oscrypto/archive/master.zip;
-        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/certbuilder/archive/master.zip;
-        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/certvalidator/archive/master.zip;
-        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/csrbuilder/archive/master.zip;
-        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/crlbuilder/archive/master.zip;
-        & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install https://github.com/wbond/ocspbuilder/archive/master.zip;
       }
+
+      cd "c:\projects\";
+      git clone https://github.com/wbond/oscrypto.git;
+      git clone https://github.com/wbond/certbuilder.git;
+      git clone https://github.com/wbond/certvalidator.git;
+      git clone https://github.com/wbond/crlbuilder.git;
+      git clone https://github.com/wbond/csrbuilder.git;
+      git clone https://github.com/wbond/ocspbuilder.git;
 
       & "C:\Python27-x64\Scripts\pip.exe" --disable-pip-version-check --quiet install https://github.com/codecov/codecov-python/archive/v2.0.6.zip;
   - "SET PATH=%PYTHON%;%PATH%"
