@@ -66,13 +66,12 @@ install:
         & "${env:PYTHON}\Scripts\pip.exe" --disable-pip-version-check --quiet install flake8 coverage;
       }
 
-      cd "c:\projects\";
-      & git clone https://github.com/wbond/oscrypto.git 2>&1 | % { $_.ToString() };
-      & git clone https://github.com/wbond/certbuilder.git 2>&1 | % { $_.ToString() };
-      & git clone https://github.com/wbond/certvalidator.git 2>&1 | % { $_.ToString() };
-      & git clone https://github.com/wbond/crlbuilder.git 2>&1 | % { $_.ToString() };
-      & git clone https://github.com/wbond/csrbuilder.git 2>&1 | % { $_.ToString() };
-      & git clone https://github.com/wbond/ocspbuilder.git 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/oscrypto.git c:\projects\oscrypto 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/certbuilder.git c:\projects\certbuilder 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/certvalidator.git c:\projects\certvalidator 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/crlbuilder.git c:\projects\crlbuilder 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/csrbuilder.git c:\projects\csrbuilder 2>&1 | % { $_.ToString() };
+      & git clone https://github.com/wbond/ocspbuilder.git c:\projects\ocspbuilder 2>&1 | % { $_.ToString() };
 
       & "C:\Python27-x64\Scripts\pip.exe" --disable-pip-version-check --quiet install https://github.com/codecov/codecov-python/archive/v2.0.6.zip;
   - "SET PATH=%PYTHON%;%PATH%"
