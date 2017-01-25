@@ -154,7 +154,8 @@ else:
         """
 
         if width is None:
-            length = (value.bit_length() + 7) // 8 + int(signed)
+            bit_length = value.bit_length()
+            length = (bit_length + 7) // 8 + int(not bit_length % 8)
             return value.to_bytes(length, byteorder='big', signed=signed)
         else:
             return value.to_bytes(width, byteorder='big', signed=signed)
