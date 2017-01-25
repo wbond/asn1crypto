@@ -108,13 +108,12 @@ install:
     fi;
 
     echo "Checking out modularcrypto packages for coverage";
-    cd $TRAVIS_BUILD_DIR/..;
-    git clone https://github.com/wbond/oscrypto.git;
-    git clone https://github.com/wbond/certbuilder.git;
-    git clone https://github.com/wbond/certvalidator.git;
-    git clone https://github.com/wbond/crlbuilder.git;
-    git clone https://github.com/wbond/csrbuilder.git;
-    git clone https://github.com/wbond/ocspbuilder.git;
+    git clone https://github.com/wbond/oscrypto.git $TRAVIS_BUILD_DIR/../oscrypto;
+    git clone https://github.com/wbond/certbuilder.git $TRAVIS_BUILD_DIR/../certbuilder;
+    git clone https://github.com/wbond/certvalidator.git $TRAVIS_BUILD_DIR/../certvalidator;
+    git clone https://github.com/wbond/crlbuilder.git $TRAVIS_BUILD_DIR/../crlbuilder;
+    git clone https://github.com/wbond/csrbuilder.git $TRAVIS_BUILD_DIR/../csrbuilder;
+    git clone https://github.com/wbond/ocspbuilder.git $TRAVIS_BUILD_DIR/../ocspbuilder;
 script:
   - $PYTHON_BIN run.py ci
 after_success:
