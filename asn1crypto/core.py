@@ -3,6 +3,7 @@
 """
 ASN.1 type classes for universal types. Exports the following items:
 
+ - load()
  - Any()
  - Asn1Value()
  - BitString()
@@ -108,6 +109,60 @@ _OID_RE = re.compile('^\d+(\.\d+)*$')
 # definitions for child classes. Without such a construct, the child classes
 # would just see the parent class attributes and would use them.
 _SETUP_CLASSES = {}
+
+
+def load(encoded_data, strict=False):
+    """
+    Loads a BER/DER-encoded byte string and construct a universal object based
+    on the tag value:
+
+     - 1: Boolean
+     - 2: Integer
+     - 3: BitString
+     - 4: OctetString
+     - 5: Null
+     - 6: ObjectIdentifier
+     - 7: ObjectDescriptor
+     - 8: InstanceOf
+     - 9: Real
+     - 10: Enumerated
+     - 11: EmbeddedPdv
+     - 12: UTF8String
+     - 13: RelativeOid
+     - 16: Sequence,
+     - 17: Set
+     - 18: NumericString
+     - 19: PrintableString
+     - 20: TeletexString
+     - 21: VideotexString
+     - 22: IA5String
+     - 23: UTCTime
+     - 24: GeneralizedTime
+     - 25: GraphicString
+     - 26: VisibleString
+     - 27: GeneralString
+     - 28: UniversalString
+     - 29: CharacterString
+     - 30: BMPString
+
+    :param encoded_data:
+        A byte string of BER or DER-encoded data
+
+    :param strict:
+        A boolean indicating if trailing data should be forbidden - if so, a
+        ValueError will be raised when trailing data exists
+
+    :raises:
+        ValueError - when strict is True and trailing data is present
+        ValueError - when the encoded value tag a tag other than listed above
+        ValueError - when the ASN.1 header length is longer than the data
+        TypeError - when encoded_data is not a byte string
+
+    :return:
+        An instance of the one of the universal classes
+    """
+
+    return Asn1Value.load(encoded_data, strict=strict)
 
 
 class Asn1Value(object):
