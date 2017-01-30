@@ -57,25 +57,20 @@ import sys
 from . import _teletex_codec
 from ._errors import unwrap
 from ._ordereddict import OrderedDict
-from ._types import type_name, str_cls, byte_cls, int_types
+from ._types import type_name, str_cls, byte_cls, int_types, chr_cls
+from .parser import _parse, _dump_header
 from .util import int_to_bytes, int_from_bytes, timezone, extended_datetime
 
-# Python 2
 if sys.version_info <= (3,):
     from cStringIO import StringIO as BytesIO
 
     range = xrange  # noqa
-    py2 = True
-    chr_cls = chr
+    _PY2 = True
 
-# Python 3
 else:
     from io import BytesIO
 
-    py2 = False
-
-    def chr_cls(num):
-        return bytes([num])
+    _PY2 = False
 
 
 _teletex_codec.register()
@@ -154,22 +149,29 @@ class Asn1Value(object):
     _native = None
 
     @classmethod
-    def load(cls, encoded_data, **kwargs):
+    def load(cls, encoded_data, strict=False, **kwargs):
         """
         Loads a BER/DER-encoded byte string using the current class as the spec
 
         :param encoded_data:
-            A byte string of BER or DER encoded data
+            A byte string of BER or DER-encoded data
+
+        :param strict:
+            A boolean indicating if trailing data should be forbidden - if so, a
+            ValueError will be raised when trailing data exists
 
         :return:
-            A instance of the current class
+            An instance of the current class
         """
+
+        if not isinstance(encoded_data, byte_cls):
+            raise TypeError('encoded_data must be a byte string, not %s' % type_name(encoded_data))
 
         spec = None
         if cls.tag is not None:
             spec = cls
 
-        value, _ = _parse_build(encoded_data, spec=spec, spec_params=kwargs)
+        value, _ = _parse_build(encoded_data, spec=spec, spec_params=kwargs, strict=strict)
         return value
 
     def __init__(self, tag_type=None, class_=None, tag=None, optional=None, default=None, contents=None):
@@ -286,7 +288,7 @@ class Asn1Value(object):
             A unicode string
         """
 
-        if py2:
+        if _PY2:
             return self.__bytes__()
         else:
             return self.__unicode__()
@@ -297,7 +299,7 @@ class Asn1Value(object):
             A unicode string
         """
 
-        if py2:
+        if _PY2:
             return '<%s %s b%s>' % (type_name(self), id(self), repr(self.dump()))
         else:
             return '<%s %s %s>' % (type_name(self), id(self), repr(self.dump()))
@@ -444,7 +446,7 @@ class Asn1Value(object):
         elif hasattr(self, 'chosen'):
             self.chosen.debug(nest_level + 2)
         else:
-            if py2 and isinstance(self.native, byte_cls):
+            if _PY2 and isinstance(self.native, byte_cls):
                 print('%s    Native: b%s' % (prefix, repr(self.native)))
             else:
                 print('%s    Native: %s' % (prefix, self.native))
@@ -764,18 +766,25 @@ class Choice(Asn1Value):
     _name_map = None
 
     @classmethod
-    def load(cls, encoded_data, **kwargs):
+    def load(cls, encoded_data, strict=False, **kwargs):
         """
         Loads a BER/DER-encoded byte string using the current class as the spec
 
         :param encoded_data:
             A byte string of BER or DER encoded data
 
+        :param strict:
+            A boolean indicating if trailing data should be forbidden - if so, a
+            ValueError will be raised when trailing data exists
+
         :return:
             A instance of the current class
         """
 
-        value, _ = _parse_build(encoded_data, spec=cls, spec_params=kwargs)
+        if not isinstance(encoded_data, byte_cls):
+            raise TypeError('encoded_data must be a byte string, not %s' % type_name(encoded_data))
+
+        value, _ = _parse_build(encoded_data, spec=cls, spec_params=kwargs, strict=strict)
         return value
 
     def _setup(self):
@@ -1063,26 +1072,34 @@ class Concat(object):
     _children = None
 
     @classmethod
-    def load(cls, encoded_data):
+    def load(cls, encoded_data, strict=False):
         """
         Loads a BER/DER-encoded byte string using the current class as the spec
 
         :param encoded_data:
             A byte string of BER or DER encoded data
 
+        :param strict:
+            A boolean indicating if trailing data should be forbidden - if so, a
+            ValueError will be raised when trailing data exists
+
         :return:
             A Concat object
         """
 
-        return cls(contents=encoded_data)
+        return cls(contents=encoded_data, strict=strict)
 
-    def __init__(self, value=None, contents=None):
+    def __init__(self, value=None, contents=None, strict=False):
         """
         :param value:
             A native Python datatype to initialize the object value with
 
         :param contents:
             A byte string of the encoded contents of the value
+
+        :param strict:
+            A boolean indicating if trailing data should be forbidden - if so, a
+            ValueError will be raised when trailing data exists in contents
 
         :raises:
             ValueError - when an error occurs with one of the children
@@ -1101,6 +1118,10 @@ class Concat(object):
                     else:
                         child_value = spec()
                     self._children.append(child_value)
+
+                if strict and offset != contents_len:
+                    extra_bytes = contents_len - offset
+                    raise ValueError('Extra data - %d bytes of trailing data were provided' % extra_bytes)
 
             except (ValueError, TypeError) as e:
                 args = e.args[1:]
@@ -1122,7 +1143,7 @@ class Concat(object):
             A unicode string
         """
 
-        if py2:
+        if _PY2:
             return self.__bytes__()
         else:
             return self.__unicode__()
@@ -2496,7 +2517,7 @@ class ObjectIdentifier(Primitive, ValueMap):
 
             part = 0
             for byte in self.contents:
-                if py2:
+                if _PY2:
                     byte = ord(byte)
                 part = part * 128
                 part += byte & 127
@@ -4238,7 +4259,7 @@ class UTCTime(AbstractTime):
 
         if isinstance(value, datetime):
             value = value.strftime('%y%m%d%H%M%SZ')
-            if py2:
+            if _PY2:
                 value = value.decode('ascii')
 
         AbstractString.set(self, value)
@@ -4296,7 +4317,7 @@ class GeneralizedTime(AbstractTime):
 
         if isinstance(value, (datetime, extended_datetime)):
             value = value.strftime('%Y%m%d%H%M%SZ')
-            if py2:
+            if _PY2:
                 value = value.decode('ascii')
 
         AbstractString.set(self, value)
@@ -4483,35 +4504,6 @@ def _fix_tagging(value, params):
         return value.untag()
 
     return value
-
-
-def _dump_header(class_, method, tag, contents):
-    header = b''
-
-    id_num = 0
-    id_num |= class_ << 6
-    id_num |= method << 5
-
-    tag = tag
-
-    if tag >= 31:
-        header += chr_cls(id_num | 31)
-        while tag > 0:
-            continuation_bit = 0x80 if tag > 0x7F else 0
-            header += chr_cls(continuation_bit | (tag & 0x7F))
-            tag = tag >> 7
-    else:
-        header += chr_cls(id_num | tag)
-
-    length = len(contents)
-    if length <= 127:
-        header += chr_cls(length)
-    else:
-        length_bytes = int_to_bytes(length)
-        header += chr_cls(0x80 | len(length_bytes))
-        header += length_bytes
-
-    return header
 
 
 def _build_id_tuple(params, spec):
@@ -4765,122 +4757,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     return value
 
 
-_MEMOIZED_PARSINGS = {}
-
-
-def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
-    """
-    Parses a byte string into component parts
-
-    :param encoded_data:
-        A byte string that contains BER-encoded data
-
-    :param data_len:
-        The integer length of the encoded data
-
-    :param pointer:
-        The index in the byte string to parse from
-
-    :param lengths_only:
-        A boolean to cause the call to return a 2-element tuple of the integer
-        number of bytes in the header and the integer number of bytes in the
-        contents. Internal use only.
-
-    :return:
-        A 2-element tuple:
-         - 0: A tuple of (class_, method, tag, header, content, trailer)
-         - 1: An integer indicating how many bytes were consumed
-    """
-
-    if data_len == 0:
-        return ((None, None, None, None, None, None), pointer)
-
-    start = pointer
-    first_octet = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
-    pointer += 1
-
-    tag = first_octet & 31
-    # Base 128 length using 8th bit as continuation indicator
-    if tag == 31:
-        tag = 0
-        while True:
-            num = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
-            pointer += 1
-            tag *= 128
-            tag += num & 127
-            if num >> 7 == 0:
-                break
-
-    length_octet = ord(encoded_data[pointer]) if py2 else encoded_data[pointer]
-    pointer += 1
-
-    if length_octet >> 7 == 0:
-        if lengths_only:
-            return (pointer, pointer + (length_octet & 127))
-        contents_end = pointer + (length_octet & 127)
-
-    else:
-        length_octets = length_octet & 127
-        if length_octets:
-            pointer += length_octets
-            contents_end = pointer + int_from_bytes(encoded_data[pointer - length_octets:pointer], signed=False)
-            if lengths_only:
-                return (pointer, contents_end)
-
-        else:
-            # To properly parse indefinite length values, we need to scan forward
-            # parsing headers until we find a value with a length of zero. If we
-            # just scanned looking for \x00\x00, nested indefinite length values
-            # would not work.
-            contents_end = pointer
-            while contents_end < data_len:
-                sub_header_end, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True)
-                if contents_end == sub_header_end:
-                    break
-            if lengths_only:
-                return (pointer, contents_end)
-            if contents_end > data_len:
-                raise ValueError(unwrap(
-                    '''
-                    Insufficient data - %s bytes requested but only %s available
-                    ''',
-                    contents_end,
-                    data_len
-                ))
-            return (
-                (
-                    first_octet >> 6,
-                    (first_octet >> 5) & 1,
-                    tag,
-                    encoded_data[start:pointer],
-                    encoded_data[pointer:contents_end - 2],
-                    b'\x00\x00'
-                ),
-                contents_end
-            )
-
-    if contents_end > data_len:
-        raise ValueError(unwrap(
-            '''
-            Insufficient data - %s bytes requested but only %s available
-            ''',
-            contents_end,
-            data_len
-        ))
-    return (
-        (
-            first_octet >> 6,
-            (first_octet >> 5) & 1,
-            tag,
-            encoded_data[start:pointer],
-            encoded_data[pointer:contents_end],
-            b''
-        ),
-        contents_end
-    )
-
-
-def _parse_build(encoded_data, pointer=0, spec=None, spec_params=None):
+def _parse_build(encoded_data, pointer=0, spec=None, spec_params=None, strict=False):
     """
     Parses a byte string generically, or using a spec with optional params
 
@@ -4900,11 +4777,19 @@ def _parse_build(encoded_data, pointer=0, spec=None, spec_params=None):
     :param spec_params:
         A dict of params to pass to the spec object
 
+    :param strict:
+        A boolean indicating if trailing data should be forbidden - if so, a
+        ValueError will be raised when trailing data exists
+
     :return:
         A 2-element tuple:
          - 0: An object of the type spec, or if not specified, a child of Asn1Value
          - 1: An integer indicating how many bytes were consumed
     """
 
-    info, new_pointer = _parse(encoded_data, len(encoded_data), pointer)
+    encoded_len = len(encoded_data)
+    info, new_pointer = _parse(encoded_data, encoded_len, pointer)
+    if strict and new_pointer != pointer + encoded_len:
+        extra_bytes = pointer + encoded_len - new_pointer
+        raise ValueError('Extra data - %d bytes of trailing data were provided' % extra_bytes)
     return (_build(*info, spec=spec, spec_params=spec_params), new_pointer)
