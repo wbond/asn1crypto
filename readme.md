@@ -16,6 +16,7 @@ A fast, pure Python library for parsing and serializing ASN.1 structures.
 
 [![Travis CI](https://api.travis-ci.org/wbond/asn1crypto.svg?branch=master)](https://travis-ci.org/wbond/asn1crypto)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/wbond/asn1crypto?branch=master&svg=true)](https://ci.appveyor.com/project/wbond/asn1crypto)
+[![CircleCI](https://circleci.com/gh/wbond/asn1crypto.svg?style=shield)](https://circleci.com/gh/wbond/asn1crypto)
 [![Codecov](https://codecov.io/gh/wbond/asn1crypto/branch/master/graph/badge.svg)](https://codecov.io/gh/wbond/asn1crypto)
 [![PyPI](https://img.shields.io/pypi/v/asn1crypto.svg)](https://pypi.python.org/pypi/asn1crypto)
 
@@ -154,7 +155,8 @@ links to the source for the various pre-defined type classes.
 ## Continuous Integration
 
  - [Windows](https://ci.appveyor.com/project/wbond/asn1crypto/history) via AppVeyor
- - [OS X & Linux](https://travis-ci.org/wbond/asn1crypto/builds) via Travis CI
+ - [OS X](https://circleci.com/gh/wbond/asn1crypto) via CircleCI
+ - [Linux](https://travis-ci.org/wbond/asn1crypto/builds) via Travis CI
  - [Test Coverage](https://codecov.io/gh/wbond/asn1crypto/commits) via Codecov
 
 ## Testing
@@ -173,23 +175,58 @@ python run.py tests ocsp
 
 ## Development
 
-To install required development dependencies, execute:
+To install the package used for linting, execute:
 
 ```bash
-pip install -r dev-requirements.txt
+pip install --user -r requires/lint
 ```
 
-The following commands will run the linter and test coverage:
+The following command will run the linter:
 
 ```bash
 python run.py lint
+```
+
+Support for code coverage can be installed via:
+
+```bash
+pip install --user -r requires/coverage
+```
+
+Coverage is measured by running:
+
+```bash
 python run.py coverage
 ```
 
-After creating a [semver](http://semver.org/) git tag, a `.tar.gz` and `.whl`
-of the package can be created and uploaded to
-[PyPi](https://pypi.python.org/pypi/asn1crypto) by executing:
+To install the necessary packages for releasing a new version on PyPI, run:
 
 ```bash
-python run.py release
+pip install --user -r requires/release
+```
+
+Releases are created by:
+
+ - Making a git tag in [semver](http://semver.org/) format
+ - Running the command:
+
+   ```bash
+   python run.py release
+   ```
+
+Existing releases can be found at https://pypi.python.org/pypi/asn1crypto.
+
+## CI Tasks
+
+A task named `deps` exists to ensure a modern version of `pip` is installed,
+along with all necessary testing dependencies.
+
+The `ci` task runs `lint` (if flake8 is avaiable for the version of Python) and
+`coverage` (or `tests` if coverage is not available for the version of Python).
+If the current directory is a clean git working copy, the coverage data is
+submitted to codecov.io.
+
+```bash
+python run.py deps
+python run.py ci
 ```

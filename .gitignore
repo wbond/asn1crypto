@@ -1,12 +1,12 @@
+.tox/
 __pycache__/
-*.pyc
-.python-version
-*.egg-info/
 build/
 dist/
 tests/output/
-.DS_Store
 tmp/
+*.egg-info/
+*.pyc
+.python-version
+.DS_Store
 .coverage
-.tox
 coverage.xml

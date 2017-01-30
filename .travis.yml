@@ -5,151 +5,24 @@ branches:
     - /^[0-9]+\.[0-9]+\.[0-9]$/
 matrix:
   include:
-    - os: osx
-      python: "2.6"
-      env:
-        PYTHON_VERSION=2.6
-        PLATFORM=osx
-        BACKEND=osx
-    - os: osx
-      python: "2.7"
-      env:
-        PYTHON_VERSION=2.7
-        PLATFORM=osx-10.11
-        BACKEND=osx
-    # This tests OpenSSL 0.9.8, which is what is bundled with OS X
-    - os: osx
-      python: "2.7"
-      env:
-        PYTHON_VERSION=2.7
-        PLATFORM=osx-10.11
-        BACKEND=openssl
-        OSCRYPTO_USE_OPENSSL=/usr/lib/libcrypto.dylib,/usr/lib/libssl.dylib
-    - os: osx
-      osx_image: xcode6.4
-      python: "2.7"
-      env:
-        PYTHON_VERSION=2.7
-        PLATFORM=osx-10.10
-        BACKEND=osx
-    - os: osx
-      osx_image: xcode8.1
-      python: "2.7"
-      env:
-        PYTHON_VERSION=2.7
-        PLATFORM=osx-10.12
-        BACKEND=osx
-    - os: osx
-      python: "3.6"
-      env:
-        PYTHON_VERSION=3.6
-        PLATFORM=osx
-        BACKEND=osx
-    - os: osx
-      osx_image: xcode8.1
-      python: "pypy"
-      env:
-        PYTHON_VERSION=pypy
-        PLATFORM=osx-10.12
-        BACKEND=osx
     - os: linux
       language: python
       python: "2.6"
-      env:
-        PYTHON_VERSION=2.6
-        PLATFORM=linux
-        BACKEND=openssl
     - os: linux
       language: python
       python: "2.7"
-      env:
-        PYTHON_VERSION=2.7
-        PLATFORM=linux
-        BACKEND=openssl
     - os: linux
       language: python
       python: "3.2"
-      env:
-        PYTHON_VERSION=3.2
-        PLATFORM=linux
-        BACKEND=openssl
     - os: linux
       language: python
       python: "3.3"
-      env:
-        PYTHON_VERSION=3.3
-        PLATFORM=linux
-        BACKEND=openssl
-    - os: linux
-      language: python
-      python: "3.4"
-      env:
-        PYTHON_VERSION=3.4
-        PLATFORM=linux
-        BACKEND=openssl
-    - os: linux
-      language: python
-      python: "3.5"
-      env:
-        PYTHON_VERSION=3.5
-        PLATFORM=linux
-        BACKEND=openssl
     - os: linux
       language: python
       python: "3.6"
-      env:
-        PYTHON_VERSION=3.6
-        PLATFORM=linux
-        BACKEND=openssl
     - os: linux
       language: python
       python: "pypy-5.3.1"
-      env:
-        PYTHON_VERSION=pypy
-        PLATFORM=linux
-        BACKEND=openssl
-install:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-        if [ "$PYTHON_VERSION" == "pypy" ]; then
-            brew update;
-            brew install pypy;
-            /usr/local/bin/pip_pypy install flake8 coverage;
-            export PYTHON_BIN=/usr/local/bin/pypy;
-        else
-            if [ "$PYTHON_VERSION" == "3.6" ]; then
-                brew update;
-                brew install python3;
-                /usr/local/bin/pip3 install flake8 coverage;
-                export PYTHON_BIN=/usr/local/bin/python3;
-            else
-                if [ "$PYTHON_VERSION" == "2.7" ]; then
-                    curl --silent --show-error https://bootstrap.pypa.io/get-pip.py | sudo /usr/bin/python2.7;
-                    sudo /usr/bin/python2.7 -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'flake8', 'coverage'])";
-                    export PYTHON_BIN=/usr/bin/python2.7;
-                else
-                    curl --silent --show-error https://bootstrap.pypa.io/get-pip.py | sudo /usr/bin/python2.6 -W ignore;
-                    sudo /usr/bin/python2.6 -W ignore -c "import pip; pip.main(['--disable-pip-version-check', '--quiet', 'install', 'coverage'])";
-                    export PYTHON_BIN=/usr/bin/python2.6;
-                fi;
-            fi;
-        fi;
-    else
-        if [ "$PYTHON_VERSION" == "3.2" ]; then
-            pip install flake8;
-        else
-            pip install flake8 coverage;
-        fi;
-        export PYTHON_BIN=python;
-    fi;
-
-    echo "Checking out modularcrypto packages for coverage";
-    git clone https://github.com/wbond/oscrypto.git $TRAVIS_BUILD_DIR/../oscrypto;
-    git clone https://github.com/wbond/certbuilder.git $TRAVIS_BUILD_DIR/../certbuilder;
-    git clone https://github.com/wbond/certvalidator.git $TRAVIS_BUILD_DIR/../certvalidator;
-    git clone https://github.com/wbond/crlbuilder.git $TRAVIS_BUILD_DIR/../crlbuilder;
-    git clone https://github.com/wbond/csrbuilder.git $TRAVIS_BUILD_DIR/../csrbuilder;
-    git clone https://github.com/wbond/ocspbuilder.git $TRAVIS_BUILD_DIR/../ocspbuilder;
 script:
-  - $PYTHON_BIN run.py ci
-after_success:
-  - bash <(curl -s https://codecov.io/bash) -X gcov -f coverage.xml -e PYTHON_VERSION,PLATFORM,BACKEND
+  - python run.py deps
+  - python run.py ci

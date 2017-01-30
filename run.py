@@ -11,25 +11,25 @@ else:
 
 
 def show_usage():
-    print('Usage: run.py (lint | tests [regex] | coverage | ci | release)', file=sys.stderr)
+    print('Usage: run.py (lint | tests [regex] | coverage | deps | ci | release)', file=sys.stderr)
     sys.exit(1)
 
 
 def get_arg(num):
     if len(sys.argv) < num + 1:
-        return None
+        return None, num
     arg = sys.argv[num]
     if isinstance(arg, byte_cls):
         arg = arg.decode('utf-8')
-    return arg
+    return arg, num + 1
 
 
 if len(sys.argv) < 2 or len(sys.argv) > 3:
     show_usage()
 
-task = get_arg(1)
+task, next_arg = get_arg(1)
 
-if task not in set(['lint', 'tests', 'coverage', 'ci', 'release']):
+if task not in set(['lint', 'tests', 'coverage', 'deps', 'ci', 'release']):
     show_usage()
 
 if task != 'tests' and len(sys.argv) == 3:
@@ -41,12 +41,15 @@ if task == 'lint':
 
 elif task == 'tests':
     from dev.tests import run
-    matcher = get_arg(2)
+    matcher, next_arg = get_arg(next_arg)
     if matcher:
         params.append(matcher)
 
 elif task == 'coverage':
     from dev.coverage import run
+
+elif task == 'deps':
+    from dev.deps import run
 
 elif task == 'ci':
     from dev.ci import run
