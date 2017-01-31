@@ -154,13 +154,17 @@ else:
         """
 
         if width is None:
-            width_ = math.ceil(value.bit_length() / 8) or 1
-            try:
-                return value.to_bytes(width_, byteorder='big', signed=signed)
-            except (OverflowError):
-                return value.to_bytes(width_ + 1, byteorder='big', signed=signed)
-        else:
-            return value.to_bytes(width, byteorder='big', signed=signed)
+            if signed:
+                if value < 0:
+                    bits_required = abs(value + 1).bit_length()
+                else:
+                    bits_required = value.bit_length()
+                if bits_required % 8 == 0:
+                    bits_required += 1
+            else:
+                bits_required = value.bit_length()
+            width = math.ceil(bits_required / 8) or 1
+        return value.to_bytes(width, byteorder='big', signed=signed)
 
     def int_from_bytes(value, signed=False):
         """
