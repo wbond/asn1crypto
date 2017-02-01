@@ -93,6 +93,10 @@ class ConcatTest(core.Concat):
     _child_specs = [Seq, core.Integer]
 
 
+class IntegerConcats(core.Concat):
+    _child_specs = [core.Integer, core.Integer]
+
+
 class MyOids(core.ObjectIdentifier):
     _map = {
         '1.2.3': 'abc',
@@ -220,6 +224,27 @@ class CoreTests(unittest.TestCase):
         c = a.cast(core.IntegerBitString)
         self.assertIsInstance(c, core.IntegerBitString)
         self.assertEqual(66051, c.native)
+
+    def test_load(self):
+        i = core.load(b'\x02\x01\x00')
+        self.assertIsInstance(i, core.Integer)
+        self.assertEqual(0, i.native)
+
+    def test_strict(self):
+        with self.assertRaises(ValueError):
+            core.load(b'\x02\x01\x00\x00', strict=True)
+
+    def test_strict_on_class(self):
+        with self.assertRaises(ValueError):
+            core.Integer.load(b'\x02\x01\x00\x00', strict=True)
+
+    def test_strict_concat(self):
+        with self.assertRaises(ValueError):
+            IntegerConcats.load(b'\x02\x01\x00\x02\x01\x00\x00', strict=True)
+
+    def test_strict_choice(self):
+        with self.assertRaises(ValueError):
+            NumChoice.load(b'\xA0\x03\x02\x01\x00\x00', strict=True)
 
     def test_bit_string_item_access(self):
         named = core.BitString()
