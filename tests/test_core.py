@@ -230,6 +230,10 @@ class CoreTests(unittest.TestCase):
         self.assertIsInstance(i, core.Integer)
         self.assertEqual(0, i.native)
 
+    def test_load_wrong_type(self):
+        with self.assertRaises(TypeError):
+            core.load('\x02\x01\x00')
+
     def test_strict(self):
         with self.assertRaises(ValueError):
             core.load(b'\x02\x01\x00\x00', strict=True)
