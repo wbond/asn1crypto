@@ -47,6 +47,7 @@ def test_classes():
     from .test_tsp import TSPTests
     from .test_x509 import X509Tests
     from .test_util import UtilTests
+    from .test_parser import ParserTests
     from .test_core import CoreTests
 
     return [
@@ -59,6 +60,7 @@ def test_classes():
         PEMTests,
         TSPTests,
         UtilTests,
+        ParserTests,
         X509Tests,
         CoreTests
     ]
