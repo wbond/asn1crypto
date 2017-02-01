@@ -4669,6 +4669,8 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     if header is None:
         return VOID
 
+    header_set = False
+
     # If an explicit specification was passed in, make sure it matches
     if spec is not None:
         if spec_params:
@@ -4718,6 +4720,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
             value.tag_type = 'explicit'
             value.explicit_class = original_value.explicit_class
             value.explicit_tag = original_value.explicit_tag
+            header_set = True
 
         elif isinstance(value, Choice):
             value.validate(class_, tag, contents)
@@ -4777,6 +4780,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         value.tag_type = 'explicit'
         value.explicit_class = original_value.explicit_class
         value.explicit_tag = original_value.explicit_tag
+        header_set = True
 
     # If no spec was specified, allow anything and just process what
     # is in the input data
@@ -4795,8 +4799,9 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
 
         value = spec(contents=contents, class_=class_)
 
-    value._header = header
-    value._trailer = trailer or b''
+    if not header_set:
+        value._header = header
+        value._trailer = trailer or b''
 
     # Destroy any default value that our contents have overwritten
     value._native = None

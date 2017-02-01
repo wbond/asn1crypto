@@ -365,6 +365,11 @@ class CoreTests(unittest.TestCase):
         self.assertNotEqual(a.contents, b.contents)
         self.assertNotEqual(a.dump(), b.dump())
 
+    def test_explicit_tag_header(self):
+        val = NumChoice.load(b'\xa0\x03\x02\x01\x00')
+        self.assertEqual(b'\xa0\x03\x02\x01', val.chosen._header)
+        self.assertEqual(b'\x00', val.chosen.contents)
+
     def test_retag(self):
         a = core.Integer(200)
         b = a.retag('explicit', 0)
