@@ -1,5 +1,19 @@
 # changelog
 
+## 0.21.0
+
+ - Added `core.load()` for loading standard, universal types without knowing
+   the spec beforehand
+ - Added a `strict` keyword arg to the various `load()` methods and functions in
+   `core` that checks for trailing data and raises a `ValueError` when found
+ - Added `asn1crypto.parser` submodule with `emit()` and `parse()` functions for
+   low-level integration
+ - Added `asn1crypto.version` for version introspection without side-effects
+ - Added `algos.DSASignature`
+ - Fixed a bug with the `_header` attribute of explicitly-tagged values only
+   containing the explicit tag header instead of both the explicit tag header
+   and the encapsulated value header
+
 ## 0.20.0
 
  - Added support for year 0
