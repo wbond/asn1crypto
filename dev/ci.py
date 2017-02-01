@@ -35,7 +35,7 @@ def run():
     if run_coverage:
         print('\nRunning tests (via coverage.py)')
         sys.stdout.flush()
-        tests_result = run_coverage(write_xml=True)
+        tests_result = run_coverage(ci=True)
     else:
         print('\nRunning tests')
         sys.stdout.flush()

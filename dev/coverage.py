@@ -24,9 +24,13 @@ else:
     from urllib.parse import urlencode
 
 
-def run(write_xml=False):
+def run(ci=False):
     """
     Runs the tests while measuring coverage
+
+    :param ci:
+        If coverage is being run in a CI environment - this triggers trying to
+        run the tests for the rest of modularcrypto and uploading coverage data
 
     :return:
         A bool - if the tests ran successfully
@@ -43,20 +47,20 @@ def run(write_xml=False):
     result = run_tests()
     print()
 
-    suite = unittest.TestSuite()
-    loader = unittest.TestLoader()
-    for package_name in ['oscrypto', 'certbuilder', 'certvalidator', 'crlbuilder', 'csrbuild', 'ocspbuilder']:
-        for test_class in _load_package_tests(package_name):
-            suite.addTest(loader.loadTestsFromTestCase(test_class))
+    if ci:
+        suite = unittest.TestSuite()
+        loader = unittest.TestLoader()
+        for package_name in ['oscrypto', 'certbuilder', 'certvalidator', 'crlbuilder', 'csrbuild', 'ocspbuilder']:
+            for test_class in _load_package_tests(package_name):
+                suite.addTest(loader.loadTestsFromTestCase(test_class))
 
-    if suite.countTestCases() > 0:
-        print('Running tests from other modularcrypto packages')
-        sys.stdout.flush()
-        other_result = unittest.TextTestRunner(stream=sys.stdout, verbosity=1).run(suite).wasSuccessful()
-        print()
-        sys.stdout.flush()
-    else:
-        other_result = True
+        if suite.countTestCases() > 0:
+            print('Running tests from other modularcrypto packages')
+            sys.stdout.flush()
+            runner_result = unittest.TextTestRunner(stream=sys.stdout, verbosity=1).run(suite)
+            result = runner_result.wasSuccessful() and result
+            print()
+            sys.stdout.flush()
 
     cov.stop()
     cov.save()
@@ -64,14 +68,14 @@ def run(write_xml=False):
     cov.report(show_missing=False)
     print()
     sys.stdout.flush()
-    if write_xml:
+    if ci:
         cov.xml_report()
 
-    if write_xml and result and other_result and os.path.exists(xml_report_path):
+    if ci and result and os.path.exists(xml_report_path):
         _codecov_submit()
         print()
 
-    return result and other_result
+    return result
 
 
 def _load_package_tests(name):
