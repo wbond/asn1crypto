@@ -406,6 +406,10 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             SeqChoice(('one', a, None))
 
+    def test_load_invalid_choice(self):
+        with self.assertRaises(ValueError):
+            NumChoice.load(b'\x02\x01\x00')
+
     def test_fix_tagging_choice(self):
         correct = core.Integer(200, tag_type='explicit', tag=2)
         choice = NumChoice(
