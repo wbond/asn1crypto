@@ -234,6 +234,19 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             core.load('\x02\x01\x00')
 
+    @staticmethod
+    def truncated_der_byte_strings():
+        return (
+            (b'',),
+            (b'\x30',),
+            (b'\x30\x03\x02\x00\x02',),
+        )
+
+    @data('truncated_der_byte_strings')
+    def truncated(self, der_bytes):
+        with self.assertRaises(ValueError):
+            core.load(der_bytes).native
+
     def test_strict(self):
         with self.assertRaises(ValueError):
             core.load(b'\x02\x01\x00\x00', strict=True)

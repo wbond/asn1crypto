@@ -129,8 +129,8 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
          - 1: An integer indicating how many bytes were consumed
     """
 
-    if data_len == 0:
-        return ((None, None, None, None, None, None), pointer)
+    if data_len < pointer + 2:
+        raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (2, data_len - pointer))
 
     start = pointer
     first_octet = ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
