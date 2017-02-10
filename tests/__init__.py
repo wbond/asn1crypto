@@ -44,6 +44,7 @@ def test_classes():
     from .test_keys import KeysTests
     from .test_ocsp import OCSPTests
     from .test_pem import PEMTests
+    from .test_pkcs12 import PKCS12Tests
     from .test_tsp import TSPTests
     from .test_x509 import X509Tests
     from .test_util import UtilTests
@@ -58,6 +59,7 @@ def test_classes():
         KeysTests,
         OCSPTests,
         PEMTests,
+        PKCS12Tests,
         TSPTests,
         UtilTests,
         ParserTests,

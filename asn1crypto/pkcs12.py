@@ -57,6 +57,10 @@ class AttributeType(ObjectIdentifier):
     }
 
 
+class SetOfAny(SetOf):
+    _child_spec = Any
+
+
 class SetOfBMPString(SetOf):
     _child_spec = BMPString
 
@@ -68,14 +72,20 @@ class SetOfOctetString(SetOf):
 class Attribute(Sequence):
     _fields = [
         ('type', AttributeType),
-        ('values', SetOf, {'spec': Any}),
+        ('values', None),
     ]
 
-    _oid_pair = ('type', 'values')
     _oid_specs = {
         'friendly_name': SetOfBMPString,
         'local_key_id': SetOfOctetString,
         'microsoft_csp_name': SetOfBMPString,
+    }
+
+    def _values_spec(self):
+        return self._oid_specs.get(self['type'].native, SetOfAny)
+
+    _spec_callbacks = {
+        'values': _values_spec
     }
 
 

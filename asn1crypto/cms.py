@@ -406,10 +406,7 @@ class AttCertAttribute(Sequence):
     }
 
     def _values_spec(self):
-        spec = self._oid_specs.get(self['type'].native, SetOfAny)
-        if spec == SetOfAny:
-            print('UNKNOWN OID: %s' % self['type'].native)
-        return spec
+        return self._oid_specs.get(self['type'].native, SetOfAny)
 
     _spec_callbacks = {
         'values': _values_spec
