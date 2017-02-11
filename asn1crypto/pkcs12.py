@@ -55,7 +55,8 @@ class AttributeType(ObjectIdentifier):
         # https://support.microsoft.com/en-us/kb/287547
         '1.3.6.1.4.1.311.17.1': 'microsoft_local_machine_keyset',
         # https://github.com/frohoff/jdk8u-dev-jdk/blob/master/src/share/classes/sun/security/pkcs12/PKCS12KeyStore.java
-        '2.16.840.1.113894.746875.1.1': 'trusted_cert_entry',
+        # this is a set of OIDs, representing key usage, the usual value is a SET of one element OID 2.5.29.37.0
+        '2.16.840.1.113894.746875.1.1': 'trusted_key_usage',
     }
 
 
