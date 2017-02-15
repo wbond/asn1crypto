@@ -28,7 +28,7 @@ from .core import (
     SetOf,
 )
 from .keys import PrivateKeyInfo, EncryptedPrivateKeyInfo
-from .x509 import Certificate
+from .x509 import Certificate, KeyPurposeId
 
 
 # The structures in this file are taken from https://tools.ietf.org/html/rfc7292
@@ -72,6 +72,10 @@ class SetOfOctetString(SetOf):
     _child_spec = OctetString
 
 
+class SetOfKeyPurposeId(SetOf):
+    _child_spec = KeyPurposeId
+
+
 class Attribute(Sequence):
     _fields = [
         ('type', AttributeType),
@@ -82,6 +86,7 @@ class Attribute(Sequence):
         'friendly_name': SetOfBMPString,
         'local_key_id': SetOfOctetString,
         'microsoft_csp_name': SetOfBMPString,
+        'trusted_key_usage': SetOfKeyPurposeId,
     }
 
     def _values_spec(self):
