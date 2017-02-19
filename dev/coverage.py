@@ -430,7 +430,7 @@ def _gitignore(root):
     return (dir_patterns, file_patterns)
 
 
-def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
+def _do_request(method, url, headers, data=None, query_params=None, timeout=30):
     """
     Performs an HTTP request
 
