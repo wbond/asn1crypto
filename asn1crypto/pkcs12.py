@@ -28,7 +28,7 @@ from .core import (
     SetOf,
 )
 from .keys import PrivateKeyInfo, EncryptedPrivateKeyInfo
-from .x509 import Certificate
+from .x509 import Certificate, KeyPurposeId
 
 
 # The structures in this file are taken from https://tools.ietf.org/html/rfc7292
@@ -54,6 +54,9 @@ class AttributeType(ObjectIdentifier):
         '1.2.840.113549.1.9.21': 'local_key_id',
         # https://support.microsoft.com/en-us/kb/287547
         '1.3.6.1.4.1.311.17.1': 'microsoft_local_machine_keyset',
+        # https://github.com/frohoff/jdk8u-dev-jdk/blob/master/src/share/classes/sun/security/pkcs12/PKCS12KeyStore.java
+        # this is a set of OIDs, representing key usage, the usual value is a SET of one element OID 2.5.29.37.0
+        '2.16.840.1.113894.746875.1.1': 'trusted_key_usage',
     }
 
 
@@ -69,6 +72,10 @@ class SetOfOctetString(SetOf):
     _child_spec = OctetString
 
 
+class SetOfKeyPurposeId(SetOf):
+    _child_spec = KeyPurposeId
+
+
 class Attribute(Sequence):
     _fields = [
         ('type', AttributeType),
@@ -79,6 +86,7 @@ class Attribute(Sequence):
         'friendly_name': SetOfBMPString,
         'local_key_id': SetOfOctetString,
         'microsoft_csp_name': SetOfBMPString,
+        'trusted_key_usage': SetOfKeyPurposeId,
     }
 
     def _values_spec(self):

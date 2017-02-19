@@ -81,3 +81,38 @@ class PKCS12Tests(unittest.TestCase):
                     ['PKCS#12 Test'],
                     bag_attributes[1]['values'].native
                 )
+
+    def test_parse_certbag(self):
+        '''test to parse the java oid "2.16.840.1.113894.746875.1.1"'''
+        with open(os.path.join(fixtures_dir, 'certbag.der'), 'rb') as f:
+            certbag = pkcs12.SafeBag.load(f.read())
+
+        self.assertEqual(
+            2,
+            len(certbag['bag_attributes'])
+        )
+
+        attr_0 = certbag['bag_attributes'][0]
+
+        self.assertEqual(
+            'friendly_name',
+            attr_0['type'].native
+        )
+
+        self.assertEqual(
+            ['testcertificate'],
+            attr_0['values'].native
+        )
+
+
+        attr_1 = certbag['bag_attributes'][1]
+
+        self.assertEqual(
+            'trusted_key_usage',
+            attr_1['type'].native
+        )
+
+        self.assertEqual(
+            ['any_extended_key_usage'],
+            attr_1['values'].native
+        )
