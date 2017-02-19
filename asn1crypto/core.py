@@ -4715,7 +4715,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
             original_value = value
             info, _ = _parse(contents, len(contents))
             value = _build(*info, spec=spec)
-            value._header = header + info[3]
+            value._header = header + value._header
             value._trailer += trailer or b''
             value.tag_type = 'explicit'
             value.explicit_class = original_value.explicit_class
@@ -4775,7 +4775,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         original_value = Asn1Value(contents=contents, **spec_params)
         info, _ = _parse(contents, len(contents))
         value = _build(*info, spec=spec)
-        value._header = header + info[3]
+        value._header = header + value._header
         value._trailer += trailer or b''
         value.tag_type = 'explicit'
         value.explicit_class = original_value.explicit_class

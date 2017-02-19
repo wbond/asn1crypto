@@ -78,6 +78,12 @@ class SeqChoice(core.Choice):
     ]
 
 
+class ExplicitField(core.Sequence):
+    _fields = [
+        ('field', NumChoice, {'tag_type': 'explicit', 'tag': 0}),
+    ]
+
+
 class SetTest(core.Set):
     _fields = [
         ('two', core.Integer, {'tag_type': 'implicit', 'tag': 2}),
@@ -386,6 +392,12 @@ class CoreTests(unittest.TestCase):
         val = NumChoice.load(b'\xa0\x03\x02\x01\x00')
         self.assertEqual(b'\xa0\x03\x02\x01', val.chosen._header)
         self.assertEqual(b'\x00', val.chosen.contents)
+
+    def test_explicit_header_field_choice(self):
+        der = b'\x30\x07\xa0\x05\xa0\x03\x02\x01\x00'
+        val = ExplicitField.load(der)
+        self.assertEqual(0, val['field'].chosen.native)
+        self.assertEqual(der, val.dump(force=True))
 
     def test_retag(self):
         a = core.Integer(200)
