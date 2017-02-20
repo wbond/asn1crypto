@@ -1,5 +1,15 @@
 # changelog
 
+## 0.21.1
+
+ - Fixed a regression where explicit tagging of a field containing a
+   `core.Choice` would result in an incorrect header
+ - Fixed a bug where an `IndexError` was being raised instead of a `ValueError`
+   when a value was truncated to not include enough bytes for the header
+ - Corrected the spec for the `value` field of `pkcs12.Attribute`
+ - Added support for `2.16.840.1.113894.746875.1.1` OID to
+   `pkcs12.AttributeType`
+
 ## 0.21.0
 
  - Added `core.load()` for loading standard, universal types without knowing
