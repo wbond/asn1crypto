@@ -90,6 +90,34 @@ class DNSName(IA5String):
 
         return self.contents.lower() == other.contents.lower()
 
+    def set(self, value):
+        """
+        Sets the value of the DNS name
+
+        :param value:
+            A unicode string
+        """
+
+        if not isinstance(value, str_cls):
+            raise TypeError(unwrap(
+                '''
+                %s value must be a unicode string, not %s
+                ''',
+                type_name(self),
+                type_name(value)
+            ))
+
+        if value.startswith('.'):
+            encoded_value = b'.' + value[1:].encode(self._encoding)
+        else:
+            encoded_value = value.encode(self._encoding)
+
+        self._native = value
+        self.contents = encoded_value
+        self._header = None
+        if self._trailer != b'':
+            self._trailer = b''
+
 
 class URI(IA5String):
 
