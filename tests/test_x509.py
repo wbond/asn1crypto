@@ -309,6 +309,11 @@ class X509Tests(unittest.TestCase):
         else:
             self.assertNotEqual(one, two)
 
+    def test_dump_generalname(self):
+        data = b'0.\x82\x0fsuscerte.gob.ve\xa0\x1b\x06\x05`\x86^\x02\x02\xa0\x12\x0c\x10RIF-G-20004036-0'
+        alt = x509.GeneralNames.load(data)
+        self.assertEqual(data, alt.dump(force=True))
+
     @staticmethod
     def compare_name_info():
         return (

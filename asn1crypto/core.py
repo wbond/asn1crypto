@@ -758,7 +758,7 @@ class Any(Asn1Value):
                 if self.tag_type == 'explicit':
                     passed_params = {} if not spec_params else spec_params.copy()
                     passed_params['tag_type'] = self.tag_type
-                    passed_params['tag'] = self.tag
+                    passed_params['tag'] = self.explicit_tag
                 parsed_value, _ = _parse_build(
                     self._header + self.contents + self._trailer,
                     spec=spec,
