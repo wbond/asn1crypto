@@ -119,3 +119,17 @@ class UtilTests(unittest.TestCase):
         self.assertEqual(util.extended_date(0, 1, 1), util.extended_datetime(0, 1, 1).date())
         self.assertEqual(util.extended_date(0, 2, 29), util.extended_datetime(0, 2, 29).date())
         self.assertEqual(time(0, 0, 0), util.extended_datetime(0, 1, 1).time())
+
+    def test_iri_to_uri(self):
+        self.assertEqual(
+            b'ldap://ldap.e-szigno.hu/CN=Microsec%20e-Szigno%20Root%20CA,OU=e-Szigno%20CA,O=Microsec%20Ltd.,L=Budapest,C=HU?certificateRevocationList;binary',
+            util.iri_to_uri('ldap://ldap.e-szigno.hu/CN=Microsec e-Szigno Root CA,OU=e-Szigno CA,O=Microsec Ltd.,L=Budapest,C=HU?certificateRevocationList;binary')
+        )
+        self.assertEqual(
+            b'ldap://directory.d-trust.net/CN=D-TRUST%20Root%20Class%203%20CA%202%202009,O=D-Trust%20GmbH,C=DE?certificaterevocationlist',
+            util.iri_to_uri('ldap://directory.d-trust.net/CN=D-TRUST Root Class 3 CA 2 2009,O=D-Trust GmbH,C=DE?certificaterevocationlist')
+        )
+        self.assertEqual(
+            b'ldap://directory.d-trust.net/CN=D-TRUST%20Root%20Class%203%20CA%202%20EV%202009,O=D-Trust%20GmbH,C=DE?certificaterevocationlist',
+            util.iri_to_uri('ldap://directory.d-trust.net/CN=D-TRUST Root Class 3 CA 2 EV 2009,O=D-Trust GmbH,C=DE?certificaterevocationlist')
+        )
