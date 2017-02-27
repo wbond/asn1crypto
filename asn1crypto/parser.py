@@ -232,8 +232,6 @@ def _dump_header(class_, method, tag, contents):
     id_num |= class_ << 6
     id_num |= method << 5
 
-    tag = tag
-
     if tag >= 31:
         header += chr_cls(id_num | 31)
         while tag > 0:
