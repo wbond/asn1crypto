@@ -114,7 +114,7 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(unicode_string, x509.IPAddress.load(der_bytes).native)
 
     def test_dnsname_begin_dot(self):
-        self.assertEqual(b'\x16\x03.gr', x509.DNSName(u'.gr').dump())
+        self.assertEqual(b'\x16\x03.gr', x509.DNSName('.gr').dump())
 
     @staticmethod
     def compare_dnsname_info():
