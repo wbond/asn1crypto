@@ -495,8 +495,13 @@ class Asn1Value(object):
         """
 
         prefix = '  ' * nest_level
+
+        # This interacts with Any and moves the tag, tag_type, _header, contents, _footer
+        # to the parsed value so duplicate data isn't present
+        has_parsed = hasattr(self, 'parsed')
+
         _basic_debug(prefix, self)
-        if hasattr(self, 'parsed'):
+        if has_parsed:
             self.parsed.debug(nest_level + 2)
         elif hasattr(self, 'chosen'):
             self.chosen.debug(nest_level + 2)
@@ -759,12 +764,22 @@ class Any(Asn1Value):
                     passed_params = {} if not spec_params else spec_params.copy()
                     passed_params['tag_type'] = self.tag_type
                     passed_params['tag'] = self.explicit_tag
+                contents = self._header + self.contents + self._trailer
                 parsed_value, _ = _parse_build(
-                    self._header + self.contents + self._trailer,
+                    contents,
                     spec=spec,
                     spec_params=passed_params
                 )
                 self._parsed = (parsed_value, spec, spec_params)
+
+                # Once we've parsed the Any value, clear any attributes from this object
+                # since they are now duplicate
+                self.tag_type = None
+                self.tag = None
+                self._header = b''
+                self.contents = contents
+                self._trailer = b''
+
             except (ValueError, TypeError) as e:
                 args = e.args[1:]
                 e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
