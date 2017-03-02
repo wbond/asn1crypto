@@ -115,12 +115,7 @@ class CMSTests(unittest.TestCase):
             compressed_data.decompressed
         )
 
-    def test_parse_content_info_jibberish(self):
-        # This DER data isn't really DER, but BER because it uses indefinite
-        # length encoding. Additionally, the CompressedData isn't actually
-        # real CompressedData, but a number of OctetString values concatenated
-        # together that can have their native values concatenated and then
-        # run through zlib.
+    def test_parse_content_info_indefinite(self):
         with open(os.path.join(fixtures_dir, 'meca2_compressed.der'), 'rb') as f:
             info = cms.ContentInfo.load(f.read())
 
@@ -146,15 +141,7 @@ class CMSTests(unittest.TestCase):
             'data',
             compressed_data['encap_content_info']['content_type'].native
         )
-        encap_data = compressed_data['encap_content_info']['content'].native
-        read = 0
-        chunks = 0
-        data = b''
-        while read < len(encap_data):
-            value, read = core._parse_build(encap_data, read)
-            data += value.native
-            chunks += 1
-        self.assertEqual(10, chunks)
+        data = compressed_data['encap_content_info']['content'].native
         self.assertIsInstance(zlib.decompress(data), byte_cls)
 
     def test_parse_content_info_digested_data(self):

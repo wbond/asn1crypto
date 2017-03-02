@@ -486,6 +486,9 @@ class Asn1Value(object):
 
         self.contents = other.contents
         self._native = copy_func(other._native)
+        if isinstance(other, Constructable):
+            self.method = copy_func(other.method)
+            self._indefinite = copy_func(other._indefinite)
         if hasattr(other, '_parsed'):
             self._parsed = copy_func(other._parsed)
 
@@ -525,7 +528,10 @@ class Asn1Value(object):
 
         contents = self.contents
 
-        if self._header is None:
+        if self._header is None or force:
+            if isinstance(self, Constructable) and self._indefinite:
+                self.method = 0
+
             header = _dump_header(self.class_, self.method, self.tag, self.contents)
             trailer = b''
 
@@ -612,7 +618,54 @@ class Castable():
         new_obj._header = self._header
         new_obj.contents = self.contents
         new_obj._trailer = self._trailer
+        if isinstance(self, Constructable):
+            new_obj.method = self.method
+            new_obj._indefinite = self._indefinite
         return new_obj
+
+
+class Constructable():
+    """
+    A mixin to handle string types that may be constructed from chunks
+    contained within an indefinite length BER-encoded container
+    """
+
+    _indefinite = False
+
+    _chunks_offset = 0
+
+    def _merge_chunks(self):
+        """
+        :return:
+            A concatenation of the native values of the contained chunks
+        """
+
+        if not self._indefinite:
+            return self._as_chunk()
+
+        pointer = self._chunks_offset
+        contents_len = len(self.contents)
+        output = None
+        while pointer < contents_len:
+            # We pass the current class as the spec so content semantics are preserved
+            sub_value, pointer = _parse_build(self.contents, pointer, spec=self.__class__)
+            if output is None:
+                output = sub_value._as_chunk()
+            else:
+                output += sub_value._as_chunk()
+        return output
+
+    def _as_chunk(self):
+        """
+        A method to return a chunk of data that can be combined for
+        constructed method values
+
+        :return:
+            A native Python value that can be added together. Examples include
+            byte strings, unicode strings or tuples.
+        """
+
+        raise NotImplementedError()
 
 
 class Void(Asn1Value):
@@ -1120,7 +1173,7 @@ class Choice(Asn1Value):
         """
 
         self.contents = self.chosen.dump(force=force)
-        if self._header is None:
+        if self._header is None or force:
             if self.tag_type == 'explicit':
                 self._header = _dump_header(self.explicit_class, 1, self.explicit_tag, self.contents)
             else:
@@ -1540,7 +1593,7 @@ class Primitive(Asn1Value):
         return self.dump() == other.dump()
 
 
-class AbstractString(Primitive):
+class AbstractString(Constructable, Primitive):
     """
     A base class for all strings that have a known encoding. In general, we do
     not worry ourselves with confirming that the decoded values match a specific
@@ -1579,7 +1632,17 @@ class AbstractString(Primitive):
             A unicode string
         """
 
-        return self.contents.decode(self._encoding)
+        return self._merge_chunks().decode(self._encoding)
+
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
+        :return:
+            A byte string
+        """
+
+        return self.contents
 
     @property
     def native(self):
@@ -1732,7 +1795,7 @@ class Integer(Primitive, ValueMap):
         return self._native
 
 
-class BitString(Castable, Primitive, ValueMap, object):
+class BitString(Constructable, Castable, Primitive, ValueMap, object):
     """
     Represents a bit string from ASN.1 as a Python tuple of 1s and 0s
     """
@@ -1740,6 +1803,10 @@ class BitString(Castable, Primitive, ValueMap, object):
     tag = 3
 
     _size = None
+
+    # Used with _as_chunk() from Constructable
+    _chunk = None
+    _chunks_offset = 1
 
     def _setup(self):
         """
@@ -1803,6 +1870,8 @@ class BitString(Castable, Primitive, ValueMap, object):
                 type_name(self),
                 type_name(value)
             ))
+
+        self._chunk = None
 
         if self._map is not None:
             if len(value) > self._size:
@@ -1951,6 +2020,36 @@ class BitString(Castable, Primitive, ValueMap, object):
 
         self.set(self._native)
 
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
+        :return:
+            A tuple of integers
+        """
+
+        extra_bits = int_from_bytes(self.contents[0:1])
+        bit_string = '{0:b}'.format(int_from_bytes(self.contents[1:]))
+        byte_len = len(self.contents[1:])
+        bit_len = len(bit_string)
+
+        # Left-pad the bit string to a byte multiple to ensure we didn't
+        # lose any zero bits on the left
+        mod_bit_len = bit_len % 8
+        if mod_bit_len != 0:
+            bit_string = ('0' * (8 - mod_bit_len)) + bit_string
+            bit_len = len(bit_string)
+
+        if bit_len // 8 < byte_len:
+            missing_bytes = byte_len - (bit_len // 8)
+            bit_string = ('0' * (8 * missing_bytes)) + bit_string
+
+        # Trim off the extra bits on the right used to fill the last byte
+        if extra_bits > 0:
+            bit_string = bit_string[0:0 - extra_bits]
+
+        return tuple(map(int, tuple(bit_string)))
+
     @property
     def native(self):
         """
@@ -1969,27 +2068,7 @@ class BitString(Castable, Primitive, ValueMap, object):
                 self.set(set())
 
         if self._native is None:
-            extra_bits = int_from_bytes(self.contents[0:1])
-            bit_string = '{0:b}'.format(int_from_bytes(self.contents[1:]))
-            byte_len = len(self.contents[1:])
-            bit_len = len(bit_string)
-
-            # Left-pad the bit string to a byte multiple to ensure we didn't
-            # lose any zero bits on the left
-            mod_bit_len = bit_len % 8
-            if mod_bit_len != 0:
-                bit_string = ('0' * (8 - mod_bit_len)) + bit_string
-                bit_len = len(bit_string)
-
-            if bit_len // 8 < byte_len:
-                missing_bytes = byte_len - (bit_len // 8)
-                bit_string = ('0' * (8 * missing_bytes)) + bit_string
-
-            # Trim off the extra bits on the right used to fill the last byte
-            if extra_bits > 0:
-                bit_string = bit_string[0:0 - extra_bits]
-
-            bits = tuple(map(int, tuple(bit_string)))
+            bits = self._merge_chunks()
             if self._map:
                 self._native = set()
                 for index, bit in enumerate(bits):
@@ -2001,12 +2080,14 @@ class BitString(Castable, Primitive, ValueMap, object):
         return self._native
 
 
-class OctetBitString(Castable, Primitive):
+class OctetBitString(Constructable, Castable, Primitive):
     """
     Represents a bit string in ASN.1 as a Python byte string
     """
 
     tag = 3
+
+    _chunks_offset = 1
 
     def set(self, value):
         """
@@ -2047,6 +2128,16 @@ class OctetBitString(Castable, Primitive):
         # unused_bits = struct.unpack('>B', self.contents[0:1])[0]
         return self.contents[1:]
 
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
+        :return:
+            A byte string
+        """
+
+        return self.contents[1:]
+
     @property
     def native(self):
         """
@@ -2060,16 +2151,18 @@ class OctetBitString(Castable, Primitive):
             return None
 
         if self._native is None:
-            self._native = self.__bytes__()
+            self._native = self._merge_chunks()
         return self._native
 
 
-class IntegerBitString(Castable, Primitive):
+class IntegerBitString(Constructable, Castable, Primitive):
     """
     Represents a bit string in ASN.1 as a Python integer
     """
 
     tag = 3
+
+    _chunks_offset = 1
 
     def set(self, value):
         """
@@ -2098,6 +2191,27 @@ class IntegerBitString(Castable, Primitive):
         if self._trailer != b'':
             self._trailer = b''
 
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
+        :return:
+            A unicode string of bits – 1s and 0s
+        """
+
+        extra_bits = int_from_bytes(self.contents[0:1])
+        bit_string = '{0:b}'.format(int_from_bytes(self.contents[1:]))
+
+        # Ensure we have leading zeros since these chunks may be concatenated together
+        mod_bit_len = len(bit_string) % 8
+        if mod_bit_len != 0:
+            bit_string = ('0' * (8 - mod_bit_len)) + bit_string
+
+        if extra_bits > 0:
+            return bit_string[0:0 - extra_bits]
+
+        return bit_string
+
     @property
     def native(self):
         """
@@ -2112,16 +2226,17 @@ class IntegerBitString(Castable, Primitive):
 
         if self._native is None:
             extra_bits = int_from_bytes(self.contents[0:1])
-            if extra_bits > 0:
-                bit_string = '{0:b}'.format(int_from_bytes(self.contents[1:]))
-                bit_string = bit_string[0:0 - extra_bits]
-                self._native = int(bit_string, 2)
-            else:
+            # Fast path
+            if not self._indefinite and extra_bits == 0:
                 self._native = int_from_bytes(self.contents[1:])
+            else:
+                if self._indefinite and extra_bits > 0:
+                    raise ValueError('Constructed bit string has extra bits on indefinite container')
+                self._native = int(self._merge_chunks(), 2)
         return self._native
 
 
-class OctetString(Castable, Primitive):
+class OctetString(Constructable, Castable, Primitive):
     """
     Represents a byte string in both ASN.1 and Python
     """
@@ -2130,6 +2245,16 @@ class OctetString(Castable, Primitive):
 
     def __bytes__(self):
         """
+        :return:
+            A byte string
+        """
+
+        return self.contents
+
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
         :return:
             A byte string
         """
@@ -2149,11 +2274,11 @@ class OctetString(Castable, Primitive):
             return None
 
         if self._native is None:
-            self._native = self.__bytes__()
+            self._native = self._merge_chunks()
         return self._native
 
 
-class IntegerOctetString(Castable, Primitive):
+class IntegerOctetString(Constructable, Castable, Primitive):
     """
     Represents a byte string in ASN.1 as a Python integer
     """
@@ -2186,6 +2311,16 @@ class IntegerOctetString(Castable, Primitive):
         if self._trailer != b'':
             self._trailer = b''
 
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
+        :return:
+            A byte string
+        """
+
+        return self.contents
+
     @property
     def native(self):
         """
@@ -2199,11 +2334,11 @@ class IntegerOctetString(Castable, Primitive):
             return None
 
         if self._native is None:
-            self._native = int_from_bytes(self.contents)
+            self._native = int_from_bytes(self._merge_chunks())
         return self._native
 
 
-class ParsableOctetString(Castable, Primitive):
+class ParsableOctetString(Constructable, Castable, Primitive):
 
     tag = 4
 
@@ -2253,12 +2388,22 @@ class ParsableOctetString(Castable, Primitive):
         """
 
         if self._parsed is None or self._parsed[1:3] != (spec, spec_params):
-            parsed_value, _ = _parse_build(byte_cls(self), spec=spec, spec_params=spec_params)
+            parsed_value, _ = _parse_build(self._merge_chunks(), spec=spec, spec_params=spec_params)
             self._parsed = (parsed_value, spec, spec_params)
         return self._parsed[0]
 
     def __bytes__(self):
         """
+        :return:
+            A byte string
+        """
+
+        return self.contents
+
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
         :return:
             A byte string
         """
@@ -2281,7 +2426,7 @@ class ParsableOctetString(Castable, Primitive):
             if self._parsed is not None:
                 self._native = self._parsed[0].native
             else:
-                self._native = self.__bytes__()
+                self._native = self._merge_chunks()
         return self._native
 
     @property
@@ -2350,6 +2495,8 @@ class ParsableOctetBitString(ParsableOctetString):
 
     tag = 3
 
+    _chunks_offset = 1
+
     def set(self, value):
         """
         Sets the value of the object
@@ -2379,6 +2526,16 @@ class ParsableOctetBitString(ParsableOctetString):
 
     def __bytes__(self):
         """
+        :return:
+            A byte string
+        """
+
+        return self._merge_chunks()
+
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
         :return:
             A byte string
         """
@@ -4764,7 +4921,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 # Allow parsing a primitive method as constructed if the value
                 # is indefinite length. This is to allow parsing BER.
                 ber_indef = method == 1 and value.method == 0 and trailer == b'\x00\x00'
-                if not ber_indef:
+                if not ber_indef or not isinstance(value, Constructable):
                     raise ValueError(unwrap(
                         '''
                         Error parsing %s - method should have been %s, but %s was found
@@ -4773,6 +4930,9 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                         METHOD_NUM_TO_NAME_MAP.get(value.method),
                         METHOD_NUM_TO_NAME_MAP.get(method, method)
                     ))
+                else:
+                    value.method = method
+                    value._indefinite = True
             if tag != value.tag and tag != value._bad_tag:
                 raise ValueError(unwrap(
                     '''
