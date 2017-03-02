@@ -501,6 +501,13 @@ class CoreTests(unittest.TestCase):
             a.native
         )
 
+    def test_nested_indefinite_length_octet_string(self):
+        data = b'\x24\x80\x24\x80\x24\x80\x04\x00\x00\x00\x00\x00\x00\x00'
+        a = core.load(data)
+        self.assertEqual(b'', a.native)
+        self.assertEqual(1, a.method)
+        self.assertEqual(b'\x04\x00', a.dump(force=True))
+
     def test_indefinite_length_integer_octet_string(self):
         data = b'$\x80\x04\x02\x01\x01\x04\x01\x01\x00\x00'
         a = core.IntegerOctetString.load(data)

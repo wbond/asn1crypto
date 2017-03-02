@@ -646,13 +646,18 @@ class Constructable():
         pointer = self._chunks_offset
         contents_len = len(self.contents)
         output = None
+
         while pointer < contents_len:
             # We pass the current class as the spec so content semantics are preserved
             sub_value, pointer = _parse_build(self.contents, pointer, spec=self.__class__)
             if output is None:
-                output = sub_value._as_chunk()
+                output = sub_value._merge_chunks()
             else:
-                output += sub_value._as_chunk()
+                output += sub_value._merge_chunks()
+
+        if output is None:
+            return self._as_chunk()
+
         return output
 
     def _as_chunk(self):
@@ -4973,6 +4978,10 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         spec = _UNIVERSAL_SPECS[tag]
 
         value = spec(contents=contents, class_=class_)
+        ber_indef = method == 1 and value.method == 0 and trailer == b'\x00\x00'
+        if ber_indef and isinstance(value, Constructable):
+            value._indefinite = True
+        value.method = method
 
     if not header_set:
         value._header = header

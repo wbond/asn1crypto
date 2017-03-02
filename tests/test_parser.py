@@ -25,6 +25,13 @@ class ParserTests(unittest.TestCase):
     def test_peek(self):
         self.assertEqual(3, parser.peek(b'\x02\x01\x00\x00'))
 
+    def test_parse_indef_nested(self):
+        data = b'\x24\x80\x24\x80\x24\x80\x04\x00\x00\x00\x00\x00\x00\x00'
+        result = parser.parse(data)
+        self.assertEqual(b'\x24\x80', result[3])
+        self.assertEqual(b'\x24\x80\x24\x80\x04\x00\x00\x00\x00\x00', result[4])
+        self.assertEqual(b'\x00\x00', result[5])
+
     def test_parser_strict(self):
         with self.assertRaises(ValueError):
             parser.parse(b'\x02\x01\x00\x00', strict=True)

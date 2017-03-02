@@ -209,7 +209,7 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
                 contents_end += 1
             while contents_end < data_len:
                 sub_header_end, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True)
-                if contents_end == sub_header_end:
+                if contents_end == sub_header_end and encoded_data[contents_end - 2:contents_end] == b'\x00\x00':
                     break
             if lengths_only:
                 return (pointer, contents_end)
