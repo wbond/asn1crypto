@@ -22,6 +22,9 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(b'\x00', result[4])
         self.assertEqual(b'', result[5])
 
+    def test_peek(self):
+        self.assertEqual(3, parser.peek(b'\x02\x01\x00\x00'))
+
     def test_parser_strict(self):
         with self.assertRaises(ValueError):
             parser.parse(b'\x02\x01\x00\x00', strict=True)

@@ -6,6 +6,7 @@ following items:
 
  - emit()
  - parse()
+ - peek()
 
 Other type classes are defined that help compose the types listed above.
 """
@@ -85,6 +86,10 @@ def parse(contents, strict=False):
         A boolean indicating if trailing data should be forbidden - if so, a
         ValueError will be raised when trailing data exists
 
+    :raises:
+        ValueError - when the contents do not contain an ASN.1 header or are truncated in some way
+        TypeError - when contents is not a byte string
+
     :return:
         A 6-element tuple:
          - 0: integer class (0 to 3)
@@ -103,6 +108,32 @@ def parse(contents, strict=False):
     if strict and consumed != contents_len:
         raise ValueError('Extra data - %d bytes of trailing data were provided' % (contents_len - consumed))
     return info
+
+
+def peek(contents):
+    """
+    Parses a byte string of ASN.1 BER/DER-encoded data to find the length
+
+    This is typically used to look into an encoded value to see how long the
+    next chunk of ASN.1-encoded data is. Primarily it is useful when a
+    value is a concatenation of multiple values.
+
+    :param contents:
+        A byte string of BER/DER-encoded data
+
+    :raises:
+        ValueError - when the contents do not contain an ASN.1 header or are truncated in some way
+        TypeError - when contents is not a byte string
+
+    :return:
+        An integer with the number of bytes occupied by the ASN.1 value
+    """
+
+    if not isinstance(contents, byte_cls):
+        raise TypeError('contents must be a byte string, not %s' % type_name(contents))
+
+    info, consumed = _parse(contents, len(contents))
+    return consumed
 
 
 def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
