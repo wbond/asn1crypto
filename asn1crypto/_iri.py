@@ -262,7 +262,8 @@ def _urlunquote(byte_string, remap=None, preserve=None):
     if byte_string is None:
         return byte_string
 
-    byte_string = unquote_to_bytes(byte_string)
+    if byte_string == b'':
+        return ''
 
     if preserve:
         replacements = ['\x1A', '\x1C', '\x1D', '\x1E', '\x1F']
@@ -271,6 +272,8 @@ def _urlunquote(byte_string, remap=None, preserve=None):
             replacement = replacements.pop(0)
             preserve_unmap[replacement] = char
             byte_string = byte_string.replace(char.encode('ascii'), replacement.encode('ascii'))
+
+    byte_string = unquote_to_bytes(byte_string)
 
     if remap:
         for char in remap:
