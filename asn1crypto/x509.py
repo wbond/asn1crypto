@@ -88,7 +88,7 @@ class DNSName(IA5String):
         if not isinstance(other, DNSName):
             return False
 
-        return self.contents.lower() == other.contents.lower()
+        return self.__unicode__().lower() == other.__unicode__().lower()
 
     def set(self, value):
         """
@@ -112,7 +112,7 @@ class DNSName(IA5String):
         else:
             encoded_value = value.encode(self._encoding)
 
-        self._native = value
+        self._unicode = value
         self.contents = encoded_value
         self._header = None
         if self._trailer != b'':
@@ -138,8 +138,7 @@ class URI(IA5String):
                 type_name(value)
             ))
 
-        self._normalized = True
-        self._native = value
+        self._unicode = value
         self.contents = iri_to_uri(value)
         self._header = None
         if self._trailer != b'':
@@ -170,7 +169,11 @@ class URI(IA5String):
             A unicode string
         """
 
-        return uri_to_iri(self.contents)
+        if self.contents is None:
+            return ''
+        if self._unicode is None:
+            self._unicode = uri_to_iri(self._merge_chunks())
+        return self._unicode
 
 
 class EmailAddress(IA5String):
@@ -222,7 +225,8 @@ class EmailAddress(IA5String):
         else:
             encoded_value = value.encode('ascii')
 
-        self._native = value
+        self._normalized = True
+        self._unicode = value
         self.contents = encoded_value
         self._header = None
         if self._trailer != b'':
@@ -234,12 +238,14 @@ class EmailAddress(IA5String):
             A unicode string
         """
 
-        if self.contents.find(b'@') == -1:
-            return self.contents.decode('ascii')
-
-        mailbox, hostname = self.contents.rsplit(b'@', 1)
-
-        return mailbox.decode('ascii') + '@' + hostname.decode('idna')
+        if self._unicode is None:
+            contents = self._merge_chunks()
+            if contents.find(b'@') == -1:
+                self._unicode = contents.decode('ascii')
+            else:
+                mailbox, hostname = contents.rsplit(b'@', 1)
+                self._unicode = mailbox.decode('ascii') + '@' + hostname.decode('idna')
+        return self._unicode
 
     def __ne__(self, other):
         return not self == other
@@ -356,6 +362,7 @@ class IPAddress(OctetString):
 
         self._native = original_value
         self.contents = inet_pton(family, value) + cidr_bytes
+        self._bytes = self.contents
         self._header = None
         if self._trailer != b'':
             self._trailer = b''
@@ -406,7 +413,7 @@ class IPAddress(OctetString):
         if not isinstance(other, IPAddress):
             return False
 
-        return self.contents == other.contents
+        return self.__bytes__() == other.__bytes__()
 
 
 class Attribute(Sequence):

@@ -113,6 +113,18 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(der_bytes, x509.IPAddress(unicode_string).dump())
         self.assertEqual(unicode_string, x509.IPAddress.load(der_bytes).native)
 
+    def test_dnsname(self):
+        e = x509.DNSName('example.com')
+        self.assertEqual('example.com', e.native)
+        self.assertEqual('example.com', e.__unicode__())
+        self.assertEqual(b'\x16\x0Bexample.com', e.dump())
+
+    def test_indef_dnsname(self):
+        e = x509.DNSName.load(b'\x36\x80\x16\x04exam\x16\x07ple.com\x00\x00')
+        self.assertEqual('example.com', e.native)
+        self.assertEqual('example.com', e.__unicode__())
+        self.assertEqual(b'\x16\x0Bexample.com', e.dump(force=True))
+
     def test_dnsname_begin_dot(self):
         self.assertEqual(b'\x16\x03.gr', x509.DNSName('.gr').dump())
 
@@ -157,6 +169,18 @@ class X509Tests(unittest.TestCase):
             self.assertEqual(one, two)
         else:
             self.assertNotEqual(one, two)
+
+    def test_uri(self):
+        u = x509.URI('https://example.com')
+        self.assertEqual('https://example.com', u.native)
+        self.assertEqual('https://example.com', u.__unicode__())
+        self.assertEqual(b'\x16\x13https://example.com', u.dump())
+
+    def test_indef_uri(self):
+        u = x509.URI.load(b'\x36\x80\x16\x07https:/\x16\x07/exampl\x16\x05e.com\x00\x00')
+        self.assertEqual('https://example.com', u.native)
+        self.assertEqual('https://example.com', u.__unicode__())
+        self.assertEqual(b'\x16\x13https://example.com', u.dump(force=True))
 
     @staticmethod
     def compare_uri_info():
@@ -209,6 +233,18 @@ class X509Tests(unittest.TestCase):
             self.assertEqual(one, two)
         else:
             self.assertNotEqual(one, two)
+
+    def test_email_address(self):
+        e = x509.EmailAddress('john@example.com')
+        self.assertEqual('john@example.com', e.native)
+        self.assertEqual('john@example.com', e.__unicode__())
+        self.assertEqual(b'\x16\x10john@example.com', e.dump())
+
+    def test_indef_email_address(self):
+        e = x509.EmailAddress.load(b'\x36\x80\x16\x07john@ex\x16\x09ample.com\x00\x00')
+        self.assertEqual('john@example.com', e.native)
+        self.assertEqual('john@example.com', e.__unicode__())
+        self.assertEqual(b'\x16\x10john@example.com', e.dump(force=True))
 
     @staticmethod
     def compare_email_address_info():

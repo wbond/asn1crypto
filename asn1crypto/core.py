@@ -200,7 +200,8 @@ class Asn1Value(object):
     # The BER/DER trailer bytes
     _trailer = b''
 
-    # The native python representation of the value
+    # The native python representation of the value - this is not used by
+    # some classes since they utilize _bytes or _unicode
     _native = None
 
     @classmethod
@@ -630,8 +631,12 @@ class Constructable():
     contained within an indefinite length BER-encoded container
     """
 
+    # Instance attribute indicating if an object was indefinite
+    # length when parsed – affects parsing and dumping
     _indefinite = False
 
+    # Class attribute that indicates the offset into self.contents
+    # that contains the chunks of data to merge
     _chunks_offset = 0
 
     def _merge_chunks(self):
@@ -670,7 +675,9 @@ class Constructable():
             byte strings, unicode strings or tuples.
         """
 
-        raise NotImplementedError()
+        if self._chunks_offset == 0:
+            return self.contents
+        return self.contents[self._chunks_offset:]
 
 
 class Void(Asn1Value):
@@ -1608,6 +1615,9 @@ class AbstractString(Constructable, Primitive):
     # The Python encoding name to use when decoding or encoded the contents
     _encoding = 'latin1'
 
+    # Instance attribute of (possibly-merged) unicode string
+    _unicode = None
+
     def set(self, value):
         """
         Sets the value of the string
@@ -1625,9 +1635,12 @@ class AbstractString(Constructable, Primitive):
                 type_name(value)
             ))
 
-        self._native = value
+        self._unicode = value
         self.contents = value.encode(self._encoding)
         self._header = None
+        if self._indefinite:
+            self._indefinite = False
+            self.method = 0
         if self._trailer != b'':
             self._trailer = b''
 
@@ -1637,17 +1650,11 @@ class AbstractString(Constructable, Primitive):
             A unicode string
         """
 
-        return self._merge_chunks().decode(self._encoding)
-
-    def _as_chunk(self):
-        """
-        Allows reconstructing indefinite length values
-
-        :return:
-            A byte string
-        """
-
-        return self.contents
+        if self.contents is None:
+            return ''
+        if self._unicode is None:
+            self._unicode = self._merge_chunks().decode(self._encoding)
+        return self._unicode
 
     @property
     def native(self):
@@ -1661,9 +1668,7 @@ class AbstractString(Constructable, Primitive):
         if self.contents is None:
             return None
 
-        if self._native is None:
-            self._native = self.__unicode__()
-        return self._native
+        return self.__unicode__()
 
 
 class Boolean(Primitive):
@@ -1918,6 +1923,9 @@ class BitString(Constructable, Castable, Primitive, ValueMap, object):
 
         self.contents = extra_bits_byte + value_bytes
         self._header = None
+        if self._indefinite:
+            self._indefinite = False
+            self.method = 0
         if self._trailer != b'':
             self._trailer = b''
 
@@ -2092,7 +2100,14 @@ class OctetBitString(Constructable, Castable, Primitive):
 
     tag = 3
 
+    # Whenever dealing with octet-based bit strings, we really want the
+    # bytes, so we just ignore the unused bits portion since it isn't
+    # applicable to the current use case
+    # unused_bits = struct.unpack('>B', self.contents[0:1])[0]
     _chunks_offset = 1
+
+    # Instance attribute of (possibly-merged) byte string
+    _bytes = None
 
     def set(self, value):
         """
@@ -2114,10 +2129,13 @@ class OctetBitString(Constructable, Castable, Primitive):
                 type_name(value)
             ))
 
-        self._native = value
+        self._bytes = value
         # Set the unused bits to 0
         self.contents = b'\x00' + value
         self._header = None
+        if self._indefinite:
+            self._indefinite = False
+            self.method = 0
         if self._trailer != b'':
             self._trailer = b''
 
@@ -2127,21 +2145,11 @@ class OctetBitString(Constructable, Castable, Primitive):
             A byte string
         """
 
-        # Whenever dealing with octet-based bit strings, we really want the
-        # bytes, so we just ignore the unused bits portion since it isn't
-        # applicable to the current use case
-        # unused_bits = struct.unpack('>B', self.contents[0:1])[0]
-        return self.contents[1:]
-
-    def _as_chunk(self):
-        """
-        Allows reconstructing indefinite length values
-
-        :return:
-            A byte string
-        """
-
-        return self.contents[1:]
+        if self.contents is None:
+            return b''
+        if self._bytes is None:
+            self._bytes = self._merge_chunks()
+        return self._bytes
 
     @property
     def native(self):
@@ -2155,9 +2163,7 @@ class OctetBitString(Constructable, Castable, Primitive):
         if self.contents is None:
             return None
 
-        if self._native is None:
-            self._native = self._merge_chunks()
-        return self._native
+        return self.__bytes__()
 
 
 class IntegerBitString(Constructable, Castable, Primitive):
@@ -2193,6 +2199,9 @@ class IntegerBitString(Constructable, Castable, Primitive):
         # Set the unused bits to 0
         self.contents = b'\x00' + int_to_bytes(value, signed=True)
         self._header = None
+        if self._indefinite:
+            self._indefinite = False
+            self.method = 0
         if self._trailer != b'':
             self._trailer = b''
 
@@ -2248,23 +2257,46 @@ class OctetString(Constructable, Castable, Primitive):
 
     tag = 4
 
+    # Instance attribute of (possibly-merged) byte string
+    _bytes = None
+
+    def set(self, value):
+        """
+        Sets the value of the object
+
+        :param value:
+            A byte string
+        """
+
+        if not isinstance(value, byte_cls):
+            raise TypeError(unwrap(
+                '''
+                %s value must be a byte string, not %s
+                ''',
+                type_name(self),
+                type_name(value)
+            ))
+
+        self._bytes = value
+        self.contents = value
+        self._header = None
+        if self._indefinite:
+            self._indefinite = False
+            self.method = 0
+        if self._trailer != b'':
+            self._trailer = b''
+
     def __bytes__(self):
         """
         :return:
             A byte string
         """
 
-        return self.contents
-
-    def _as_chunk(self):
-        """
-        Allows reconstructing indefinite length values
-
-        :return:
-            A byte string
-        """
-
-        return self.contents
+        if self.contents is None:
+            return b''
+        if self._bytes is None:
+            self._bytes = self._merge_chunks()
+        return self._bytes
 
     @property
     def native(self):
@@ -2278,9 +2310,7 @@ class OctetString(Constructable, Castable, Primitive):
         if self.contents is None:
             return None
 
-        if self._native is None:
-            self._native = self._merge_chunks()
-        return self._native
+        return self.__bytes__()
 
 
 class IntegerOctetString(Constructable, Castable, Primitive):
@@ -2313,18 +2343,11 @@ class IntegerOctetString(Constructable, Castable, Primitive):
         self._native = value
         self.contents = int_to_bytes(value, signed=False)
         self._header = None
+        if self._indefinite:
+            self._indefinite = False
+            self.method = 0
         if self._trailer != b'':
             self._trailer = b''
-
-    def _as_chunk(self):
-        """
-        Allows reconstructing indefinite length values
-
-        :return:
-            A byte string
-        """
-
-        return self.contents
 
     @property
     def native(self):
@@ -2349,6 +2372,9 @@ class ParsableOctetString(Constructable, Castable, Primitive):
 
     _parsed = None
 
+    # Instance attribute of (possibly-merged) byte string
+    _bytes = None
+
     def __init__(self, value=None, parsed=None, **kwargs):
         """
         Allows providing a parsed object that will be serialized to get the
@@ -2372,7 +2398,32 @@ class ParsableOctetString(Constructable, Castable, Primitive):
 
         if set_parsed:
             self._parsed = (parsed, parsed.__class__, None)
-            self._native = parsed.native
+
+    def set(self, value):
+        """
+        Sets the value of the object
+
+        :param value:
+            A byte string
+        """
+
+        if not isinstance(value, byte_cls):
+            raise TypeError(unwrap(
+                '''
+                %s value must be a byte string, not %s
+                ''',
+                type_name(self),
+                type_name(value)
+            ))
+
+        self._bytes = value
+        self.contents = value
+        self._header = None
+        if self._indefinite:
+            self._indefinite = False
+            self.method = 0
+        if self._trailer != b'':
+            self._trailer = b''
 
     def parse(self, spec=None, spec_params=None):
         """
@@ -2393,7 +2444,7 @@ class ParsableOctetString(Constructable, Castable, Primitive):
         """
 
         if self._parsed is None or self._parsed[1:3] != (spec, spec_params):
-            parsed_value, _ = _parse_build(self._merge_chunks(), spec=spec, spec_params=spec_params)
+            parsed_value, _ = _parse_build(self.__bytes__(), spec=spec, spec_params=spec_params)
             self._parsed = (parsed_value, spec, spec_params)
         return self._parsed[0]
 
@@ -2403,17 +2454,11 @@ class ParsableOctetString(Constructable, Castable, Primitive):
             A byte string
         """
 
-        return self.contents
-
-    def _as_chunk(self):
-        """
-        Allows reconstructing indefinite length values
-
-        :return:
-            A byte string
-        """
-
-        return self.contents
+        if self.contents is None:
+            return b''
+        if self._bytes is None:
+            self._bytes = self._merge_chunks()
+        return self._bytes
 
     @property
     def native(self):
@@ -2427,12 +2472,10 @@ class ParsableOctetString(Constructable, Castable, Primitive):
         if self.contents is None:
             return None
 
-        if self._native is None:
-            if self._parsed is not None:
-                self._native = self._parsed[0].native
-            else:
-                self._native = self._merge_chunks()
-        return self._native
+        if self._parsed is not None:
+            return self._parsed[0].native
+        else:
+            return self.__bytes__()
 
     @property
     def parsed(self):
@@ -2500,6 +2543,10 @@ class ParsableOctetBitString(ParsableOctetString):
 
     tag = 3
 
+    # Whenever dealing with octet-based bit strings, we really want the
+    # bytes, so we just ignore the unused bits portion since it isn't
+    # applicable to the current use case
+    # unused_bits = struct.unpack('>B', self.contents[0:1])[0]
     _chunks_offset = 1
 
     def set(self, value):
@@ -2522,34 +2569,15 @@ class ParsableOctetBitString(ParsableOctetString):
                 type_name(value)
             ))
 
-        self._native = value
+        self._bytes = value
         # Set the unused bits to 0
         self.contents = b'\x00' + value
         self._header = None
+        if self._indefinite:
+            self._indefinite = False
+            self.method = 0
         if self._trailer != b'':
             self._trailer = b''
-
-    def __bytes__(self):
-        """
-        :return:
-            A byte string
-        """
-
-        return self._merge_chunks()
-
-    def _as_chunk(self):
-        """
-        Allows reconstructing indefinite length values
-
-        :return:
-            A byte string
-        """
-
-        # Whenever dealing with octet-based bit strings, we really want the
-        # bytes, so we just ignore the unused bits portion since it isn't
-        # applicable to the current use case
-        # unused_bits = struct.unpack('>B', self.contents[0:1])[0]
-        return self.contents[1:]
 
 
 class Null(Primitive):
