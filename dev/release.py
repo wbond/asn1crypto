@@ -63,5 +63,5 @@ def run():
 
     setuptools.sandbox.run_setup(
         setup_file,
-        ['clean']
+        ['clean', '--all']
     )
