@@ -8,7 +8,7 @@ from asn1crypto import version
 
 class CleanCommand(Command):
     user_options = [
-        ('all', None, '(Compatibility with original clean command)')
+        ('all', 'a', '(Compatibility with original clean command)'),
     ]
 
     def initialize_options(self):
