@@ -1,36 +1,6 @@
-import os
-import shutil
-
-from setuptools import setup, find_packages, Command
+from setuptools import setup, find_packages
 
 from asn1crypto import version
-
-
-class CleanCommand(Command):
-    user_options = [
-        ('all', None, '(Compatibility with original clean command)')
-    ]
-
-    def initialize_options(self):
-        self.all = False
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        folder = os.path.dirname(os.path.abspath(__file__))
-        for sub_folder in ['build', 'dist', 'asn1crypto.egg-info']:
-            full_path = os.path.join(folder, sub_folder)
-            if os.path.exists(full_path):
-                shutil.rmtree(full_path)
-        for root, dirnames, filenames in os.walk(os.path.join(folder, 'asn1crypto')):
-            for filename in filenames:
-                if filename[-4:] == '.pyc':
-                    os.unlink(os.path.join(root, filename))
-            for dirname in list(dirnames):
-                if dirname == '__pycache__':
-                    shutil.rmtree(os.path.join(root, dirname))
-
 
 setup(
     name='asn1crypto',
@@ -74,8 +44,4 @@ setup(
     packages=find_packages(exclude=['tests*', 'dev*']),
 
     test_suite='tests.make_suite',
-
-    cmdclass={
-        'clean': CleanCommand,
-    }
 )
