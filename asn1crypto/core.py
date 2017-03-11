@@ -487,11 +487,6 @@ class Asn1Value(object):
 
         self.contents = other.contents
         self._native = copy_func(other._native)
-        if isinstance(other, Constructable):
-            self.method = copy_func(other.method)
-            self._indefinite = copy_func(other._indefinite)
-        if hasattr(other, '_parsed'):
-            self._parsed = copy_func(other._parsed)
 
     def debug(self, nest_level=1):
         """
@@ -580,7 +575,7 @@ class ValueMap():
             cls._reverse_map[value] = key
 
 
-class Castable():
+class Castable(object):
     """
     A mixin to handle converting an object between different classes that
     represent the same encoded value, but with different rules for converting
@@ -625,7 +620,7 @@ class Castable():
         return new_obj
 
 
-class Constructable():
+class Constructable(object):
     """
     A mixin to handle string types that may be constructed from chunks
     contained within an indefinite length BER-encoded container
@@ -678,6 +673,22 @@ class Constructable():
         if self._chunks_offset == 0:
             return self.contents
         return self.contents[self._chunks_offset:]
+
+    def _copy(self, other, copy_func):
+        """
+        Copies the contents of another Constructable object to itself
+
+        :param object:
+            Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
+        """
+
+        super(Constructable, self)._copy(other, copy_func)
+        self.method = other.method
+        self._indefinite = other._indefinite
 
 
 class Void(Asn1Value):
@@ -850,6 +861,21 @@ class Any(Asn1Value):
                 e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
                 raise e
         return self._parsed[0]
+
+    def _copy(self, other, copy_func):
+        """
+        Copies the contents of another Any object to itself
+
+        :param object:
+            Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
+        """
+
+        super(Any, self)._copy(other, copy_func)
+        self._parsed = copy_func(other._parsed)
 
     def dump(self, force=False):
         """
@@ -1147,7 +1173,7 @@ class Choice(Asn1Value):
 
     def _copy(self, other, copy_func):
         """
-        Copies the contents of another Asn1Value object to itself
+        Copies the contents of another Choice object to itself
 
         :param object:
             Another instance of the same class
@@ -1157,17 +1183,7 @@ class Choice(Asn1Value):
             lists, dicts and objects
         """
 
-        if self.__class__ != other.__class__:
-            raise TypeError(unwrap(
-                '''
-                Can not copy values from %s object to %s object
-                ''',
-                type_name(other),
-                type_name(self)
-            ))
-
-        self.contents = other.contents
-        self._native = copy_func(other._native)
+        super(Choice, self)._copy(other, copy_func)
         self._choice = other._choice
         self._name = other._name
         self._parsed = copy_func(other._parsed)
@@ -1655,6 +1671,21 @@ class AbstractString(Constructable, Primitive):
         if self._unicode is None:
             self._unicode = self._merge_chunks().decode(self._encoding)
         return self._unicode
+
+    def _copy(self, other, copy_func):
+        """
+        Copies the contents of another AbstractString object to itself
+
+        :param object:
+            Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
+        """
+
+        super(AbstractString, self)._copy(other, copy_func)
+        self._unicode = other._unicode
 
     @property
     def native(self):
@@ -2151,6 +2182,21 @@ class OctetBitString(Constructable, Castable, Primitive):
             self._bytes = self._merge_chunks()
         return self._bytes
 
+    def _copy(self, other, copy_func):
+        """
+        Copies the contents of another OctetBitString object to itself
+
+        :param object:
+            Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
+        """
+
+        super(OctetBitString, self)._copy(other, copy_func)
+        self._bytes = other._bytes
+
     @property
     def native(self):
         """
@@ -2297,6 +2343,21 @@ class OctetString(Constructable, Castable, Primitive):
         if self._bytes is None:
             self._bytes = self._merge_chunks()
         return self._bytes
+
+    def _copy(self, other, copy_func):
+        """
+        Copies the contents of another OctetString object to itself
+
+        :param object:
+            Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
+        """
+
+        super(OctetString, self)._copy(other, copy_func)
+        self._bytes = other._bytes
 
     @property
     def native(self):
@@ -2460,6 +2521,22 @@ class ParsableOctetString(Constructable, Castable, Primitive):
             self._bytes = self._merge_chunks()
         return self._bytes
 
+    def _copy(self, other, copy_func):
+        """
+        Copies the contents of another ParsableOctetString object to itself
+
+        :param object:
+            Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
+        """
+
+        super(ParsableOctetString, self)._copy(other, copy_func)
+        self._bytes = other._bytes
+        self._parsed = copy_func(other._parsed)
+
     @property
     def native(self):
         """
@@ -2490,31 +2567,6 @@ class ParsableOctetString(Constructable, Castable, Primitive):
             self.parse()
 
         return self._parsed[0]
-
-    def _copy(self, other, copy_func):
-        """
-        Copies the contents of another ParsableOctetString object to itself
-
-        :param object:
-            Another instance of the same class
-
-        :param copy_func:
-            An reference of copy.copy() or copy.deepcopy() to use when copying
-            lists, dicts and objects
-        """
-
-        if self.__class__ != other.__class__:
-            raise TypeError(unwrap(
-                '''
-                Can not copy values from %s object to %s object
-                ''',
-                type_name(other),
-                type_name(self)
-            ))
-
-        self.contents = other.contents
-        self._native = copy_func(other._native)
-        self._parsed = copy_func(other._parsed)
 
     def dump(self, force=False):
         """
@@ -3656,7 +3708,7 @@ class Sequence(Asn1Value):
 
     def _copy(self, other, copy_func):
         """
-        Copies the contents of another Asn1Value object to itself
+        Copies the contents of another Sequence object to itself
 
         :param object:
             Another instance of the same class
@@ -3666,17 +3718,7 @@ class Sequence(Asn1Value):
             lists, dicts and objects
         """
 
-        if self.__class__ != other.__class__:
-            raise TypeError(unwrap(
-                '''
-                Can not copy values from %s object to %s object
-                ''',
-                type_name(other),
-                type_name(self)
-            ))
-
-        self.contents = other.contents
-        self._native = copy_func(other._native)
+        super(Sequence, self)._copy(other, copy_func)
         if self.children is not None:
             self.children = []
             for child in other.children:
@@ -4122,7 +4164,7 @@ class SequenceOf(Asn1Value):
 
     def _copy(self, other, copy_func):
         """
-        Copies the contents of another Asn1Value object to itself
+        Copies the contents of another SequenceOf object to itself
 
         :param object:
             Another instance of the same class
@@ -4132,17 +4174,7 @@ class SequenceOf(Asn1Value):
             lists, dicts and objects
         """
 
-        if self.__class__ != other.__class__:
-            raise TypeError(unwrap(
-                '''
-                Can not copy values from %s object to %s object
-                ''',
-                type_name(other),
-                type_name(self)
-            ))
-
-        self.contents = other.contents
-        self._native = copy_func(other._native)
+        super(SequenceOf, self)._copy(other, copy_func)
         if self.children is not None:
             self.children = []
             for child in other.children:

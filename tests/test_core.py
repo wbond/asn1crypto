@@ -499,6 +499,8 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(b'\x01\x01\x01', a.native)
         self.assertEqual(b'\x01\x01\x01', a.__bytes__())
         self.assertEqual(1, a.method)
+        # Test copying moves internal state
+        self.assertEqual(a._bytes, a.copy()._bytes)
 
     def test_indefinite_length_octet_string_2(self):
         data = b'$\x80\x04\r\x8d\xff\xf0\x98\x076\xaf\x93nB:\xcf\xcc\x04\x15\x92w\xf7\xf0\xe4y\xff\xc7\xdc3\xb2\xd0={\x1a\x18mDr\xaaI\x00\x00'
@@ -515,6 +517,8 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(b'', a.__bytes__())
         self.assertEqual(1, a.method)
         self.assertEqual(b'\x04\x00', a.dump(force=True))
+        # Test copying moves internal state
+        self.assertEqual(a._bytes, a.copy()._bytes)
 
     def test_indefinite_length_integer_octet_string(self):
         data = b'$\x80\x04\x02\x01\x01\x04\x01\x01\x00\x00'
@@ -532,6 +536,9 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(b'\x01', a.parsed.native)
         self.assertEqual(b'\x01', a.native)
         self.assertEqual(b'\x04\x01\x01', a.cast(core.OctetString).native)
+        # Test copying moves internal state
+        self.assertEqual(a._bytes, a.copy()._bytes)
+        self.assertEqual(a._parsed, a.copy()._parsed)
 
     def test_indefinite_length_utf8string(self):
         data = b'\x2C\x80\x0C\x02\x61\x62\x0C\x01\x63\x00\x00'
@@ -541,6 +548,8 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(1, a.method)
         # Ensure a forced re-encoding is proper DER
         self.assertEqual(b'\x0C\x03\x61\x62\x63', a.dump(force=True))
+        # Test copying moves internal state
+        self.assertEqual(a._unicode, a.copy()._unicode)
 
     def test_indefinite_length_bit_string(self):
         data = b'#\x80\x00\x03\x02\x00\x01\x03\x02\x02\x04\x00\x00'
@@ -557,6 +566,8 @@ class CoreTests(unittest.TestCase):
         a = core.OctetBitString.load(data)
         self.assertEqual(b'\x01\x04', a.native)
         self.assertEqual(b'\x01\x04', a.__bytes__())
+        # Test copying moves internal state
+        self.assertEqual(a._bytes, a.copy()._bytes)
 
     def test_indefinite_length_parsable_octet_bit_string(self):
         data = b'#\x80\x00\x03\x03\x00\x0C\x02\x03\x03\x00\x61\x62\x00\x00'
@@ -565,3 +576,6 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(b'\x0C\x02\x61\x62', a.__bytes__())
         self.assertEqual('ab', a.parsed.native)
         self.assertEqual('ab', a.native)
+        # Test copying moves internal state
+        self.assertEqual(a._bytes, a.copy()._bytes)
+        self.assertEqual(a._parsed, a.copy()._parsed)
