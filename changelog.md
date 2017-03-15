@@ -1,5 +1,18 @@
 # changelog
 
+## 0.22.0
+
+ - Added `parser.peek()`
+ - Implemented proper support for BER-encoded indefinite length strings of
+   all kinds - `core.BitString`, `core.OctetString` and all of the `core`
+   classes that are natively represented as Python unicode strings
+ - Fixed a bug with encoding LDAP URLs in `x509.URI`
+ - Correct `x509.DNSName` to allow a leading `.`, such as when used with
+   `x509.NameConstraints`
+ - Fixed an issue with dumping the parsed contents of `core.Any` when
+   explicitly tagged
+ - Custom `setup.py clean` now accepts the short `-a` flag for compatibility
+
 ## 0.21.1
 
  - Fixed a regression where explicit tagging of a field containing a
