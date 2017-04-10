@@ -101,7 +101,7 @@ METHOD_NUM_TO_NAME_MAP = {
 }
 
 
-_OID_RE = re.compile('^\d+(\.\d+)*$')
+_OID_RE = re.compile(r'^\d+(\.\d+)*$')
 
 
 # A global tracker to ensure that _setup() is called for every class, even
