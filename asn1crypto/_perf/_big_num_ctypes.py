@@ -21,6 +21,8 @@ interfacing with libcrypto.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import sys
+
 from ctypes import CDLL, c_int, c_char_p, c_void_p
 from ctypes.util import find_library
 
@@ -28,7 +30,9 @@ from .._ffi import LibraryNotFoundError, FFIEngineError
 
 
 try:
-    libcrypto_path = find_library('crypto')
+    # On Python 2, the unicode string here may raise a UnicodeDecodeError as it
+    # tries to join a bytestring path to the unicode name "crypto"
+    libcrypto_path = find_library(b'crypto' if sys.version_info < (3,) else 'crypto')
     if not libcrypto_path:
         raise LibraryNotFoundError('The library libcrypto could not be found')
 
