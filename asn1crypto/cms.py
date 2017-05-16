@@ -99,6 +99,7 @@ class CMSAttributeType(ObjectIdentifier):
         '1.2.840.113549.1.9.6': 'counter_signature',
         # https://tools.ietf.org/html/rfc3161#page-20
         '1.2.840.113549.1.9.16.2.14': 'signature_time_stamp_token',
+        '1.2.840.113549.1.9.52': 'cms_algorithm_protection',
     }
 
 
@@ -122,6 +123,14 @@ class ContentType(ObjectIdentifier):
         '1.2.840.113549.1.9.16.1.23': 'authenticated_enveloped_data',
     }
 
+class CMSAlgorithmProtection(Sequence):
+    _fields = [
+        ('digest_algorithm', DigestAlgorithm),
+        ('signature_algorithm', SignedDigestAlgorithm, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('mac_algorithm', HmacAlgorithm, {'tag_type': 'implicit', 'tag': 2, 'optional': True}),
+    ]
+
+
 
 class SetOfContentType(SetOf):
     _child_spec = ContentType
@@ -137,6 +146,9 @@ class SetOfTime(SetOf):
 
 class SetOfAny(SetOf):
     _child_spec = Any
+
+class SetOfCMSAlgorithmProtection(SetOf):
+    _child_spec = CMSAlgorithmProtection
 
 
 class CMSAttribute(Sequence):
@@ -912,4 +924,5 @@ CMSAttribute._oid_specs = {
     'signing_time': SetOfTime,
     'counter_signature': SignerInfos,
     'signature_time_stamp_token': SetOfContentInfo,
+    'cms_algorithm_protection': SetOfCMSAlgorithmProtection,
 }
