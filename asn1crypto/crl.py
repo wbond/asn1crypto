@@ -278,7 +278,7 @@ class TbsCertList(Sequence):
         ('signature', SignedDigestAlgorithm),
         ('issuer', Name),
         ('this_update', Time),
-        ('next_update', Time),
+        ('next_update', Time, {'optional': True}),
         ('revoked_certificates', RevokedCertificates, {'optional': True}),
         ('crl_extensions', TBSCertListExtensions, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
     ]
