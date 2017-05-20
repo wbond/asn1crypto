@@ -2518,6 +2518,16 @@ class Certificate(Sequence):
             self._sha256 = hashlib.sha256(self.dump()).digest()
         return self._sha256
 
+    @property
+    def sha256_fingerprint(self):
+        """
+        :return:
+            A unicode string of the SHA-256 hash, formatted using hex encoding
+            with a space between each pair of characters, all uppercase
+        """
+
+        return ' '.join('%02X' % c for c in bytes_to_list(self.sha256))
+
     def is_valid_domain_ip(self, domain_ip):
         """
         Check if a domain name or IP address is valid according to the
