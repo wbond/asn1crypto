@@ -492,6 +492,12 @@ class X509Tests(unittest.TestCase):
         cert = self._load_cert('geotrust_certs/codex.crt')
         self.assertEqual('78 1C 9F 87 59 93 52 08 D2 21 FA 70 6C C5 F9 76 12 C9 6D 8B', cert.sha1_fingerprint)
 
+    def test_sha256_fingerprint(self):
+        cert = self._load_cert('geotrust_certs/codex.crt')
+        self.assertEqual(
+            'E5 6D 97 3A 22 77 55 E4 85 6F 71 78 DA 4D 69 93 0C E2 87 F8 85 5E BE 1A 8C F7 FE 78 80 EB A5 F0',
+            cert.sha256_fingerprint)
+
     def test_punycode_common_name(self):
         cert = self._load_cert('chromium/punycodetest.pem')
         self.assertEqual('xn--wgv71a119e.com', cert['tbs_certificate']['subject'].native['common_name'])
