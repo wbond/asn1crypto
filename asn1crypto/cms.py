@@ -43,6 +43,7 @@ from .core import (
     OctetBitString,
     OctetString,
     ParsableOctetString,
+    PrintableString,
     Sequence,
     SequenceOf,
     SetOf,
@@ -99,6 +100,13 @@ class CMSAttributeType(ObjectIdentifier):
         '1.2.840.113549.1.9.6': 'counter_signature',
         # https://tools.ietf.org/html/rfc3161#page-20
         '1.2.840.113549.1.9.16.2.14': 'signature_time_stamp_token',
+        # http://www.cisco.com/c/en/us/support/docs/security-vpn/public-key-infrastructure-pki/116167-technote-scep-00.html
+        '2.16.840.1.113733.1.9.2': 'message_type',
+        '2.16.840.1.113733.1.9.3': 'pki_status',
+        '2.16.840.1.113733.1.9.4': 'fail_info',
+        '2.16.840.1.113733.1.9.5': 'sender_nonce',
+        '2.16.840.1.113733.1.9.6': 'recipient_nonce',
+        '2.16.840.1.113733.1.9.7': 'trans_id',
     }
 
 
@@ -129,6 +137,10 @@ class SetOfContentType(SetOf):
 
 class SetOfOctetString(SetOf):
     _child_spec = OctetString
+
+
+class SetOfPrintableString(SetOf):
+    _child_spec = PrintableString
 
 
 class SetOfTime(SetOf):
@@ -912,4 +924,10 @@ CMSAttribute._oid_specs = {
     'signing_time': SetOfTime,
     'counter_signature': SignerInfos,
     'signature_time_stamp_token': SetOfContentInfo,
+    'message_type': SetOfPrintableString,
+    'pki_status': SetOfPrintableString,
+    'fail_info': SetOfPrintableString,
+    'sender_nonce': SetOfOctetString,
+    'recipient_nonce': SetOfOctetString,
+    'trans_id': SetOfPrintableString,
 }
