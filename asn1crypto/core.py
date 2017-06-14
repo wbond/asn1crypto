@@ -774,7 +774,7 @@ class Any(Asn1Value):
                 if not isinstance(value, Asn1Value):
                     raise TypeError(unwrap(
                         '''
-                        value must be an instance of Ans1Value, not %s
+                        value must be an instance of Asn1Value, not %s
                         ''',
                         type_name(value)
                     ))
@@ -3389,7 +3389,7 @@ class Sequence(Asn1Value):
         :return:
             A tuple containing the following elements:
              - unicode string of the field name
-             - Ans1Value class of the field spec
+             - Asn1Value class of the field spec
              - Asn1Value class of the value spec
              - None or dict of params to pass to the field spec
              - None or Asn1Value class indicating the value spec was derived fomr an OID or a spec callback
