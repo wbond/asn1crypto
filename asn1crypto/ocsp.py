@@ -351,6 +351,8 @@ class SingleResponseExtensionId(ObjectIdentifier):
         '2.5.29.21': 'crl_reason',
         '2.5.29.24': 'invalidity_date',
         '2.5.29.29': 'certificate_issuer',
+        # https://tools.ietf.org/html/rfc6962.html#page-13
+        '1.3.6.1.4.1.11129.2.4.5': 'signed_certificate_timestamp_list',
     }
 
 
@@ -368,6 +370,7 @@ class SingleResponseExtension(Sequence):
         'crl_reason': CRLReason,
         'invalidity_date': GeneralizedTime,
         'certificate_issuer': GeneralNames,
+        'signed_certificate_timestamp_list': OctetString,
     }
 
 

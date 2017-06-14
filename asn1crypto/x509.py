@@ -1766,6 +1766,8 @@ class ExtensionId(ObjectIdentifier):
         '1.3.6.1.5.5.7.48.1.5': 'ocsp_no_check',
         '1.2.840.113533.7.65.0': 'entrust_version_extension',
         '2.16.840.1.113730.1.1': 'netscape_certificate_type',
+        # https://tools.ietf.org/html/rfc6962.html#page-14
+        '1.3.6.1.4.1.11129.2.4.2': 'signed_certificate_timestamp_list',
     }
 
 
@@ -1800,6 +1802,7 @@ class Extension(Sequence):
         'ocsp_no_check': Null,
         'entrust_version_extension': EntrustVersionInfo,
         'netscape_certificate_type': NetscapeCertificateType,
+        'signed_certificate_timestamp_list': OctetString,
     }
 
 
