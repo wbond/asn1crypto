@@ -221,7 +221,7 @@ Existing releases can be found at https://pypi.python.org/pypi/asn1crypto.
 A task named `deps` exists to ensure a modern version of `pip` is installed,
 along with all necessary testing dependencies.
 
-The `ci` task runs `lint` (if flake8 is avaiable for the version of Python) and
+The `ci` task runs `lint` (if flake8 is available for the version of Python) and
 `coverage` (or `tests` if coverage is not available for the version of Python).
 If the current directory is a clean git working copy, the coverage data is
 submitted to codecov.io.
