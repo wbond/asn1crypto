@@ -214,7 +214,7 @@
 
 ## 0.12.0
 
- - Backwards Compatiblity Break: `core.NoValue` was renamed to `core.Void` and
+ - Backwards Compatibility Break: `core.NoValue` was renamed to `core.Void` and
    a singleton was added as `core.VOID`
  - 20-30% improvement in parsing performance
  - `core.Void` now implements `__nonzero__`

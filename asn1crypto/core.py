@@ -337,7 +337,7 @@ class Asn1Value(object):
 
     def __str__(self):
         """
-        Since str is differnt in Python 2 and 3, this calls the appropriate
+        Since str is different in Python 2 and 3, this calls the appropriate
         method, __unicode__() or __bytes__()
 
         :return:
@@ -1287,7 +1287,7 @@ class Concat(object):
 
     def __str__(self):
         """
-        Since str is differnt in Python 2 and 3, this calls the appropriate
+        Since str is different in Python 2 and 3, this calls the appropriate
         method, __unicode__() or __bytes__()
 
         :return:
@@ -3392,7 +3392,7 @@ class Sequence(Asn1Value):
              - Asn1Value class of the field spec
              - Asn1Value class of the value spec
              - None or dict of params to pass to the field spec
-             - None or Asn1Value class indicating the value spec was derived fomr an OID or a spec callback
+             - None or Asn1Value class indicating the value spec was derived from an OID or a spec callback
         """
 
         name, field_spec, field_params = self._fields[index]
@@ -3638,8 +3638,8 @@ class Sequence(Asn1Value):
         """
         Determines the spec to use for the field specified. Depending on how
         the spec is determined (_oid_pair or _spec_callbacks), it may be
-        necessary to set preceeding field values before calling this. Usually
-        specs, if dynamic, are controlled by a preceeding ObjectIdentifier
+        necessary to set preceding field values before calling this. Usually
+        specs, if dynamic, are controlled by a preceding ObjectIdentifier
         field.
 
         :param field_name:

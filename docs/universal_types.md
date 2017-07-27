@@ -563,7 +563,7 @@ class MySequence(Sequence):
 Throughout the usage of ASN.1 in cryptography, a pattern is present where an
 `ObjectIdenfitier` is used to determine what specification should be used to
 interpret another field in a `Sequence`. Usually the other field is an instance
-of `Any`, however ocassionally it is an `OctetString` or `OctetBitString`.
+of `Any`, however occasionally it is an `OctetString` or `OctetBitString`.
 
 *asn1crypto* provides the `_oid_pair` and `_oid_specs` properties of the
 `Sequence` class to allow handling these situations.
