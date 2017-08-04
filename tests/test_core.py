@@ -109,6 +109,11 @@ class MyOids(core.ObjectIdentifier):
         '4.5.6': 'def',
     }
 
+class ApplicationTaggedInteger(core.Integer):
+    tag_type = 'explicit'
+    explicit_class = 1
+    explicit_tag = 10
+
 
 @data_decorator
 class CoreTests(unittest.TestCase):
@@ -579,3 +584,18 @@ class CoreTests(unittest.TestCase):
         # Test copying moves internal state
         self.assertEqual(a._bytes, a.copy()._bytes)
         self.assertEqual(a._parsed, a.copy()._parsed)
+
+    def test_explicit_application_tag(self):
+        data = b'\x6a\x81\x03\x02\x01\x00'
+        ati = ApplicationTaggedInteger.load(data)
+
+        self.assertEqual('explicit', ati.tag_type)
+        self.assertEqual(1, ati.explicit_class)
+        self.assertEqual(10, ati.explicit_tag)
+        self.assertEqual(0, ati.class_)
+        self.assertEqual(2, ati.tag)
+        self.assertEqual(0, ati.native)
+
+        # The output encoding is DER, whereas the input was not, so
+        # the length encoding changes from long form to short form
+        self.assertEqual(b'\x6a\x03\x02\x01\x00', ati.dump(force=True))

@@ -230,7 +230,8 @@ class Asn1Value(object):
         value, _ = _parse_build(encoded_data, spec=spec, spec_params=kwargs, strict=strict)
         return value
 
-    def __init__(self, tag_type=None, class_=None, tag=None, optional=None, default=None, contents=None):
+    def __init__(self, tag_type=None, class_=None, tag=None, optional=None, default=None, contents=None,
+                 no_explicit=False):
         """
         The optional parameter is not used, but rather included so we don't
         have to delete it from the parameter dictionary when passing as keyword
@@ -260,6 +261,11 @@ class Asn1Value(object):
 
         :param contents:
             A byte string of the encoded contents of the value
+
+        :param no_explicit:
+            If explicit tagging info should be removed from this instance.
+            Used internally to allow contructing the underlying value that
+            has been wrapped in an explicit tag.
 
         :raises:
             ValueError - when tag_type, class_ or tag are invalid values
@@ -323,6 +329,11 @@ class Asn1Value(object):
 
                 if tag is not None:
                     self.tag = tag
+
+            if no_explicit:
+                self.tag_type = None
+                self.explicit_tag = None
+                self.explicit_class = None
 
             if contents is not None:
                 self.contents = contents
@@ -4951,7 +4962,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 ))
             original_value = value
             info, _ = _parse(contents, len(contents))
-            value = _build(*info, spec=spec)
+            value = _build(*info, spec=spec, spec_params={'no_explicit': True})
             value._header = header + value._header
             value._trailer += trailer or b''
             value.tag_type = 'explicit'
@@ -5014,7 +5025,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     elif spec_params and 'tag_type' in spec_params and spec_params['tag_type'] == 'explicit':
         original_value = Asn1Value(contents=contents, **spec_params)
         info, _ = _parse(contents, len(contents))
-        value = _build(*info, spec=spec)
+        value = _build(*info, spec=spec, spec_params={'no_explicit': True})
         value._header = header + value._header
         value._trailer += trailer or b''
         value.tag_type = 'explicit'
