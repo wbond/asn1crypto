@@ -115,6 +115,46 @@ class ApplicationTaggedInteger(core.Integer):
     explicit_tag = 10
 
 
+class ApplicationTaggedInner(core.Sequence):
+    """
+    TESTCASE DEFINITIONS EXPLICIT TAGS ::=
+    BEGIN
+
+    INNERSEQ ::= SEQUENCE {
+        innernumber       [21] INTEGER
+    }
+
+    INNER ::= [APPLICATION 20] INNERSEQ
+    """
+    tag_type = 'explicit'
+    explicit_class = 1
+    explicit_tag = 20
+
+    _fields = [
+        ('innernumber', core.Integer, {'tag_type': 'explicit', 'tag': 21}),
+    ]
+
+
+class ApplicationTaggedOuter(core.Sequence):
+    """
+    OUTERSEQ ::= SEQUENCE {
+        outernumber  [11] INTEGER,
+        inner        [12] INNER
+    }
+
+    OUTER ::= [APPLICATION 10] OUTERSEQ
+    END
+    """
+    tag_type = 'explicit'
+    explicit_class = 1
+    explicit_tag = 10
+
+    _fields = [
+        ('outernumber', core.Integer, {'tag_type': 'explicit', 'tag': 11}),
+        ('inner', ApplicationTaggedInner, {'tag_type': 'explicit', 'tag': 12}),
+    ]
+
+
 @data_decorator
 class CoreTests(unittest.TestCase):
 
@@ -599,3 +639,56 @@ class CoreTests(unittest.TestCase):
         # The output encoding is DER, whereas the input was not, so
         # the length encoding changes from long form to short form
         self.assertEqual(b'\x6a\x03\x02\x01\x00', ati.dump(force=True))
+
+    def test_explicit_application_tag_nested(self):
+        # tag = [APPLICATION 10] constructed; length = 18
+        #   OUTER SEQUENCE: tag = [UNIVERSAL 16] constructed; length = 16
+        #     outernumber : tag = [11] constructed; length = 3
+        #       INTEGER: tag = [UNIVERSAL 2] primitive; length = 1
+        #         23
+        #     inner : tag = [12] constructed; length = 9
+        #       tag = [APPLICATION 20] constructed; length = 7
+        #         INNER SEQUENCE: tag = [UNIVERSAL 16] constructed; length = 5
+        #           innernumber : tag = [21] constructed; length = 3
+        #             INTEGER: tag = [UNIVERSAL 2] primitive; length = 1
+        #               42
+        der = (
+            b'\x6A\x12\x30\x10\xAB\x03\x02\x01\x17\xAC\x09\x74'
+            b'\x07\x30\x05\xB5\x03\x02\x01\x2A'
+        )
+
+        ato = ApplicationTaggedOuter.load(der)
+        self.assertEqual('explicit', ato.tag_type)
+        self.assertEqual(1, ato.explicit_class)
+        self.assertEqual(10, ato.explicit_tag)
+        self.assertEqual(0, ato.class_)
+        self.assertEqual(16, ato.tag)
+        self.assertEqual(1, ato.method)
+
+        onum = ato['outernumber']
+        self.assertEqual('explicit', onum.tag_type)
+        self.assertEqual(2, onum.explicit_class)
+        self.assertEqual(11, onum.explicit_tag)
+        self.assertEqual(0, onum.class_)
+        self.assertEqual(2, onum.tag)
+        self.assertEqual(0, onum.method)
+        self.assertEqual(23, onum.native)
+
+        ati = ato['inner']
+        # HERE BE DRAGONS, ato['inner'] fails with an exception
+        self.assertEqual('explicit', ati.tag_type)
+        self.assertEqual(1, ati.explicit_class)
+        # XXX: 12 or 20?
+        self.assertEqual(20, ati.explicit_tag)
+        self.assertEqual(0, ati.class_)
+        self.assertEqual(2, ati.tag)
+        self.assertEqual(0, ati.native)
+
+        inum = ati['innernumber']
+        self.assertEqual('explicit', inum.tag_type)
+        self.assertEqual(2, inum.explicit_class)
+        self.assertEqual(21, inum.explicit_tag)
+        self.assertEqual(0, inum.class_)
+        self.assertEqual(2, inum.tag)
+        self.assertEqual(0, inum.method)
+        self.assertEqual(42, inum.native)
