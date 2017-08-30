@@ -920,7 +920,7 @@ class Name(Choice):
 
         :param use_printable:
             A bool - if PrintableString should be used for encoding instead of
-            UTF8String. This is for backwards compatiblity with old software.
+            UTF8String. This is for backwards compatibility with old software.
 
         :return:
             An x509.Name object
