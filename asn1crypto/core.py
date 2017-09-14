@@ -638,7 +638,7 @@ class Constructable(object):
     """
 
     # Instance attribute indicating if an object was indefinite
-    # length when parsed – affects parsing and dumping
+    # length when parsed - affects parsing and dumping
     _indefinite = False
 
     # Class attribute that indicates the offset into self.contents
@@ -2267,7 +2267,7 @@ class IntegerBitString(Constructable, Castable, Primitive):
         Allows reconstructing indefinite length values
 
         :return:
-            A unicode string of bits – 1s and 0s
+            A unicode string of bits - 1s and 0s
         """
 
         extra_bits = int_from_bytes(self.contents[0:1])
@@ -3471,7 +3471,7 @@ class Sequence(Asn1Value):
                 raise ValueError(unwrap(
                     '''
                     Can not set a native python value to %s, which has the
-                    choice type of %s – value must be an instance of Asn1Value
+                    choice type of %s - value must be an instance of Asn1Value
                     ''',
                     field_name,
                     type_name(value_spec)
@@ -3911,7 +3911,7 @@ class SequenceOf(Asn1Value):
                 raise ValueError(unwrap(
                     '''
                     Can not set a native python value to %s where the
-                    _child_spec is Any – value must be an instance of Asn1Value
+                    _child_spec is Any - value must be an instance of Asn1Value
                     ''',
                     type_name(self)
                 ))
@@ -3921,7 +3921,7 @@ class SequenceOf(Asn1Value):
                 raise ValueError(unwrap(
                     '''
                     Can not set a native python value to %s where the
-                    _child_spec is the choice type %s – value must be an
+                    _child_spec is the choice type %s - value must be an
                     instance of Asn1Value
                     ''',
                     type_name(self),
