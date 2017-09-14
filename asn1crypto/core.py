@@ -3769,6 +3769,19 @@ class Sequence(Asn1Value):
         if force:
             self._set_contents(force=force)
 
+        if self._fields and self.children is not None:
+            for index, (field_name, _, params) in enumerate(self._fields):
+                if self.children[index] is not VOID:
+                    continue
+                if 'default' in params or 'optional' in params:
+                    continue
+                raise ValueError(unwrap(
+                    '''
+                    Field "%s" is missing from structure
+                    ''',
+                    field_name
+                ))
+
         return Asn1Value.dump(self)
 
 

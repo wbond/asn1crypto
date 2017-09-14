@@ -599,3 +599,7 @@ class CoreTests(unittest.TestCase):
         # The output encoding is DER, whereas the input was not, so
         # the length encoding changes from long form to short form
         self.assertEqual(b'\x6a\x03\x02\x01\x00', ati.dump(force=True))
+
+    def test_required_field(self):
+        with self.assertRaisesRegexp(ValueError, '"id" is missing from structure'):
+            Seq({'value': core.Integer(5)}).dump()
