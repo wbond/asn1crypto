@@ -15,6 +15,7 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+from contextlib import contextmanager
 from encodings import idna  # noqa
 import hashlib
 import re
@@ -448,9 +449,42 @@ class PrivateKeyUsagePeriod(Sequence):
     ]
 
 
+class NotReallyTeletexString(TeletexString):
+    """
+    OpenSSL (and probably some other libraries) puts ISO-8859-1
+    into TeletexString instead of ITU T.61. We use Windows-1252 when
+    decoding since it is a superset of ISO-8859-1, and less likely to
+    cause encoding issues, but we stay strict with encoding to prevent
+    us from creating bad data.
+    """
+
+    _decoding_encoding = 'cp1252'
+
+    def __unicode__(self):
+        """
+        :return:
+            A unicode string
+        """
+
+        if self.contents is None:
+            return ''
+        if self._unicode is None:
+            self._unicode = self._merge_chunks().decode(self._decoding_encoding)
+        return self._unicode
+
+
+@contextmanager
+def strict_teletex():
+    try:
+        NotReallyTeletexString._decoding_encoding = 'teletex'
+        yield
+    finally:
+        NotReallyTeletexString._decoding_encoding = 'cp1252'
+
+
 class DirectoryString(Choice):
     _alternatives = [
-        ('teletex_string', TeletexString),
+        ('teletex_string', NotReallyTeletexString),
         ('printable_string', PrintableString),
         ('universal_string', UniversalString),
         ('utf8_string', UTF8String),

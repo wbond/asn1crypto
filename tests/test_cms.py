@@ -886,3 +886,18 @@ class CMSTests(unittest.TestCase):
             b'\xBF\x6B\x77\x1A\x32\xC2\x0C\x93\xCC\x35\xBC\x66\xC6\x69',
             signer['signature'].native
         )
+
+    def test_bad_teletex_inside_pkcs7(self):
+        with open(os.path.join(fixtures_dir, 'mozilla-generated-by-openssl.pkcs7.der'), 'rb') as f:
+            content = cms.ContentInfo.load(f.read())['content']
+        self.assertEqual(
+            util.OrderedDict([
+                ('organizational_unit_name', 'Testing'),
+                ('country_name', 'US'),
+                ('locality_name', 'Mountain View'),
+                ('organization_name', 'Addons Testing'),
+                ('state_or_province_name', 'CA'),
+                ('common_name', '{02b860db-e71f-48d2-a5a0-82072a93d33c}')
+            ]),
+            content['certificates'][0].chosen['tbs_certificate']['subject'].native
+        )

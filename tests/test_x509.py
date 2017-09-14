@@ -3355,3 +3355,24 @@ class X509Tests(unittest.TestCase):
             cert['tbs_certificate']['validity']['not_before'].native,
             util.extended_datetime(0, 1, 1, 0, 0, 1, tzinfo=util.timezone.utc)
         )
+
+    def test_teletex_that_is_really_latin1(self):
+        self.assertEqual(
+            '{}',
+            x509.DirectoryString.load(b'\x14\x02{}').native
+        )
+
+    def test_strict_teletex(self):
+        with x509.strict_teletex():
+            with self.assertRaises(UnicodeDecodeError):
+                self.assertEqual(
+                    '{}',
+                    x509.DirectoryString.load(b'\x14\x02{}').native
+                )
+
+        # Make sure outside of the contextmanager we are back to
+        # liberal interpretation of TeletexString
+        self.assertEqual(
+            '{}',
+            x509.DirectoryString.load(b'\x14\x02{}').native
+        )
