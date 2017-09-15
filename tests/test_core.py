@@ -65,6 +65,14 @@ class Enum(core.Enumerated):
 
 class NumChoice(core.Choice):
     _alternatives = [
+        ('one', core.Integer, {'explicit': 0}),
+        ('two', core.Integer, {'implicit': 1}),
+        ('three', core.Integer, {'explicit': 2}),
+    ]
+
+
+class NumChoiceOldApi(core.Choice):
+    _alternatives = [
         ('one', core.Integer, {'tag_type': 'explicit', 'tag': 0}),
         ('two', core.Integer, {'tag_type': 'implicit', 'tag': 1}),
         ('three', core.Integer, {'tag_type': 'explicit', 'tag': 2}),
@@ -72,6 +80,13 @@ class NumChoice(core.Choice):
 
 
 class SeqChoice(core.Choice):
+    _alternatives = [
+        ('one', CopySeq, {'explicit': 0}),
+        ('two', CopySeq, {'implicit': 1}),
+    ]
+
+
+class SeqChoiceOldApi(core.Choice):
     _alternatives = [
         ('one', CopySeq, {'tag_type': 'explicit', 'tag': 0}),
         ('two', CopySeq, {'tag_type': 'implicit', 'tag': 1}),
@@ -84,10 +99,23 @@ class ExplicitField(core.Sequence):
     ]
 
 
+class ExplicitFieldOldApi(core.Sequence):
+    _fields = [
+        ('field', NumChoiceOldApi, {'explicit': 0}),
+    ]
+
+
 class SetTest(core.Set):
     _fields = [
         ('two', core.Integer, {'tag_type': 'implicit', 'tag': 2}),
         ('one', core.Integer, {'tag_type': 'implicit', 'tag': 1}),
+    ]
+
+
+class SetTestOldApi(core.Set):
+    _fields = [
+        ('two', core.Integer, {'implicit': 2}),
+        ('one', core.Integer, {'implicit': 1}),
     ]
 
 
@@ -110,9 +138,7 @@ class MyOids(core.ObjectIdentifier):
     }
 
 class ApplicationTaggedInteger(core.Integer):
-    tag_type = 'explicit'
-    explicit_class = 1
-    explicit_tag = 10
+    explicit = ((1, 10), )
 
 
 @data_decorator
@@ -134,8 +160,8 @@ class CoreTests(unittest.TestCase):
         return (
             (core.ObjectIdentifier('1.2.3'), core.ObjectIdentifier('1.2.3'), True),
             (core.Integer(1), Enum(1), False),
-            (core.Integer(1), core.Integer(1, tag_type='implicit', tag=5), True),
-            (core.Integer(1), core.Integer(1, tag_type='explicit', tag=5), True),
+            (core.Integer(1), core.Integer(1, implicit=5), True),
+            (core.Integer(1), core.Integer(1, explicit=5), True),
             (core.Integer(1), core.Integer(2), False),
             (core.OctetString(b''), core.OctetString(b''), True),
             (core.OctetString(b''), core.OctetString(b'1'), False),
@@ -273,6 +299,8 @@ class CoreTests(unittest.TestCase):
     def test_strict_choice(self):
         with self.assertRaises(ValueError):
             NumChoice.load(b'\xA0\x03\x02\x01\x00\x00', strict=True)
+        with self.assertRaises(ValueError):
+            NumChoiceOldApi.load(b'\xA0\x03\x02\x01\x00\x00', strict=True)
 
     def test_bit_string_item_access(self):
         named = core.BitString()
@@ -397,12 +425,19 @@ class CoreTests(unittest.TestCase):
         val = NumChoice.load(b'\xa0\x03\x02\x01\x00')
         self.assertEqual(b'\xa0\x03\x02\x01', val.chosen._header)
         self.assertEqual(b'\x00', val.chosen.contents)
+        val2 = NumChoiceOldApi.load(b'\xa0\x03\x02\x01\x00')
+        self.assertEqual(b'\xa0\x03\x02\x01', val2.chosen._header)
+        self.assertEqual(b'\x00', val2.chosen.contents)
 
     def test_explicit_header_field_choice(self):
         der = b'\x30\x07\xa0\x05\xa0\x03\x02\x01\x00'
         val = ExplicitField.load(der)
         self.assertEqual(0, val['field'].chosen.native)
         self.assertEqual(der, val.dump(force=True))
+
+        val2 = ExplicitFieldOldApi.load(der)
+        self.assertEqual(0, val2['field'].chosen.native)
+        self.assertEqual(der, val2.dump(force=True))
 
     def test_retag(self):
         a = core.Integer(200)
@@ -412,7 +447,7 @@ class CoreTests(unittest.TestCase):
         self.assertNotEqual(a.dump(), b.dump())
 
     def test_untag(self):
-        a = core.Integer(200, tag_type='explicit', tag=0)
+        a = core.Integer(200, explicit=0)
         b = a.untag()
         self.assertNotEqual(id(a), id(b))
         self.assertEqual(a.contents, b.contents)
@@ -429,6 +464,15 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             SeqChoice({'one': a, 'two': a})
 
+        choice2 = SeqChoiceOldApi({'one': a})
+        self.assertEqual('one', choice2.name)
+
+        with self.assertRaises(ValueError):
+            SeqChoiceOldApi({})
+
+        with self.assertRaises(ValueError):
+            SeqChoiceOldApi({'one': a, 'two': a})
+
     def test_choice_tuple_name(self):
         a = CopySeq({'name': 'foo', 'pair': {'id': '1.2.3', 'value': 5}})
         choice = SeqChoice(('one', a))
@@ -440,19 +484,35 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             SeqChoice(('one', a, None))
 
+        choice2 = SeqChoiceOldApi(('one', a))
+        self.assertEqual('one', choice2.name)
+
+        with self.assertRaises(ValueError):
+            SeqChoiceOldApi(('one',))
+
+        with self.assertRaises(ValueError):
+            SeqChoiceOldApi(('one', a, None))
+
     def test_load_invalid_choice(self):
         with self.assertRaises(ValueError):
             NumChoice.load(b'\x02\x01\x00')
+        with self.assertRaises(ValueError):
+            NumChoiceOldApi.load(b'\x02\x01\x00')
 
     def test_fix_tagging_choice(self):
-        correct = core.Integer(200, tag_type='explicit', tag=2)
+        correct = core.Integer(200, explicit=2)
         choice = NumChoice(
             name='three',
-            value=core.Integer(200, tag_type='explicit', tag=1)
+            value=core.Integer(200, explicit=1)
         )
         self.assertEqual(correct.dump(), choice.dump())
-        self.assertEqual(correct.tag_type, choice.chosen.tag_type)
-        self.assertEqual(correct.explicit_tag, choice.chosen.explicit_tag)
+        self.assertEqual(correct.explicit, choice.chosen.explicit)
+        choice2 = NumChoiceOldApi(
+            name='three',
+            value=core.Integer(200, explicit=1)
+        )
+        self.assertEqual(correct.dump(), choice2.dump())
+        self.assertEqual(correct.explicit, choice2.chosen.explicit)
 
     def test_copy_choice_mutate(self):
         a = CopySeq({'name': 'foo', 'pair': {'id': '1.2.3', 'value': 5}})
@@ -464,6 +524,15 @@ class CoreTests(unittest.TestCase):
         choice_copy = choice.copy()
         choice.chosen['name'] = 'bar'
         self.assertNotEqual(choice.chosen['name'], choice_copy.chosen['name'])
+
+        choice2 = SeqChoiceOldApi(
+            name='one',
+            value=a
+        )
+        choice2.dump()
+        choice2_copy = choice2.copy()
+        choice2.chosen['name'] = 'bar'
+        self.assertNotEqual(choice2.chosen['name'], choice2_copy.chosen['name'])
 
     def test_concat(self):
         child1 = Seq({
@@ -589,9 +658,7 @@ class CoreTests(unittest.TestCase):
         data = b'\x6a\x81\x03\x02\x01\x00'
         ati = ApplicationTaggedInteger.load(data)
 
-        self.assertEqual('explicit', ati.tag_type)
-        self.assertEqual(1, ati.explicit_class)
-        self.assertEqual(10, ati.explicit_tag)
+        self.assertEqual(((1, 10),), ati.explicit)
         self.assertEqual(0, ati.class_)
         self.assertEqual(2, ati.tag)
         self.assertEqual(0, ati.native)
