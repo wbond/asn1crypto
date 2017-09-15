@@ -74,8 +74,8 @@ class MessageImprint(Sequence):
 class Accuracy(Sequence):
     _fields = [
         ('seconds', Integer, {'optional': True}),
-        ('millis', Integer, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
-        ('micros', Integer, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('millis', Integer, {'implicit': 0, 'optional': True}),
+        ('micros', Integer, {'implicit': 1, 'optional': True}),
     ]
 
 
@@ -101,8 +101,8 @@ class TSTInfo(Sequence):
         ('accuracy', Accuracy, {'optional': True}),
         ('ordering', Boolean, {'default': False}),
         ('nonce', Integer, {'optional': True}),
-        ('tsa', GeneralName, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('extensions', Extensions, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('tsa', GeneralName, {'explicit': 0, 'optional': True}),
+        ('extensions', Extensions, {'implicit': 1, 'optional': True}),
     ]
 
 
@@ -113,7 +113,7 @@ class TimeStampReq(Sequence):
         ('req_policy', ObjectIdentifier, {'optional': True}),
         ('nonce', Integer, {'optional': True}),
         ('cert_req', Boolean, {'default': False}),
-        ('extensions', Extensions, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('extensions', Extensions, {'implicit': 0, 'optional': True}),
     ]
 
 
@@ -201,9 +201,9 @@ class PartialHashtrees(SequenceOf):
 
 class ArchiveTimeStamp(Sequence):
     _fields = [
-        ('digest_algorithm', DigestAlgorithm, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
-        ('attributes', Attributes, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
-        ('reduced_hashtree', PartialHashtrees, {'tag_type': 'implicit', 'tag': 2, 'optional': True}),
+        ('digest_algorithm', DigestAlgorithm, {'implicit': 0, 'optional': True}),
+        ('attributes', Attributes, {'implicit': 1, 'optional': True}),
+        ('reduced_hashtree', PartialHashtrees, {'implicit': 2, 'optional': True}),
         ('time_stamp', ContentInfo),
     ]
 
@@ -216,8 +216,8 @@ class EvidenceRecord(Sequence):
     _fields = [
         ('version', Version),
         ('digest_algorithms', DigestAlgorithms),
-        ('crypto_infos', Attributes, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
-        ('encryption_info', EncryptionInfo, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('crypto_infos', Attributes, {'implicit': 0, 'optional': True}),
+        ('encryption_info', EncryptionInfo, {'implicit': 1, 'optional': True}),
         ('archive_time_stamp_sequence', ArchiveTimeStampSequence),
     ]
 
@@ -231,9 +231,9 @@ class OtherEvidence(Sequence):
 
 class Evidence(Choice):
     _alternatives = [
-        ('tst_evidence', TimeStampTokenEvidence, {'tag_type': 'implicit', 'tag': 0}),
-        ('ers_evidence', EvidenceRecord, {'tag_type': 'implicit', 'tag': 1}),
-        ('other_evidence', OtherEvidence, {'tag_type': 'implicit', 'tag': 2}),
+        ('tst_evidence', TimeStampTokenEvidence, {'implicit': 0}),
+        ('ers_evidence', EvidenceRecord, {'implicit': 1}),
+        ('other_evidence', OtherEvidence, {'implicit': 2}),
     ]
 
 

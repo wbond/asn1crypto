@@ -412,8 +412,8 @@ class ECPrivateKey(Sequence):
     _fields = [
         ('version', ECPrivateKeyVersion),
         ('private_key', IntegerOctetString),
-        ('parameters', ECDomainParameters, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('public_key', ECPointBitString, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
+        ('parameters', ECDomainParameters, {'explicit': 0, 'optional': True}),
+        ('public_key', ECPointBitString, {'explicit': 1, 'optional': True}),
     ]
 
 
@@ -497,7 +497,7 @@ class PrivateKeyInfo(Sequence):
         ('version', Integer),
         ('private_key_algorithm', PrivateKeyAlgorithm),
         ('private_key', ParsableOctetString),
-        ('attributes', Attributes, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('attributes', Attributes, {'implicit': 0, 'optional': True}),
     ]
 
     def _private_key_spec(self):

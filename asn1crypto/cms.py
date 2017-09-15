@@ -128,8 +128,8 @@ class ContentType(ObjectIdentifier):
 class CMSAlgorithmProtection(Sequence):
     _fields = [
         ('digest_algorithm', DigestAlgorithm),
-        ('signature_algorithm', SignedDigestAlgorithm, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
-        ('mac_algorithm', HmacAlgorithm, {'tag_type': 'implicit', 'tag': 2, 'optional': True}),
+        ('signature_algorithm', SignedDigestAlgorithm, {'implicit': 1, 'optional': True}),
+        ('mac_algorithm', HmacAlgorithm, {'implicit': 2, 'optional': True}),
     ]
 
 
@@ -190,8 +190,8 @@ class AttCertVersion(Integer):
 
 class AttCertSubject(Choice):
     _alternatives = [
-        ('base_certificate_id', IssuerSerial, {'tag_type': 'explicit', 'tag': 0}),
-        ('subject_name', GeneralNames, {'tag_type': 'explicit', 'tag': 1}),
+        ('base_certificate_id', IssuerSerial, {'explicit': 0}),
+        ('subject_name', GeneralNames, {'explicit': 1}),
     ]
 
 
@@ -243,24 +243,24 @@ class ObjectDigestInfo(Sequence):
 
 class Holder(Sequence):
     _fields = [
-        ('base_certificate_id', IssuerSerial, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
-        ('entity_name', GeneralNames, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
-        ('object_digest_info', ObjectDigestInfo, {'tag_type': 'implicit', 'tag': 2, 'optional': True}),
+        ('base_certificate_id', IssuerSerial, {'implicit': 0, 'optional': True}),
+        ('entity_name', GeneralNames, {'implicit': 1, 'optional': True}),
+        ('object_digest_info', ObjectDigestInfo, {'implicit': 2, 'optional': True}),
     ]
 
 
 class V2Form(Sequence):
     _fields = [
         ('issuer_name', GeneralNames, {'optional': True}),
-        ('base_certificate_id', IssuerSerial, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('object_digest_info', ObjectDigestInfo, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
+        ('base_certificate_id', IssuerSerial, {'explicit': 0, 'optional': True}),
+        ('object_digest_info', ObjectDigestInfo, {'explicit': 1, 'optional': True}),
     ]
 
 
 class AttCertIssuer(Choice):
     _alternatives = [
         ('v1_form', GeneralNames),
-        ('v2_form', V2Form, {'tag_type': 'explicit', 'tag': 0}),
+        ('v2_form', V2Form, {'explicit': 0}),
     ]
 
 
@@ -278,7 +278,7 @@ class IetfAttrValues(SequenceOf):
 
 class IetfAttrSyntax(Sequence):
     _fields = [
-        ('policy_authority', GeneralNames, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('policy_authority', GeneralNames, {'implicit': 0, 'optional': True}),
         ('values', IetfAttrValues),
     ]
 
@@ -301,8 +301,8 @@ class SetOfSvceAuthInfo(SetOf):
 
 class RoleSyntax(Sequence):
     _fields = [
-        ('role_authority', GeneralNames, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
-        ('role_name', GeneralName, {'tag_type': 'implicit', 'tag': 1}),
+        ('role_authority', GeneralNames, {'implicit': 0, 'optional': True}),
+        ('role_name', GeneralName, {'implicit': 1}),
     ]
 
 
@@ -323,8 +323,8 @@ class ClassList(BitString):
 
 class SecurityCategory(Sequence):
     _fields = [
-        ('type', ObjectIdentifier, {'tag_type': 'implicit', 'tag': 0}),
-        ('value', Any, {'tag_type': 'implicit', 'tag': 1}),
+        ('type', ObjectIdentifier, {'implicit': 0}),
+        ('value', Any, {'implicit': 1}),
     ]
 
 
@@ -334,9 +334,9 @@ class SetOfSecurityCategory(SetOf):
 
 class Clearance(Sequence):
     _fields = [
-        ('policy_id', ObjectIdentifier, {'tag_type': 'implicit', 'tag': 0}),
-        ('class_list', ClassList, {'tag_type': 'implicit', 'tag': 1, 'default': 'unclassified'}),
-        ('security_categories', SetOfSecurityCategory, {'tag_type': 'implicit', 'tag': 2, 'optional': True}),
+        ('policy_id', ObjectIdentifier, {'implicit': 0}),
+        ('class_list', ClassList, {'implicit': 1, 'default': 'unclassified'}),
+        ('security_categories', SetOfSecurityCategory, {'implicit': 2, 'optional': True}),
     ]
 
 
@@ -380,8 +380,8 @@ class SetOfTimingMetrics(SetOf):
 class TimingPolicy(Sequence):
     _fields = [
         ('policy_id', SequenceOf, {'spec': ObjectIdentifier}),
-        ('max_offset', BigTime, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('max_delay', BigTime, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
+        ('max_offset', BigTime, {'explicit': 0, 'optional': True}),
+        ('max_delay', BigTime, {'explicit': 1, 'optional': True}),
     ]
 
 
@@ -466,10 +466,10 @@ class OtherCertificateFormat(Sequence):
 class CertificateChoices(Choice):
     _alternatives = [
         ('certificate', Certificate),
-        ('extended_certificate', ExtendedCertificate, {'tag_type': 'implicit', 'tag': 0}),
-        ('v1_attr_cert', AttributeCertificateV1, {'tag_type': 'implicit', 'tag': 1}),
-        ('v2_attr_cert', AttributeCertificateV2, {'tag_type': 'implicit', 'tag': 2}),
-        ('other', OtherCertificateFormat, {'tag_type': 'implicit', 'tag': 3}),
+        ('extended_certificate', ExtendedCertificate, {'implicit': 0}),
+        ('v1_attr_cert', AttributeCertificateV1, {'implicit': 1}),
+        ('v2_attr_cert', AttributeCertificateV2, {'implicit': 2}),
+        ('other', OtherCertificateFormat, {'implicit': 3}),
     ]
 
     def validate(self, class_, tag, contents):
@@ -505,7 +505,7 @@ class CertificateSet(SetOf):
 class ContentInfo(Sequence):
     _fields = [
         ('content_type', ContentType),
-        ('content', Any, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+        ('content', Any, {'explicit': 0, 'optional': True}),
     ]
 
     _oid_pair = ('content_type', 'content')
@@ -519,7 +519,7 @@ class SetOfContentInfo(SetOf):
 class EncapsulatedContentInfo(Sequence):
     _fields = [
         ('content_type', ContentType),
-        ('content', ParsableOctetString, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+        ('content', ParsableOctetString, {'explicit': 0, 'optional': True}),
     ]
 
     _oid_pair = ('content_type', 'content')
@@ -536,7 +536,7 @@ class IssuerAndSerialNumber(Sequence):
 class SignerIdentifier(Choice):
     _alternatives = [
         ('issuer_and_serial_number', IssuerAndSerialNumber),
-        ('subject_key_identifier', OctetString, {'tag_type': 'implicit', 'tag': 0}),
+        ('subject_key_identifier', OctetString, {'implicit': 0}),
     ]
 
 
@@ -550,7 +550,7 @@ class CertificateRevocationLists(SetOf):
 
 class SCVPReqRes(Sequence):
     _fields = [
-        ('request', ContentInfo, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+        ('request', ContentInfo, {'explicit': 0, 'optional': True}),
         ('response', ContentInfo),
     ]
 
@@ -578,7 +578,7 @@ class OtherRevocationInfoFormat(Sequence):
 class RevocationInfoChoice(Choice):
     _alternatives = [
         ('crl', CertificateList),
-        ('other', OtherRevocationInfoFormat, {'tag_type': 'implciit', 'tag': 1}),
+        ('other', OtherRevocationInfoFormat, {'implicit': 1}),
     ]
 
 
@@ -591,10 +591,10 @@ class SignerInfo(Sequence):
         ('version', CMSVersion),
         ('sid', SignerIdentifier),
         ('digest_algorithm', DigestAlgorithm),
-        ('signed_attrs', CMSAttributes, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('signed_attrs', CMSAttributes, {'implicit': 0, 'optional': True}),
         ('signature_algorithm', SignedDigestAlgorithm),
         ('signature', OctetString),
-        ('unsigned_attrs', CMSAttributes, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('unsigned_attrs', CMSAttributes, {'implicit': 1, 'optional': True}),
     ]
 
 
@@ -607,8 +607,8 @@ class SignedData(Sequence):
         ('version', CMSVersion),
         ('digest_algorithms', DigestAlgorithms),
         ('encap_content_info', None),
-        ('certificates', CertificateSet, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
-        ('crls', RevocationInfoChoices, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('certificates', CertificateSet, {'implicit': 0, 'optional': True}),
+        ('crls', RevocationInfoChoices, {'implicit': 1, 'optional': True}),
         ('signer_infos', SignerInfos),
     ]
 
@@ -633,15 +633,15 @@ class SignedData(Sequence):
 
 class OriginatorInfo(Sequence):
     _fields = [
-        ('certs', CertificateSet, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
-        ('crls', RevocationInfoChoices, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('certs', CertificateSet, {'implicit': 0, 'optional': True}),
+        ('crls', RevocationInfoChoices, {'implicit': 1, 'optional': True}),
     ]
 
 
 class RecipientIdentifier(Choice):
     _alternatives = [
         ('issuer_and_serial_number', IssuerAndSerialNumber),
-        ('subject_key_identifier', OctetString, {'tag_type': 'implicit', 'tag': 0}),
+        ('subject_key_identifier', OctetString, {'implicit': 0}),
     ]
 
 
@@ -676,8 +676,8 @@ class KeyTransRecipientInfo(Sequence):
 class OriginatorIdentifierOrKey(Choice):
     _alternatives = [
         ('issuer_and_serial_number', IssuerAndSerialNumber),
-        ('subject_key_identifier', OctetString, {'tag_type': 'implicit', 'tag': 0}),
-        ('originator_key', PublicKeyInfo, {'tag_type': 'implicit', 'tag': 1}),
+        ('subject_key_identifier', OctetString, {'implicit': 0}),
+        ('originator_key', PublicKeyInfo, {'implicit': 1}),
     ]
 
 
@@ -699,7 +699,7 @@ class RecipientKeyIdentifier(Sequence):
 class KeyAgreementRecipientIdentifier(Choice):
     _alternatives = [
         ('issuer_and_serial_number', IssuerAndSerialNumber),
-        ('r_key_id', RecipientKeyIdentifier, {'tag_type': 'implicit', 'tag': 0}),
+        ('r_key_id', RecipientKeyIdentifier, {'implicit': 0}),
     ]
 
 
@@ -717,8 +717,8 @@ class RecipientEncryptedKeys(SequenceOf):
 class KeyAgreeRecipientInfo(Sequence):
     _fields = [
         ('version', CMSVersion),
-        ('originator', OriginatorIdentifierOrKey, {'tag_type': 'explicit', 'tag': 0}),
-        ('ukm', OctetString, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
+        ('originator', OriginatorIdentifierOrKey, {'explicit': 0}),
+        ('ukm', OctetString, {'explicit': 1, 'optional': True}),
         ('key_encryption_algorithm', KeyEncryptionAlgorithm),
         ('recipient_encrypted_keys', RecipientEncryptedKeys),
     ]
@@ -744,7 +744,7 @@ class KEKRecipientInfo(Sequence):
 class PasswordRecipientInfo(Sequence):
     _fields = [
         ('version', CMSVersion),
-        ('key_derivation_algorithm', KdfAlgorithm, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('key_derivation_algorithm', KdfAlgorithm, {'implicit': 0, 'optional': True}),
         ('key_encryption_algorithm', KeyEncryptionAlgorithm),
         ('encrypted_key', OctetString),
     ]
@@ -760,10 +760,10 @@ class OtherRecipientInfo(Sequence):
 class RecipientInfo(Choice):
     _alternatives = [
         ('ktri', KeyTransRecipientInfo),
-        ('kari', KeyAgreeRecipientInfo, {'tag_type': 'implicit', 'tag': 1}),
-        ('kekri', KEKRecipientInfo, {'tag_type': 'implicit', 'tag': 2}),
-        ('pwri', PasswordRecipientInfo, {'tag_type': 'implicit', 'tag': 3}),
-        ('ori', OtherRecipientInfo, {'tag_type': 'implicit', 'tag': 4}),
+        ('kari', KeyAgreeRecipientInfo, {'implicit': 1}),
+        ('kekri', KEKRecipientInfo, {'implicit': 2}),
+        ('pwri', PasswordRecipientInfo, {'implicit': 3}),
+        ('ori', OtherRecipientInfo, {'implicit': 4}),
     ]
 
 
@@ -775,17 +775,17 @@ class EncryptedContentInfo(Sequence):
     _fields = [
         ('content_type', ContentType),
         ('content_encryption_algorithm', EncryptionAlgorithm),
-        ('encrypted_content', OctetString, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('encrypted_content', OctetString, {'implicit': 0, 'optional': True}),
     ]
 
 
 class EnvelopedData(Sequence):
     _fields = [
         ('version', CMSVersion),
-        ('originator_info', OriginatorInfo, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('originator_info', OriginatorInfo, {'implicit': 0, 'optional': True}),
         ('recipient_infos', RecipientInfos),
         ('encrypted_content_info', EncryptedContentInfo),
-        ('unprotected_attrs', CMSAttributes, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('unprotected_attrs', CMSAttributes, {'implicit': 1, 'optional': True}),
     ]
 
 
@@ -795,8 +795,8 @@ class SignedAndEnvelopedData(Sequence):
         ('recipient_infos', RecipientInfos),
         ('digest_algorithms', DigestAlgorithms),
         ('encrypted_content_info', EncryptedContentInfo),
-        ('certificates', CertificateSet, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
-        ('crls', CertificateRevocationLists, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('certificates', CertificateSet, {'implicit': 0, 'optional': True}),
+        ('crls', CertificateRevocationLists, {'implicit': 1, 'optional': True}),
         ('signer_infos', SignerInfos),
     ]
 
@@ -832,35 +832,35 @@ class EncryptedData(Sequence):
     _fields = [
         ('version', CMSVersion),
         ('encrypted_content_info', EncryptedContentInfo),
-        ('unprotected_attrs', CMSAttributes, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('unprotected_attrs', CMSAttributes, {'implicit': 1, 'optional': True}),
     ]
 
 
 class AuthenticatedData(Sequence):
     _fields = [
         ('version', CMSVersion),
-        ('originator_info', OriginatorInfo, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('originator_info', OriginatorInfo, {'implicit': 0, 'optional': True}),
         ('recipient_infos', RecipientInfos),
         ('mac_algorithm', HmacAlgorithm),
-        ('digest_algorithm', DigestAlgorithm, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('digest_algorithm', DigestAlgorithm, {'implicit': 1, 'optional': True}),
         # This does not require the _spec_callbacks approach of SignedData and
         # DigestedData since AuthenticatedData was not part of PKCS#7
         ('encap_content_info', EncapsulatedContentInfo),
-        ('auth_attrs', CMSAttributes, {'tag_type': 'implicit', 'tag': 2, 'optional': True}),
+        ('auth_attrs', CMSAttributes, {'implicit': 2, 'optional': True}),
         ('mac', OctetString),
-        ('unauth_attrs', CMSAttributes, {'tag_type': 'implicit', 'tag': 3, 'optional': True}),
+        ('unauth_attrs', CMSAttributes, {'implicit': 3, 'optional': True}),
     ]
 
 
 class AuthEnvelopedData(Sequence):
     _fields = [
         ('version', CMSVersion),
-        ('originator_info', OriginatorInfo, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('originator_info', OriginatorInfo, {'implicit': 0, 'optional': True}),
         ('recipient_infos', RecipientInfos),
         ('auth_encrypted_content_info', EncryptedContentInfo),
-        ('auth_attrs', CMSAttributes, {'tag_type': 'implicit', 'tag': 1, 'optional': True}),
+        ('auth_attrs', CMSAttributes, {'implicit': 1, 'optional': True}),
         ('mac', OctetString),
-        ('unauth_attrs', CMSAttributes, {'tag_type': 'implicit', 'tag': 2, 'optional': True}),
+        ('unauth_attrs', CMSAttributes, {'implicit': 2, 'optional': True}),
     ]
 
 

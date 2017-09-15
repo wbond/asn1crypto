@@ -50,12 +50,12 @@ class Version(Integer):
 
 class IssuingDistributionPoint(Sequence):
     _fields = [
-        ('distribution_point', DistributionPointName, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('only_contains_user_certs', Boolean, {'tag_type': 'implicit', 'tag': 1, 'default': False}),
-        ('only_contains_ca_certs', Boolean, {'tag_type': 'implicit', 'tag': 2, 'default': False}),
-        ('only_some_reasons', ReasonFlags, {'tag_type': 'implicit', 'tag': 3, 'optional': True}),
-        ('indirect_crl', Boolean, {'tag_type': 'implicit', 'tag': 4, 'default': False}),
-        ('only_contains_attribute_certs', Boolean, {'tag_type': 'implicit', 'tag': 5, 'default': False}),
+        ('distribution_point', DistributionPointName, {'explicit': 0, 'optional': True}),
+        ('only_contains_user_certs', Boolean, {'implicit': 1, 'default': False}),
+        ('only_contains_ca_certs', Boolean, {'implicit': 2, 'default': False}),
+        ('only_some_reasons', ReasonFlags, {'implicit': 3, 'optional': True}),
+        ('indirect_crl', Boolean, {'implicit': 4, 'default': False}),
+        ('only_contains_attribute_certs', Boolean, {'implicit': 5, 'default': False}),
     ]
 
 
@@ -280,7 +280,7 @@ class TbsCertList(Sequence):
         ('this_update', Time),
         ('next_update', Time, {'optional': True}),
         ('revoked_certificates', RevokedCertificates, {'optional': True}),
-        ('crl_extensions', TBSCertListExtensions, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+        ('crl_extensions', TBSCertListExtensions, {'explicit': 0, 'optional': True}),
     ]
 
 

@@ -84,7 +84,7 @@ class CertificationRequestInfo(Sequence):
         ('version', Version),
         ('subject', Name),
         ('subject_pk_info', PublicKeyInfo),
-        ('attributes', CRIAttributes, {'tag_type': 'implicit', 'tag': 0, 'optional': True}),
+        ('attributes', CRIAttributes, {'implicit': 0, 'optional': True}),
     ]
 
 

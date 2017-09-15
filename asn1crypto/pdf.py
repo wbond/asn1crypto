@@ -63,9 +63,9 @@ class SequenceOfOtherRevInfo(SequenceOf):
 
 class RevocationInfoArchival(Sequence):
     _fields = [
-        ('crl', SequenceOfCertificateList, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
-        ('ocsp', SequenceOfOCSPResponse, {'tag_type': 'explicit', 'tag': 1, 'optional': True}),
-        ('other_rev_info', SequenceOfOtherRevInfo, {'tag_type': 'explicit', 'tag': 2, 'optional': True}),
+        ('crl', SequenceOfCertificateList, {'explicit': 0, 'optional': True}),
+        ('ocsp', SequenceOfOCSPResponse, {'explicit': 1, 'optional': True}),
+        ('other_rev_info', SequenceOfOtherRevInfo, {'explicit': 2, 'optional': True}),
     ]
 
 

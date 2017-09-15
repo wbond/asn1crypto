@@ -145,7 +145,7 @@ class CertId(ObjectIdentifier):
 class CertBag(Sequence):
     _fields = [
         ('cert_id', CertId),
-        ('cert_value', ParsableOctetString, {'tag_type': 'explicit', 'tag': 0}),
+        ('cert_value', ParsableOctetString, {'explicit': 0}),
     ]
 
     _oid_pair = ('cert_id', 'cert_value')
@@ -157,14 +157,14 @@ class CertBag(Sequence):
 class CrlBag(Sequence):
     _fields = [
         ('crl_id', ObjectIdentifier),
-        ('crl_value', OctetString, {'tag_type': 'explicit', 'tag': 0}),
+        ('crl_value', OctetString, {'explicit': 0}),
     ]
 
 
 class SecretBag(Sequence):
     _fields = [
         ('secret_type_id', ObjectIdentifier),
-        ('secret_value', OctetString, {'tag_type': 'explicit', 'tag': 0}),
+        ('secret_value', OctetString, {'explicit': 0}),
     ]
 
 
@@ -175,7 +175,7 @@ class SafeContents(SequenceOf):
 class SafeBag(Sequence):
     _fields = [
         ('bag_id', BagId),
-        ('bag_value', Any, {'tag_type': 'explicit', 'tag': 0}),
+        ('bag_value', Any, {'explicit': 0}),
         ('bag_attributes', Attributes, {'optional': True}),
     ]
 
