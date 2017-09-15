@@ -138,7 +138,49 @@ class MyOids(core.ObjectIdentifier):
     }
 
 class ApplicationTaggedInteger(core.Integer):
+    # This class attribute may be a 2-element tuple of integers,
+    # or a tuple of 2-element tuple of integers. The first form
+    # will be converted to the second form the first time an
+    # object of this type is constructed.
     explicit = ((1, 10), )
+
+
+class ApplicationTaggedInner(core.Sequence):
+    """
+    TESTCASE DEFINITIONS EXPLICIT TAGS ::=
+    BEGIN
+
+    INNERSEQ ::= SEQUENCE {
+        innernumber       [21] INTEGER
+    }
+
+    INNER ::= [APPLICATION 20] INNERSEQ
+    """
+
+    explicit = (1, 20)
+
+    _fields = [
+        ('innernumber', core.Integer, {'explicit': 21}),
+    ]
+
+
+class ApplicationTaggedOuter(core.Sequence):
+    """
+    OUTERSEQ ::= SEQUENCE {
+        outernumber  [11] INTEGER,
+        inner        [12] INNER
+    }
+
+    OUTER ::= [APPLICATION 10] OUTERSEQ
+    END
+    """
+
+    explicit = (1, 10)
+
+    _fields = [
+        ('outernumber', core.Integer, {'explicit': 11}),
+        ('inner', ApplicationTaggedInner, {'explicit': 12}),
+    ]
 
 
 @data_decorator
@@ -670,3 +712,48 @@ class CoreTests(unittest.TestCase):
     def test_required_field(self):
         with self.assertRaisesRegexp(ValueError, '"id" is missing from structure'):
             Seq({'value': core.Integer(5)}).dump()
+
+    def test_explicit_application_tag_nested(self):
+        # tag = [APPLICATION 10] constructed; length = 18
+        #   OUTER SEQUENCE: tag = [UNIVERSAL 16] constructed; length = 16
+        #     outernumber : tag = [11] constructed; length = 3
+        #       INTEGER: tag = [UNIVERSAL 2] primitive; length = 1
+        #         23
+        #     inner : tag = [12] constructed; length = 9
+        #       tag = [APPLICATION 20] constructed; length = 7
+        #         INNER SEQUENCE: tag = [UNIVERSAL 16] constructed; length = 5
+        #           innernumber : tag = [21] constructed; length = 3
+        #             INTEGER: tag = [UNIVERSAL 2] primitive; length = 1
+        #               42
+        der = (
+            b'\x6A\x12\x30\x10\xAB\x03\x02\x01\x17\xAC\x09\x74'
+            b'\x07\x30\x05\xB5\x03\x02\x01\x2A'
+        )
+
+        ato = ApplicationTaggedOuter.load(der)
+        self.assertEqual(((1, 10),), ato.explicit)
+        self.assertEqual(0, ato.class_)
+        self.assertEqual(16, ato.tag)
+        self.assertEqual(1, ato.method)
+
+        onum = ato['outernumber']
+        self.assertEqual(((2, 11),), onum.explicit)
+        self.assertEqual(0, onum.class_)
+        self.assertEqual(2, onum.tag)
+        self.assertEqual(0, onum.method)
+        self.assertEqual(23, onum.native)
+
+        ati = ato['inner']
+        self.assertEqual(((1, 20), (2, 12)), ati.explicit)
+        self.assertEqual(0, ati.class_)
+        self.assertEqual(16, ati.tag)
+        self.assertEqual(util.OrderedDict([('innernumber', 42)]), ati.native)
+
+        inum = ati['innernumber']
+        self.assertEqual(((2, 21),), inum.explicit)
+        self.assertEqual(0, inum.class_)
+        self.assertEqual(2, inum.tag)
+        self.assertEqual(0, inum.method)
+        self.assertEqual(42, inum.native)
+
+        self.assertEqual(der, ato.dump(force=True))
