@@ -637,39 +637,39 @@ from asn1crypto.core import Sequence, Choice, IA5String, UTCTime, ObjectIdentifi
 class Person(Choice):
     _alternatives = [
         ('name', IA5String),
-        ('email', IA5String, {'tag_type': 'implicit', 'tag': 0}),
+        ('email', IA5String, {'implicit': 0}),
     ]
 
 class Record(Sequence):
     _fields = [
         ('id', ObjectIdentifier),
         ('created', UTCTime),
-        ('creator', Person, {'tag_type': 'explicit', 'tag': 0, 'optional': True}),
+        ('creator', Person, {'explicit': 0, 'optional': True}),
     ]
 ```
 
-As is shown above, the keys `tag_type` and `tag` are used for tagging, and are
-passed to a type class constructor via the optional third element of a field
-or alternative tuple. The `tag_type` may be the unicode strings `'implicit'` or
-`'explicit'` and the `tag` may be any integer.
+As is shown above, the keys `implicit` and `explicit` are used for tagging,
+and are passed to a type class constructor via the optional third element of
+a field or alternative tuple. Both parameters may be an integer tag number, or
+a 2-element tuple of string class name and integer tag.
 
 If a tagging value needs its tagging changed, the `.untag()` method can be used
 to create a copy of the object without explicit/implicit tagging. The `.retag()`
-method can be used to change the tagging. This method accepts two parameters:
-a unicode string `tag_type` and an integer `tag`.
+method can be used to change the tagging. This method accepts one parameter, a
+dict with either or both of the keys `implicit` and `explicit`.
 
 ```python
 person = Person(name='email', value='will@wbond.net')
 
-# Will display "implicit"
-print(person.tag_type)
+# Will display True
+print(person.implicit)
 
-# Will display nothing
-print(person.untag().tag_type)
+# Will display False
+print(person.untag().implicit)
 
 # Will display 0
 print(person.tag)
 
 # Will display 1
-print(person.retag('implicit', 1).tag)
+print(person.retag({'implicit': 1}).tag)
 ```
