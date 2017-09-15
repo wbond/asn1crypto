@@ -282,6 +282,10 @@ class Asn1Value(object):
         try:
             if self.__class__ not in _SETUP_CLASSES:
                 cls = self.__class__
+                # Allow explicit to be specified as a simple 2-element tuple
+                # instead of requiring the user make a nested tuple
+                if cls.explicit is not None and isinstance(cls.explicit[0], int_types):
+                    cls.explicit = (cls.explicit, )
                 if hasattr(cls, '_setup'):
                     self._setup()
                 _SETUP_CLASSES[cls] = True
