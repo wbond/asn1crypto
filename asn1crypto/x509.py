@@ -1527,8 +1527,7 @@ class DistributionPoint(Sequence):
             for general_name in name.chosen:
                 if general_name.name == 'uniform_resource_identifier':
                     url = general_name.native
-                    lurl = url.lower()
-                    if lurl.startswith('http://') or lurl.startswith('https://') or lurl.startswith('ldap://'):
+                    if url.lower().startswith(('http://', 'https://', 'ldap://', 'ldaps://')):
                         self._url = url
                         break
 
@@ -2412,8 +2411,7 @@ class Certificate(Sequence):
                 if location.name != 'uniform_resource_identifier':
                     continue
                 url = location.native
-                lurl = url.lower()
-                if lurl.startswith('http://') or lurl.startswith('https://') or lurl.startswith('ldap://'):
+                if url.lower().startswith(('http://', 'https://', 'ldap://', 'ldaps://')):
                     output.append(url)
         return output
 
