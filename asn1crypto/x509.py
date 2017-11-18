@@ -1726,9 +1726,9 @@ class KeyPurposeId(ObjectIdentifier):
         '2.16.840.1.101.3.6.7': 'piv_content_signing',
         # https://tools.ietf.org/html/rfc4556.html
         '1.3.6.1.5.2.3.4': 'pkinit_kpclientauth',
-        '1.3.6.1.5.2.3.4': 'pkinit_kpkdc',
+        '1.3.6.1.5.2.3.5': 'pkinit_kpkdc',
         # https://www.adobe.com/devnet-docs/acrobatetk/tools/DigSig/changes.html
-        '1.2.840.113583.1.1.5': 'adobe_authentic_documents_trust',     
+        '1.2.840.113583.1.1.5': 'adobe_authentic_documents_trust',
     }
 
 
