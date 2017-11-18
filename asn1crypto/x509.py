@@ -1684,6 +1684,8 @@ class KeyPurposeId(ObjectIdentifier):
         '1.3.6.1.4.1.311.10.3.12': 'microsoft_document_signing',
         '1.3.6.1.4.1.311.10.3.13': 'microsoft_lifetime_signing',
         '1.3.6.1.4.1.311.10.3.14': 'microsoft_mobile_device_software',
+        # https://support.microsoft.com/en-us/help/287547/object-ids-associated-with-microsoft-cryptography
+        '1.3.6.1.4.1.311.20.2.2': 'microsoft_smart_card_logon',
         # https://opensource.apple.com/source
         #  - /Security/Security-57031.40.6/Security/libsecurity_keychain/lib/SecPolicy.cpp
         #  - /libsecurity_cssm/libsecurity_cssm-36064/lib/oidsalg.c
@@ -1719,6 +1721,14 @@ class KeyPurposeId(ObjectIdentifier):
         '1.2.840.113625.100.1.32': 'apple_test_smp_encryption',
         '1.2.840.113635.100.1.33': 'apple_server_authentication',
         '1.2.840.113635.100.1.34': 'apple_pcs_escrow_service',
+        # http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.201-2.pdf
+        '2.16.840.1.101.3.6.8': 'piv_card_authentication',
+        '2.16.840.1.101.3.6.7': 'piv_content_signing',
+        # https://tools.ietf.org/html/rfc4556.html
+        '1.3.6.1.5.2.3.4': 'pkinit_kpclientauth',
+        '1.3.6.1.5.2.3.4': 'pkinit_kpkdc',
+        # https://www.adobe.com/devnet-docs/acrobatetk/tools/DigSig/changes.html
+        '1.2.840.113583.1.1.5': 'adobe_authentic_documents_trust',     
     }
 
 
@@ -1950,7 +1960,7 @@ class Certificate(Sequence):
 
         if not self._processed_extensions:
             self._set_extensions()
-        return self._key_identifier_value
+        return self._subject_directory_attributes
 
     @property
     def key_identifier_value(self):
