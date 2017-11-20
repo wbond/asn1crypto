@@ -2513,11 +2513,14 @@ class Certificate(Sequence):
     def self_signed(self):
         """
         :return:
-            A unicode string of "yes", "no" or "maybe". The "maybe" result will
-            be returned if the certificate does not contain a key identifier
-            extension, but is issued by the subject. In this case the
-            certificate signature will need to be verified using the subject
-            public key to determine a "yes" or "no" answer.
+            A unicode string of "no" or "maybe". The "maybe" result will
+            be returned if the certificate issuer and subject are the same.
+            If a key identifier and authority key identifier are present,
+            they will need to match otherwise "no" will be returned.
+
+            To verify is a certificate is truly self-signed, the signature
+            will need to be verified. See the certvalidator package for
+            one possible solution.
         """
 
         if self._self_signed is None:
@@ -2525,9 +2528,9 @@ class Certificate(Sequence):
             if self.self_issued:
                 if self.key_identifier:
                     if not self.authority_key_identifier:
-                        self._self_signed = 'yes'
+                        self._self_signed = 'maybe'
                     elif self.authority_key_identifier == self.key_identifier:
-                        self._self_signed = 'yes'
+                        self._self_signed = 'maybe'
                 else:
                     self._self_signed = 'maybe'
         return self._self_signed

@@ -2606,7 +2606,7 @@ class X509Tests(unittest.TestCase):
         return (
             (
                 'keys/test-der.crt',
-                'yes'
+                'maybe'
             ),
             (
                 'keys/test-inter-der.crt',
@@ -2618,11 +2618,11 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'geotrust_certs/GeoTrust_Universal_CA.crt',
-                'yes'
+                'maybe'
             ),
             (
                 'geotrust_certs/GeoTrust_Primary_CA.crt',
-                'yes'
+                'maybe'
             ),
             (
                 'geotrust_certs/GeoTrust_EV_SSL_CA_-_G4.crt',
@@ -2634,7 +2634,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'lets_encrypt/isrgrootx1.pem',
-                'yes'
+                'maybe'
             ),
             (
                 'lets_encrypt/letsencryptauthorityx1.pem',
@@ -2650,7 +2650,7 @@ class X509Tests(unittest.TestCase):
             ),
             (
                 'globalsign_example_keys/rootCA.cer',
-                'yes'
+                'maybe'
             ),
             (
                 'globalsign_example_keys/SSL1.cer',
