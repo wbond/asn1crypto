@@ -63,6 +63,13 @@ class Enum(core.Enumerated):
     }
 
 
+class ExplicitFieldDefault(core.Sequence):
+    _fields = [
+        ('bits', NamedBits),
+        ('seq', Seq, {'explicit': 2, 'default': {'id': '1.2.3', 'value': 10}}),
+    ]
+
+
 class NumChoice(core.Choice):
     _alternatives = [
         ('one', core.Integer, {'explicit': 0}),
@@ -470,6 +477,17 @@ class CoreTests(unittest.TestCase):
         val2 = NumChoiceOldApi.load(b'\xa0\x03\x02\x01\x00')
         self.assertEqual(b'\xa0\x03\x02\x01', val2.chosen._header)
         self.assertEqual(b'\x00', val2.chosen.contents)
+
+    def test_explicit_field_default(self):
+        val = ExplicitFieldDefault.load(b'\x30\x0f\x03\x02\x06@\xa2\x090\x07\x06\x02*\x03\x02\x01\x01')
+        self.assertEqual(set(['one']), val['bits'].native)
+        self.assertEqual(
+            util.OrderedDict([
+                ('id', '1.2.3'),
+                ('value', 1)
+            ]),
+            val['seq'].native
+        )
 
     def test_explicit_header_field_choice(self):
         der = b'\x30\x07\xa0\x05\xa0\x03\x02\x01\x00'
