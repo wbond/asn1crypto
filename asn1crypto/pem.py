@@ -132,7 +132,7 @@ def _unarmor(pem_bytes):
             '''
             pem_bytes must be a byte string, not %s
             ''',
-            type_name(pem_bytes)
+            _type_name(pem_bytes)
         ))
 
     # Valid states include: "trash", "headers", "body"
