@@ -118,6 +118,23 @@ class PEMTests(unittest.TestCase):
             expected_bytes = f.read()
             self.assertEqual(expected_bytes, decoded_bytes)
 
+    def test_unarmor_multiple(self):
+        data = self.unarmor_armor_files()
+        input_data = b''
+        der_data = []
+        for pem_file, der_file in ((data[0][0], data[0][1]), (data[1][0], data[1][1])):
+            with open(os.path.join(fixtures_dir, pem_file), 'rb') as f:
+                input_data += f.read() + b'\n'
+            with open(os.path.join(fixtures_dir, der_file), 'rb') as f:
+                der_data.append(f.read())
+        i = 0
+        for name, headers, der_bytes in pem.unarmor(input_data, True):
+            self.assertEqual('CERTIFICATE', name)
+            self.assertEqual({}, headers)
+            self.assertEqual(der_data[i], der_bytes)
+            i += 1
+        self.assertEqual(2, i)
+
     @data('unarmor_armor_files')
     def armor(self, expected_bytes_filename, relative_path, type_name, headers):
         with open(os.path.join(fixtures_dir, relative_path), 'rb') as f:
