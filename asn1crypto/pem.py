@@ -51,14 +51,14 @@ def armor(type_name, der_bytes, headers=None):
     """
     Armors a DER-encoded byte string in PEM
 
-    :param der_bytes:
-        A byte string to be armored
-
     :param type_name:
         A unicode string that will be capitalized and placed in the header
         and footer of the block. E.g. "CERTIFICATE", "PRIVATE KEY", etc. This
         will appear as "-----BEGIN CERTIFICATE-----" and
         "-----END CERTIFICATE-----".
+
+    :param der_bytes:
+        A byte string to be armored
 
     :param headers:
         An OrderedDict of the header lines to write after the BEGIN line
