@@ -1861,7 +1861,7 @@ class X509Tests(unittest.TestCase):
     @data('private_key_usage_period_value_info')
     def private_key_usage_period_value(self, relative_path, private_key_usage_period_value):
         cert = self._load_cert(relative_path)
-        self.assertEqual(private_key_usage_period_value, cert.private_key_usage_period_value)
+        self.assertEqual(private_key_usage_period_value, cert.private_key_usage_period_value.contents)
 
     @staticmethod
     def serial_number_info():
