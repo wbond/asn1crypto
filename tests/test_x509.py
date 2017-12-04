@@ -1850,6 +1850,20 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(ocsp_no_check_value, value.native if value else None)
 
     @staticmethod
+    def private_key_usage_period_value_info():
+        return (
+            (
+                'ocsp-with-pkup.pem',
+                b'\x80\x0f20170918151736Z\x81\x0f20180101041421Z'
+            ),
+        )
+    
+    @data('private_key_usage_period_value_info')
+    def private_key_usage_period_value(self, relative_path, private_key_usage_period_value):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(private_key_usage_period_value, cert.private_key_usage_period_value)
+
+    @staticmethod
     def serial_number_info():
         return (
             (
