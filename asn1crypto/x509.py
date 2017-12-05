@@ -2202,7 +2202,7 @@ class Certificate(Sequence):
         private key may be used
 
         :return:
-            None or an PrivateKeyUsagePeriod object
+            None or a PrivateKeyUsagePeriod object
         """
 
         if not self._processed_extensions:
@@ -2216,7 +2216,7 @@ class Certificate(Sequence):
         about the subject.
 
         :return:
-            None or an Attributes object
+            None or a SubjectDirectoryAttributes object
         """
 
         if not self._processed_extensions:
