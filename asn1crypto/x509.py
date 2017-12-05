@@ -2149,6 +2149,7 @@ class Certificate(Sequence):
     _extended_key_usage_value = None
     _authority_information_access_value = None
     _subject_information_access_value = None
+    _private_key_usage_period_value = None
     _tls_feature_value = None
     _ocsp_no_check_value = None
     _issuer_serial = None
@@ -2195,13 +2196,27 @@ class Certificate(Sequence):
         return self._critical_extensions
 
     @property
+    def private_key_usage_period_value(self):
+        """
+        This extension is used to constrain the period over which the subject
+        private key may be used
+
+        :return:
+            None or a PrivateKeyUsagePeriod object
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._private_key_usage_period_value
+
+    @property
     def subject_directory_attributes_value(self):
         """
         This extension is used to contain additional identification attributes
         about the subject.
 
         :return:
-            None or an Attributes object
+            None or a SubjectDirectoryAttributes object
         """
 
         if not self._processed_extensions:
