@@ -1,5 +1,24 @@
 # changelog
 
+## 0.24.0
+
+ - `x509.Certificate().self_signed` will no longer return `"yes"` under any
+   circumstances. This helps prevent confusion since the library does not
+   verify the signature. Instead a library like oscrypto should be used
+   to confirm if a certificate is self-signed.
+ - Added various OIDs to `x509.KeyPurposeId()`
+ - Added `x509.Certificate().private_key_usage_period_value`
+ - Added structures for parsing common subject directory attributes for
+   X.509 certificates, including `x509.SubjectDirectoryAttribute()`
+ - Added `algos.AnyAlgorithmIdentifier()` for situations where an
+   algorithm identifier may contain a digest, signed digest or encryption
+   algorithm OID
+ - Fixed a bug with `x509.Certificate().subject_directory_attributes_value`
+   not returning the correct value
+ - Fixed a bug where explicitly-tagged fields in a `core.Sequence()` would
+   not function properly when the field had a default value
+ - Fixed a bug with type checking in `pem.armor()`
+
 ## 0.23.0
 
  - Backwards compatibility break: the `tag_type`, `explicit_tag` and
