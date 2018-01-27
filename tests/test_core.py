@@ -625,7 +625,6 @@ class CoreTests(unittest.TestCase):
         self.assertEqual('abc', MyOids('abc').native)
         self.assertEqual('1.2.3', MyOids('abc').dotted)
 
-
     def test_dump_set(self):
         st = SetTest({'two': 2, 'one': 1})
         self.assertEqual(b'1\x06\x81\x01\x01\x82\x01\x02', st.dump())
