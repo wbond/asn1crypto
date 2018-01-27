@@ -619,6 +619,12 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             MyOids.unmap('no_such_mapping')
 
+    def test_oid_dotted_native(self):
+        self.assertEqual('abc', MyOids('1.2.3').native)
+        self.assertEqual('1.2.3', MyOids('1.2.3').dotted)
+        self.assertEqual('abc', MyOids('abc').native)
+        self.assertEqual('1.2.3', MyOids('abc').dotted)
+
     def test_dump_set(self):
         st = SetTest({'two': 2, 'one': 1})
         self.assertEqual(b'1\x06\x81\x01\x01\x82\x01\x02', st.dump())
