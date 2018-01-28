@@ -459,7 +459,7 @@ class CcmParams(Sequence):
     # aes_ICVlen: 4 | 6 | 8 | 10 | 12 | 14 | 16
     _fields = [
         ('aes_nonce', OctetString),
-        ('aes_ICVlen', Integer),
+        ('aes_icvlen', Integer),
     ]
 
 
