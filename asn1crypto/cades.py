@@ -18,26 +18,31 @@ Other type classes are defined that help compose the types listed above.
 
 ContentInfo is the main structure
 
-ASN.1:
-------
+-----------------
+ASN.1 Definitions
+-----------------
+
+ETS-ElectronicSignatureFormats-ExplicitSyntax88 { iso(1) member-body(2)
+us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-mod(0)
+eSignature-explicit88(28)}
 
 DEFINITIONS EXPLICIT TAGS ::=
 
 BEGIN
 
--- EXPORTS All -
+-- EXPORTS All
 
 IMPORTS
 
 -- Cryptographic Message Syntax (CMS): RFC 3852
 
    ContentInfo, ContentType, id-data, id-signedData, SignedData,
-   EncapsulatedContentInfo, SignerInfo,
-   id-contentType, id-messageDigest, MessageDigest, id-signingTime,
-   SigningTime, id-countersignature, Countersignature
+   EncapsulatedContentInfo, SignerInfo, id-contentType,
+   id-messageDigest, MessageDigest, id-signingTime, SigningTime,
+   id-countersignature, Countersignature
       FROM CryptographicMessageSyntax2004
       { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
-       smime(16) modules(0) cms-2004(24) }
+      smime(16) modules(0) cms-2004(24) }
 
 -- ESS Defined attributes: ESS Update
 -- RFC 5035 (Adding CertID Algorithm Agility)
@@ -49,72 +54,64 @@ IMPORTS
         { iso(1) member-body(2) us(840) rsadsi(113549)
           pkcs(1) pkcs-9(9) smime(16) modules(0) id-mod-ess-2006(30) }
 
--- Internet X.509 Public Key Infrastructure
--- Certificate and CRL Profile: RFC 3280
+-- Internet X.509 Public Key Infrastructure - Certificate and CRL
+-- Profile: RFC 3280
 
    Certificate, AlgorithmIdentifier, CertificateList, Name,
-   Attribute
-
+   DirectoryString, Attribute, BMPString, UTF8String
       FROM PKIX1Explicit88
       {iso(1) identified-organization(3) dod(6) internet(1)
-      security(5) mechanisms(5) pkix(7) id-mod(0)
-      id-pkix1-explicit(18)}
+      security(5) mechanisms(5) pkix(7) id-mod(0) id-pkix1-explicit(18)}
 
    GeneralNames, GeneralName, PolicyInformation
-      FROM PKIX1Implicit88 {iso(1) identified-organization(3) dod(6)
-      internet(1) security(5) mechanisms(5) pkix(7) id-mod(0)
-      id-pkix1-implicit(19)}
+      FROM PKIX1Implicit88
+      {iso(1) identified-organization(3) dod(6) internet(1) security(5)
+       mechanisms(5) pkix(7) id-mod(0) id-pkix1-implicit (19)}
 
 -- Internet Attribute Certificate Profile for Authorization - RFC 3281
 
    AttributeCertificate
       FROM PKIXAttributeCertificate {iso(1) identified-organization(3)
-      dod(6) internet(1) security(5) mechanisms(5) pkix(7) id-mod(0)
-      id-mod-attribute-cert(12)}
+                dod(6) internet(1) security(5) mechanisms(5) pkix(7)
+                id-mod(0) id-mod-attribute-cert(12)}
 
--- OCSP RFC 2560
+-- OCSP - RFC 2560
 
    BasicOCSPResponse, ResponderID
       FROM OCSP {iso(1) identified-organization(3) dod(6) internet(1)
       security(5) mechanisms(5) pkix(7) id-mod(0) id-mod-ocsp(14)}
 
--- RFC 3161 Internet X.509 Public Key Infrastructure
--- Time-Stamp Protocol
+-- Time Stamp Protocol RFC 3161
 
    TimeStampToken
-      FROM PKIXTSP {iso(1) identified-organization(3) dod(6) internet(1)
-      security(5) mechanisms(5) pkix(7) id-mod(0) id-mod-tsp(13)}
-
--- X.520
-
-    DirectoryString {}
-        FROM SelectedAttributeTypes
-         {joint-iso-itu-t ds(5) module(1) selectedAttributeTypes(5) 4}
+      FROM PKIXTSP
+      {iso(1) identified-organization(3) dod(6) internet(1) security(5)
+      mechanisms(5) pkix(7) id-mod(0) id-mod-tsp(13)}
 
 ;
+
 
 -- Definitions of Object Identifier arcs used in the present document
 -- ==================================================================
 
--- OID used referencing electronic signature mechanisms based
--- on the present document for use with the IDUP API (see Annex D)
+-- OID used referencing electronic signature mechanisms based on
+-- the present document for use with the Independent Data Unit
+-- Protection (IDUP) API (see Annex D)
 
-id-etsi-es-IDUP-Mechanism-v1 OBJECT IDENTIFIER ::=
-{ itu-t(0) identified-organization(4) etsi(0)
-electronic-signature-standard (1733) part1 (1) idupMechanism (4)
-etsiESv1(1) }
+   id-etsi-es-IDUP-Mechanism-v1 OBJECT IDENTIFIER ::=
+   { itu-t(0) identified-organization(4) etsi(0)
+     electronic-signature-standard (1733) part1 (1) idupMechanism (4)
+     etsiESv1(1) }
 
--- Basic ES Attributes Defined in the present document
--- ===================================================
 
--- CMS Attributes defined in the present document
+-- Basic ES CMS Attributes Defined in the present document
+-- =======================================================
 
 -- OtherSigningCertificate - deprecated
 
-id-aa-ets-otherSigCert OBJECT IDENTIFIER ::= { iso(1)
-member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs9(9)
-smime(16) id-aa(2) 19 }
-
+    id-aa-ets-otherSigCert OBJECT IDENTIFIER ::=
+    { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs9(9)
+    smime(16) id-aa(2) 19 }
 
    OtherSigningCertificate ::=  SEQUENCE {
       certs        SEQUENCE OF OtherCertID,
@@ -127,31 +124,34 @@ smime(16) id-aa(2) 19 }
       issuerSerial             IssuerSerial OPTIONAL }
 
    OtherHash ::= CHOICE {
-      sha1Hash OtherHashValue,
-      -- This contains a SHA-1 hash
-      otherHash OtherHashAlgAndValue}
+       sha1Hash     OtherHashValue,
+       -- This contains a SHA-1 hash
+       otherHash    OtherHashAlgAndValue}
+
 
 -- Policy ES Attributes Defined in the present document
 -- ====================================================
 
--- Mandatory Basic Electronic Signature Attributes, plus in addition.
--- Signature Policy Identifier
+-- Mandatory Basic Electronic Signature Attributes as above,
+-- plus in addition.
 
-id-aa-ets-sigPolicyId OBJECT IDENTIFIER ::= { iso(1)
-member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs9(9)
-smime(16) id-aa(2) 15 }
+-- Signature-policy-identifier attribute
+
+   id-aa-ets-sigPolicyId OBJECT IDENTIFIER ::=
+   { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs9(9)
+   smime(16) id-aa(2) 15 }
 
    SignaturePolicy ::= CHOICE {
       signaturePolicyId          SignaturePolicyId,
       signaturePolicyImplied     SignaturePolicyImplied
-                              -- not used in this version
+                                 --  not used in this version
    }
 
    SignaturePolicyId ::= SEQUENCE {
-      sigPolicyId           SigPolicyId,
-      sigPolicyHash         SigPolicyHash,
+      sigPolicyId        SigPolicyId,
+      sigPolicyHash      SigPolicyHash,
       sigPolicyQualifiers   SEQUENCE SIZE (1..MAX) OF
-                                 SigPolicyQualifierInfo OPTIONAL
+                                   SigPolicyQualifierInfo OPTIONAL
    }
 
    SignaturePolicyImplied ::= NULL
@@ -162,82 +162,57 @@ smime(16) id-aa(2) 15 }
 
    OtherHashAlgAndValue ::= SEQUENCE {
       hashAlgorithm   AlgorithmIdentifier,
-      hashValue       OtherHashValue
-   }
+      hashValue       OtherHashValue }
 
    OtherHashValue ::= OCTET STRING
 
    SigPolicyQualifierInfo ::= SEQUENCE {
-      sigPolicyQualifierId       SIG-POLICY-QUALIFIER.&id
-      ({SupportedSigPolicyQualifiers}),
-      qualifier               SIG-POLICY-QUALIFIER.&Qualifier
-                                ({SupportedSigPolicyQualifiers}
-                                    {@sigPolicyQualifierId})OPTIONAL }
+      sigPolicyQualifierId  SigPolicyQualifierId,
+      sigQualifier          ANY DEFINED BY sigPolicyQualifierId }
 
-   SupportedSigPolicyQualifiers SIG-POLICY-QUALIFIER ::=
-       { noticeToUser | pointerToSigPolSpec }
+   SigPolicyQualifierId ::=   OBJECT IDENTIFIER
 
-   SIG-POLICY-QUALIFIER ::= CLASS {
-      &id             OBJECT IDENTIFIER UNIQUE,
-      &Qualifier      OPTIONAL }
-   WITH SYNTAX {
-      SIG-POLICY-QUALIFIER-ID     &id
-      [SIG-QUALIFIER-TYPE &Qualifier] }
-
-   noticeToUser SIG-POLICY-QUALIFIER ::= {
-      SIG-POLICY-QUALIFIER-ID id-spq-ets-unotice SIG-QUALIFIER-TYPE
-      SPUserNotice }
-
-   pointerToSigPolSpec SIG-POLICY-QUALIFIER ::= {
-      SIG-POLICY-QUALIFIER-ID id-spq-ets-uri SIG-QUALIFIER-TYPE SPuri }
-
-   id-spq-ets-uri OBJECT IDENTIFIER ::= { iso(1)
-    member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs9(9)
-    smime(16) id-spq(5) 1 }
+   id-spq-ets-uri OBJECT IDENTIFIER ::=
+   { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs9(9)
+   smime(16) id-spq(5) 1 }
 
    SPuri ::= IA5String
 
-   id-spq-ets-unotice OBJECT IDENTIFIER ::= { iso(1)
-   member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs9(9)
+   id-spq-ets-unotice OBJECT IDENTIFIER ::=
+   { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs9(9)
    smime(16) id-spq(5) 2 }
 
    SPUserNotice ::= SEQUENCE {
-        noticeRef        NoticeReference OPTIONAL,
-        explicitText     DisplayText OPTIONAL}
+       noticeRef        NoticeReference OPTIONAL,
+       explicitText     DisplayText OPTIONAL}
 
    NoticeReference ::= SEQUENCE {
-        organization     DisplayText,
-        noticeNumbers    SEQUENCE OF INTEGER }
+      organization     DisplayText,
+      noticeNumbers    SEQUENCE OF INTEGER }
 
    DisplayText ::= CHOICE {
-        visibleString    VisibleString  (SIZE (1..200)),
-        bmpString        BMPString      (SIZE (1..200)),
-        utf8String       UTF8String     (SIZE (1..200)) }
+      visibleString    VisibleString  (SIZE (1..200)),
+      bmpString        BMPString      (SIZE (1..200)),
+
+      utf8String       UTF8String     (SIZE (1..200)) }
 
 -- Optional Electronic Signature Attributes
 
--- Commitment Type
+-- Commitment-type attribute
 
-  id-aa-ets-commitmentType OBJECT IDENTIFIER ::= { iso(1) member-body(2)
-    us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 16}
+id-aa-ets-commitmentType OBJECT IDENTIFIER ::= { iso(1) member-body(2)
+us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 16}
 
    CommitmentTypeIndication ::= SEQUENCE {
-      commitmentTypeId CommitmentTypeIdentifier,
-      commitmentTypeQualifier SEQUENCE SIZE (1..MAX) OF
-         CommitmentTypeQualifier OPTIONAL}
+     commitmentTypeId CommitmentTypeIdentifier,
+     commitmentTypeQualifier SEQUENCE SIZE (1..MAX) OF
+            CommitmentTypeQualifier OPTIONAL}
 
    CommitmentTypeIdentifier ::= OBJECT IDENTIFIER
 
    CommitmentTypeQualifier ::= SEQUENCE {
-      commitmentQualifierId   COMMITMENT-QUALIFIER.&id,
-      qualifier               COMMITMENT-QUALIFIER.&Qualifier OPTIONAL }
-
-   COMMITMENT-QUALIFIER ::= CLASS {
-      &id             OBJECT IDENTIFIER UNIQUE,
-      &Qualifier      OPTIONAL }
-   WITH SYNTAX {
-      COMMITMENT-QUALIFIER-ID     &id
-      [COMMITMENT-TYPE &Qualifier] }
+      commitmentTypeIdentifier CommitmentTypeIdentifier,
+      qualifier   ANY DEFINED BY commitmentTypeIdentifier }
 
 id-cti-ets-proofOfOrigin OBJECT IDENTIFIER ::= { iso(1) member-body(2)
 us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) cti(6) 1}
@@ -245,9 +220,9 @@ us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) cti(6) 1}
 id-cti-ets-proofOfReceipt OBJECT IDENTIFIER ::= { iso(1) member-body(2)
 us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) cti(6) 2}
 
-id-cti-ets-proofOfDelivery OBJECT IDENTIFIER ::= { iso(1)
-member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16)
-cti(6) 3}
+id-cti-ets-proofOfDelivery OBJECT IDENTIFIER ::=
+{ iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
+smime(16) cti(6) 3}
 
 id-cti-ets-proofOfSender OBJECT IDENTIFIER ::= { iso(1) member-body(2)
 us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) cti(6) 4}
@@ -260,23 +235,22 @@ id-cti-ets-proofOfCreation OBJECT IDENTIFIER ::=
 { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
 smime(16) cti(6) 6}
 
--- Signer Location
+-- Signer-location attribute
 
 id-aa-ets-signerLocation OBJECT IDENTIFIER ::= { iso(1) member-body(2)
 us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 17}
 
    SignerLocation ::= SEQUENCE {
-   -- at least one of the following shall be present
-      countryName [0] DirectoryString{maxSize} OPTIONAL,
-         -- as used to name a Country in X.520
-      localityName [1] DirectoryString{maxSize} OPTIONAL,
-         -- as used to name a locality in X.520
-      postalAdddress [2] PostalAddress OPTIONAL }
+       -- at least one of the following shall be present
+       countryName    [0]   DirectoryString OPTIONAL,
+          -- As used to name a Country in X.500
+       localityName   [1]   DirectoryString OPTIONAL,
+           -- As used to name a locality in X.500
+       postalAdddress [2]   PostalAddress OPTIONAL }
 
-   PostalAddress ::= SEQUENCE SIZE(1..6) OF DirectoryString{maxSize}
-                    -- maxSize parametrization as specified in X.683
+   PostalAddress ::= SEQUENCE SIZE(1..6) OF DirectoryString
 
--- Signer Attributes
+-- Signer-attributes attribute
 
 id-aa-ets-signerAttr OBJECT IDENTIFIER ::= { iso(1) member-body(2)
 us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 18}
@@ -290,29 +264,30 @@ us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 18}
    CertifiedAttributes ::= AttributeCertificate
    -- as defined in RFC 3281: see Section 4.1
 
--- Content Timestamp
+-- Content-time-stamp attribute
 
 id-aa-ets-contentTimestamp OBJECT IDENTIFIER ::=
 { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
 smime(16) id-aa(2) 20}
+
    ContentTimestamp ::= TimeStampToken
 
--- Signature Timestamp
+-- Signature-time-stamp attribute
 
 id-aa-signatureTimeStampToken OBJECT IDENTIFIER ::=
 { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
 smime(16) id-aa(2) 14}
 
-   SignatureTimeStampToken ::= TimeStampToken
+SignatureTimeStampToken ::= TimeStampToken
 
--- Complete Certificate Refs.
+-- Complete-certificate-references attribute
 
 id-aa-ets-certificateRefs OBJECT IDENTIFIER ::= { iso(1) member-body(2)
 us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 21}
 
 CompleteCertificateRefs ::=  SEQUENCE OF OtherCertID
 
--- Complete Revocation Refs
+-- Complete-revocation-references attribute
 
 id-aa-ets-revocationRefs OBJECT IDENTIFIER ::= { iso(1) member-body(2)
 us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 22}
@@ -326,22 +301,19 @@ us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 22}
    }
 
    CRLListID ::=  SEQUENCE {
-      crls        SEQUENCE OF CrlValidatedID
-   }
+      crls        SEQUENCE OF CrlValidatedID}
 
    CrlValidatedID ::=  SEQUENCE {
       crlHash                   OtherHash,
-      crlIdentifier             CrlIdentifier OPTIONAL   }
+      crlIdentifier             CrlIdentifier OPTIONAL}
 
    CrlIdentifier ::= SEQUENCE {
-       crlissuer                 Name,
-       crlIssuedTime             UTCTime,
-       crlNumber                 INTEGER OPTIONAL
-   }
+      crlissuer                 Name,
+      crlIssuedTime             UTCTime,
+      crlNumber                 INTEGER OPTIONAL }
 
    OcspListID ::=  SEQUENCE {
-       ocspResponses        SEQUENCE OF OcspResponsesID
-   }
+       ocspResponses        SEQUENCE OF OcspResponsesID}
 
    OcspResponsesID ::=  SEQUENCE {
        ocspIdentifier              OcspIdentifier,
@@ -356,87 +328,80 @@ us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 22}
    }
 
    OtherRevRefs ::= SEQUENCE {
-      otherRevRefType   OTHER-REVOCATION-REF.&id,
-      otherRevRefs      SEQUENCE OF OTHER-REVOCATION-REF.&Type
-   }
+       otherRevRefType   OtherRevRefType,
+       otherRevRefs      ANY DEFINED BY otherRevRefType
+    }
 
-OTHER-REVOCATION-REF ::= CLASS {
-      &Type,
-      &id   OBJECT IDENTIFIER UNIQUE }
-   WITH SYNTAX {
-      WITH SYNTAX &Type ID &id }
+   OtherRevRefType ::= OBJECT IDENTIFIER
 
--- Certificate Values
+-- Certificate-values attribute
 
 id-aa-ets-certValues OBJECT IDENTIFIER ::= { iso(1) member-body(2)
 us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 23}
 
-CertificateValues ::=  SEQUENCE OF Certificate
+   CertificateValues ::=  SEQUENCE OF Certificate
 
--- Certificate Revocation Values
+-- Certificate-revocation-values attribute
 
-id-aa-ets-revocationValues OBJECT IDENTIFIER ::=
-{ iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
+id-aa-ets-revocationValues OBJECT IDENTIFIER ::= { iso(1)
+member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
 smime(16) id-aa(2) 24}
 
    RevocationValues ::=  SEQUENCE {
-     crlVals           [0] SEQUENCE OF CertificateList OPTIONAL,
-     ocspVals          [1] SEQUENCE OF BasicOCSPResponse OPTIONAL,
-
-     otherRevVals      [2] OtherRevVals OPTIONAL
-   }
+      crlVals           [0] SEQUENCE OF CertificateList OPTIONAL,
+      ocspVals          [1] SEQUENCE OF BasicOCSPResponse OPTIONAL,
+      otherRevVals      [2] OtherRevVals OPTIONAL}
 
    OtherRevVals ::= SEQUENCE {
-      otherRevValType   OTHER-REVOCATION-VAL.&id,
-      otherRevVals      SEQUENCE OF OTHER-REVOCATION-REF.&Type
+       otherRevValType   OtherRevValType,
+       otherRevVals      ANY DEFINED BY otherRevValType
    }
 
-  OTHER-REVOCATION-VAL ::= CLASS {
-      &Type,
-      &id   OBJECT IDENTIFIER UNIQUE }
-   WITH SYNTAX {
-      WITH SYNTAX &Type ID &id }
+   OtherRevValType ::= OBJECT IDENTIFIER
 
--- CAdES-C Timestamp
+-- CAdES-C time-stamp attribute
+
 id-aa-ets-escTimeStamp OBJECT IDENTIFIER ::= { iso(1) member-body(2)
 us(840) rsadsi(113549) pkcs(1) pkcs-9(9) smime(16) id-aa(2) 25}
 
-   ESCTimeStampToken ::= TimeStampToken
+ESCTimeStampToken ::= TimeStampToken
 
 -- Time-Stamped Certificates and CRLs
 
-id-aa-ets-certCRLTimestamp OBJECT IDENTIFIER ::=
-{ iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
+id-aa-ets-certCRLTimestamp OBJECT IDENTIFIER ::= { iso(1)
+member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
 smime(16) id-aa(2) 26}
 
-   TimestampedCertsCRLs ::= TimeStampToken
+TimestampedCertsCRLs ::= TimeStampToken
 
--- Archive Timestamp
-
-id-aa-ets-archiveTimestampV2  OBJECT IDENTIFIER ::=
-{ iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
+-- Archive time-stamp attribute
+id-aa-ets-archiveTimestampV2  OBJECT IDENTIFIER ::= { iso(1)
+member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
 smime(16) id-aa(2) 48}
 
-   ArchiveTimeStampToken ::= TimeStampToken
+ArchiveTimeStampToken ::= TimeStampToken
 
--- Attribute certificate references
+-- Attribute-certificate-references attribute
 
-id-aa-ets-attrCertificateRefs OBJECT IDENTIFIER ::=
-{ iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
+id-aa-ets-attrCertificateRefs OBJECT IDENTIFIER ::= { iso(1)
+member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
 smime(16) id-aa(2) 44}
 
-   AttributeCertificateRefs ::=  SEQUENCE OF OtherCertID
+AttributeCertificateRefs ::=  SEQUENCE OF OtherCertID
 
--- Attribute revocation references
+-- Attribute-revocation-references attribute
 
-id-aa-ets-attrRevocationRefs OBJECT IDENTIFIER ::=
-{ iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
+id-aa-ets-attrRevocationRefs OBJECT IDENTIFIER ::= { iso(1)
+member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-9(9)
 smime(16) id-aa(2) 45}
 
-   AttributeRevocationRefs ::=  SEQUENCE OF CrlOcspRef
+AttributeRevocationRefs ::=  SEQUENCE OF CrlOcspRef
 
 END
 
+------------------------
+End of ASN.1 Definitions
+------------------------
 """
 from __future__ import unicode_literals, division, absolute_import, print_function
 
@@ -513,7 +478,9 @@ class OtherSigningCertificate(Sequence):
     ]
 
 
-# CMS Attributes defined in RFC 5126
+# Policy ES Attributes Defined in RFC 5126
+# ========================================
+# Additional CMS Attributes
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.15'] = 'signature_policy'
 
 
