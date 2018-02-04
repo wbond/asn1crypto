@@ -589,3 +589,44 @@ class SetOfSignaturePolicy(SetOf):
 
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.15'] = 'signature_policy'
 CMSAttribute._oid_specs['signature_policy'] = SetOfSignaturePolicy
+
+
+# Optional Electronic Signature Attributes
+# ========================================
+
+
+class CommitmentTypeIdentifier(ObjectIdentifier):
+    _map = {
+        '1.2.840.113549.1.9.16.6.1': 'proofOfOrigin',
+        '1.2.840.113549.1.9.16.6.2': 'proofOfReceipt',
+        '1.2.840.113549.1.9.16.6.3': 'proofOfDelivery',
+        '1.2.840.113549.1.9.16.6.4': 'proofOfSender',
+        '1.2.840.113549.1.9.16.6.5': 'proofOfApproval',
+        '1.2.840.113549.1.9.16.6.6': 'proofOfCreation',
+    }
+
+
+class CommitmentTypeQualifier(Sequence):
+    _fields = [
+        ('commitmentTypeIdentifier', CommitmentTypeIdentifier),
+        ('qualifier', Any),
+    ]
+
+
+class CommitmentTypeQualifiers(SequenceOf):
+    _child_spec = CommitmentTypeQualifier
+
+
+class CommitmentTypeIndication(Sequence):
+    _fields = [
+        ('commitmentTypeId', CommitmentTypeIdentifier),
+        ('commitmentTypeQualifier', CommitmentTypeQualifiers, {'optional': True}),
+    ]
+
+
+class SetOfCommitmentTypeIndication(SetOf):
+    _child_spec = CommitmentTypeIndication
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.16'] = 'commitment_type'
+CMSAttribute._oid_specs['signature_policy'] = SetOfCommitmentTypeIndication
