@@ -490,12 +490,12 @@ class OtherSigningCertificate(Sequence):
     ]
 
 
-class OtherSigningCertificates(SetOf):
+class SetOfOtherSigningCertificate(SetOf):
     _child_spec = OtherSigningCertificate
 
 
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.19'] = 'other_signing_certificate'
-CMSAttribute._oid_specs['other_signing_certificate'] = OtherSigningCertificates
+CMSAttribute._oid_specs['other_signing_certificate'] = SetOfOtherSigningCertificate
 
 
 # Policy ES CMS Attributes
@@ -583,5 +583,9 @@ class SignaturePolicy(Choice):
     ]
 
 
+class SetOfSignaturePolicy(SetOf):
+    _child_spec = SignaturePolicy
+
+
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.15'] = 'signature_policy'
-CMSAttribute._oid_specs['signature_policy'] = SignaturePolicy
+CMSAttribute._oid_specs['signature_policy'] = SetOfSignaturePolicy
