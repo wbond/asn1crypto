@@ -121,13 +121,21 @@ IMPORTS
 
    OtherCertID ::= SEQUENCE {
       otherCertHash            OtherHash,
-      issuerSerial             IssuerSerial OPTIONAL }
+      issuerSerial             IssuerSerial OPTIONAL
+   }
 
    OtherHash ::= CHOICE {
        sha1Hash     OtherHashValue,
        -- This contains a SHA-1 hash
-       otherHash    OtherHashAlgAndValue}
+       otherHash    OtherHashAlgAndValue
+   }
 
+   OtherHashValue ::= OCTET STRING
+
+   OtherHashAlgAndValue ::= SEQUENCE {
+       hashAlgorithm     AlgorithmIdentifier,
+       hashValue         OtherHashValue
+   }
 
 -- Policy ES Attributes Defined in the present document
 -- ====================================================
