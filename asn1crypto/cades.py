@@ -424,6 +424,7 @@ from .core import (
     OctetString,
     Sequence,
     SequenceOf,
+    SetOf,
     UTF8String,
     VisibleString,
 )
@@ -432,7 +433,7 @@ from .core import (
 # from .cms import CMSAttribute, ContentInfo, SignedData, EncapsulatedContentInfo, SignerInfo, MessageDigest, SigningTime, Countersignature
 
 # TODO: handle certificate encoding correctly
-from .cms import CMSAttributeType  # , AttributeCertificateV1, AttributeCertificateV2, CertificateChoices
+from .cms import CMSAttribute, CMSAttributeType  # , AttributeCertificateV1, AttributeCertificateV2, CertificateChoices
 # from .ocsp import BasicOCSPResponse, ResponderId
 from .tsp import IssuerSerial
 # from .tsp import SigningCertificate, SigningCertificateV2,  ContentReference, ContentIdentifier
@@ -442,12 +443,15 @@ from .x509 import AlgorithmIdentifier, CertificatePolicies
 # from .x509 import GeneralNames, GeneralName, PolicyInformation
 # from .x509 import DirectoryString
 
-# Referencing OID
-# 0.4.0.1733.1.4.1
+# Definitions of Object Identifier arcs used in the present document
+# ==================================================================
+# Referencing OID: id-etsi-es-IDUP-Mechanism-v1 = '0.4.0.1733.1.4.1'
+# TODO: define this
 
-# CMS attributes for Long Term signatures (RFC 3126, page 24, section 3.8.2)
-# ------
-CMSAttributeType._map['1.2.840.113549.1.9.16.2.19'] = 'other_signing_certificate'
+#
+# Basic ES CMS Attributes
+# =======================
+# defined in RFC 5126 (page 35, section 5.7.3.3.) and RFC 3126 (page 24, section 3.8.2)
 
 
 class OtherHashValue(OctetString):
@@ -486,10 +490,17 @@ class OtherSigningCertificate(Sequence):
     ]
 
 
-# Policy ES Attributes Defined in RFC 5126
-# ========================================
-# Additional CMS Attributes
-CMSAttributeType._map['1.2.840.113549.1.9.16.2.15'] = 'signature_policy'
+class OtherSigningCertificates(SetOf):
+    _child_spec = OtherSigningCertificate
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.19'] = 'other_signing_certificate'
+CMSAttribute._oid_specs['other_signing_certificate'] = OtherSigningCertificates
+
+
+# Policy ES CMS Attributes
+# ========================
+# defined in RFC 5126 page 36 section 5.8.
 
 
 class SigPolicyId(ObjectIdentifier):
@@ -570,3 +581,7 @@ class SignaturePolicy(Choice):
         ('signaturePolicyId', SignaturePolicyId),
         ('signaturePolicyImplied', SignaturePolicyImplied),     # RFC 5126 states "not used in this version"
     ]
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.15'] = 'signature_policy'
+CMSAttribute._oid_specs['signature_policy'] = SignaturePolicy
