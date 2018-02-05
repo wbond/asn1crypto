@@ -433,12 +433,12 @@ from .core import (
 # from .cms import CMSAttribute, ContentInfo, SignedData, EncapsulatedContentInfo, SignerInfo, MessageDigest, SigningTime, Countersignature
 
 # TODO: handle certificate encoding correctly
-from .cms import CMSAttribute, CMSAttributeType, SetOfContentInfo    # , AttributeCertificateV1, AttributeCertificateV2, CertificateChoices
+from .cms import AttributeCertificateV2, CMSAttribute, CMSAttributeType, SetOfContentInfo
 # from .ocsp import BasicOCSPResponse, ResponderId
 from .tsp import IssuerSerial
 # from .tsp import SigningCertificate, SigningCertificateV2,  ContentReference, ContentIdentifier
 # from .tsp import TimeStampToken
-from .x509 import AlgorithmIdentifier, CertificatePolicies, DirectoryString
+from .x509 import AlgorithmIdentifier, Attributes, CertificatePolicies, DirectoryString
 # from .x509 import Certificate, AlgorithmIdentifier, CertificateList, Name, Attribute
 # from .x509 import GeneralNames, GeneralName, PolicyInformation
 
@@ -658,7 +658,29 @@ CMSAttribute._oid_specs['signature_policy'] = SetOfSignerLocation
 
 # signer-attributes
 # -----------------
-# TODO
+
+ClaimedAttributes = Attributes                  # Attributes from x509 (RFC 3280)
+CertifiedAttributes = AttributeCertificateV2    # AttributeCertificate from RFC 3281
+
+
+class SignerAttributeChoice(Choice):
+    _alternatives = [
+        ('claimedAttributes', ClaimedAttributes),
+        ('certifiedAttributes', CertifiedAttributes),
+    ]
+
+
+class SignerAttributes(SequenceOf):
+    _child_spec = SignerAttributeChoice
+
+
+class SetOfSignerAttributes(SetOf):
+    _child_spec = SignerAttributes
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.18'] = 'signer_attributes'
+CMSAttribute._oid_specs['signer_attributes'] = SetOfSignerAttributes
+
 
 # content-time-stamp
 # ------------------
