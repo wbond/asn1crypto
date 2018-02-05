@@ -433,15 +433,14 @@ from .core import (
 # from .cms import CMSAttribute, ContentInfo, SignedData, EncapsulatedContentInfo, SignerInfo, MessageDigest, SigningTime, Countersignature
 
 # TODO: handle certificate encoding correctly
-from .cms import CMSAttribute, CMSAttributeType  # , AttributeCertificateV1, AttributeCertificateV2, CertificateChoices
+from .cms import CMSAttribute, CMSAttributeType, SetOfContentInfo    # , AttributeCertificateV1, AttributeCertificateV2, CertificateChoices
 # from .ocsp import BasicOCSPResponse, ResponderId
 from .tsp import IssuerSerial
 # from .tsp import SigningCertificate, SigningCertificateV2,  ContentReference, ContentIdentifier
 # from .tsp import TimeStampToken
-from .x509 import AlgorithmIdentifier, CertificatePolicies
+from .x509 import AlgorithmIdentifier, CertificatePolicies, DirectoryString
 # from .x509 import Certificate, AlgorithmIdentifier, CertificateList, Name, Attribute
 # from .x509 import GeneralNames, GeneralName, PolicyInformation
-# from .x509 import DirectoryString
 
 # Definitions of Object Identifier arcs used in the present document
 # ==================================================================
@@ -593,7 +592,9 @@ CMSAttribute._oid_specs['signature_policy'] = SetOfSignaturePolicy
 
 # Optional Electronic Signature Attributes
 # ========================================
-
+#
+# commitment-type
+# ---------------
 
 class CommitmentTypeIdentifier(ObjectIdentifier):
     _map = {
@@ -630,3 +631,41 @@ class SetOfCommitmentTypeIndication(SetOf):
 
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.16'] = 'commitment_type'
 CMSAttribute._oid_specs['signature_policy'] = SetOfCommitmentTypeIndication
+
+# signer-location
+# ---------------
+
+
+class PostalAddress(SequenceOf):
+    _child_spec = DirectoryString
+
+
+class SignerLocation(Sequence):
+    _fields = [
+        ('countryName', DirectoryString, {'optional': True}),
+        ('localityName', DirectoryString, {'optional': True}),
+        ('postalAdddress', PostalAddress, {'optional': True}),
+    ]
+
+
+class SetOfSignerLocation(SetOf):
+    _child_spec = SignerLocation
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.17'] = 'signer_location'
+CMSAttribute._oid_specs['signature_policy'] = SetOfSignerLocation
+
+
+# signer-attributes
+# -----------------
+# TODO
+
+# content-time-stamp
+# ------------------
+
+SetOfTimeStampToken = SetOfContentInfo
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.20'] = 'content_time_stamp'
+CMSAttribute._oid_specs['content_time_stamp'] = SetOfTimeStampToken
+
+# signature-time-stamp: already included in CMS
