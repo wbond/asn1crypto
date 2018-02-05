@@ -691,3 +691,16 @@ CMSAttributeType._map['1.2.840.113549.1.9.16.2.20'] = 'content_time_stamp'
 CMSAttribute._oid_specs['content_time_stamp'] = SetOfTimeStampToken
 
 # signature-time-stamp: already included in CMS
+
+# complete-certificate-references
+# -------------------------------
+
+CompleteCertificateRefs = OtherCertIDs
+
+
+class SetOfCompleteCertificateRefs(SetOf):
+    _child_spec = CompleteCertificateRefs
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.21'] = 'complete_certificate_references'
+CMSAttribute._oid_specs['complete_certificate_references'] = SetOfCompleteCertificateRefs
