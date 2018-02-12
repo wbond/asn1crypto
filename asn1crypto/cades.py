@@ -417,6 +417,7 @@ from .core import (
     Any,
     BMPString,
     Choice,
+    GeneralizedTime,
     IA5String,
     Integer,
     Null,
@@ -425,6 +426,7 @@ from .core import (
     Sequence,
     SequenceOf,
     SetOf,
+    UTCTime,
     UTF8String,
     VisibleString,
 )
@@ -434,11 +436,11 @@ from .core import (
 
 # TODO: handle certificate encoding correctly
 from .cms import AttributeCertificateV2, CMSAttribute, CMSAttributeType, SetOfContentInfo
-# from .ocsp import BasicOCSPResponse, ResponderId
+from .ocsp import ResponderId
 from .tsp import IssuerSerial
 # from .tsp import SigningCertificate, SigningCertificateV2,  ContentReference, ContentIdentifier
 # from .tsp import TimeStampToken
-from .x509 import AlgorithmIdentifier, Attributes, CertificatePolicies, DirectoryString
+from .x509 import AlgorithmIdentifier, Attributes, CertificatePolicies, DirectoryString, Name
 # from .x509 import Certificate, AlgorithmIdentifier, CertificateList, Name, Attribute
 # from .x509 import GeneralNames, GeneralName, PolicyInformation
 
@@ -471,20 +473,20 @@ class OtherHash(Choice):
     ]
 
 
-class OtherCertID(Sequence):
+class OtherCertId(Sequence):
     _fields = [
         ('otherCertHash', OtherHash),
         ('issuerSerial', IssuerSerial, {'optional': True}),
     ]
 
 
-class OtherCertIDs(SequenceOf):
-    _child_spec = OtherCertID
+class OtherCertIds(SequenceOf):
+    _child_spec = OtherCertId
 
 
 class OtherSigningCertificate(Sequence):
     _fields = [
-        ('certs', OtherCertIDs),
+        ('certs', OtherCertIds),
         ('policies', CertificatePolicies, {'optional': True}),
     ]
 
@@ -695,7 +697,7 @@ CMSAttribute._oid_specs['content_time_stamp'] = SetOfTimeStampToken
 # complete-certificate-references
 # -------------------------------
 
-CompleteCertificateRefs = OtherCertIDs
+CompleteCertificateRefs = OtherCertIds
 
 
 class SetOfCompleteCertificateRefs(SetOf):
@@ -704,3 +706,85 @@ class SetOfCompleteCertificateRefs(SetOf):
 
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.21'] = 'complete_certificate_references'
 CMSAttribute._oid_specs['complete_certificate_references'] = SetOfCompleteCertificateRefs
+
+
+# complete-revocation-references
+# ------------------------------
+
+class CrlIdentifier(Sequence):
+    _fields = [
+        ('crlissuer', Name),
+        ('crlIssuedTime', UTCTime),
+        ('crlNumber', Integer, {'optional': True}),
+    ]
+
+
+class CrlValidatedId(Sequence):
+    _fields = [
+        ('crlHash', OtherHash),
+        ('crlIdentifier', CrlIdentifier, {'optional': True}),
+    ]
+
+
+class CrlValidatedIds(SequenceOf):
+    _child_spec = CrlValidatedId
+
+
+class CRLListId(Sequence):
+    _fields = [
+        ('crls', CrlValidatedIds),
+    ]
+
+
+class OcspIdentifier(Sequence):
+    _fields = [
+        ('ocspResponderID', ResponderId),   # -- As in OCSP response data
+        ('producedAt', GeneralizedTime),    # -- As in OCSP response data
+    ]
+
+
+class OcspResponsesId(Sequence):
+    _fields = [
+        ('ocspIdentifier', OcspIdentifier),
+        ('ocspRepHash', OtherHash, {'optional': True}),
+    ]
+
+
+class OcspResponsesIds(SequenceOf):
+    _child_spec = OcspResponsesId
+
+
+class OcspListId(Sequence):
+    _fields = [
+        ('ocspResponses', OcspResponsesIds),
+    ]
+
+
+OtherRevRefType = ObjectIdentifier
+
+
+class OtherRevRefs(Sequence):
+    _fields = [
+        ('otherRevRefType', OtherRevRefType),
+        ('otherRevRefs', Any),  # DEFINED BY otherRevRefType
+    ]
+
+
+class CrlOcspRef(Sequence):
+    _fields = [
+        ('crlids', CRLListId, {'explicit': 0, 'optional': True}),
+        ('ocspids', OcspListId, {'explicit': 1, 'optional': True}),
+        ('otherRev', OtherRevRefs, {'explicit': 2, 'optional': True}),
+    ]
+
+
+class CompleteRevocationRefs(SequenceOf):
+    _child_spec = CrlOcspRef
+
+
+class SetOfCompleteRevocationRefs(SetOf):
+    _child_spec = CompleteRevocationRefs
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.22'] = 'complete_revocation_references'
+CMSAttribute._oid_specs['complete_revocation_references'] = SetOfCompleteRevocationRefs
