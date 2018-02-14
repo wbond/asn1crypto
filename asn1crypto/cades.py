@@ -703,15 +703,18 @@ CMSAttribute._oid_specs['content_time_stamp_token'] = SetOfTimeStampToken
 # complete-certificate-references
 # -------------------------------
 
-CompleteCertificateRefs = OtherCertIds
+# CompleteCertificateRefs = OtherCertIds
 
 
-class SetOfCompleteCertificateRefs(SetOf):
-    _child_spec = CompleteCertificateRefs
+class SetOfOtherCertIds(SetOf):
+    _child_spec = OtherCertIds
+
+
+# SetOfCompleteCertificateRefs = SetOfOtherCertIds
 
 
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.21'] = 'complete_certificate_references'
-CMSAttribute._oid_specs['complete_certificate_references'] = SetOfCompleteCertificateRefs
+CMSAttribute._oid_specs['complete_certificate_references'] = SetOfOtherCertIds
 
 
 # complete-revocation-references
