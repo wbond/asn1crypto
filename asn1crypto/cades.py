@@ -687,12 +687,18 @@ CMSAttribute._oid_specs['signer_attributes'] = SetOfSignerAttributes
 # content-time-stamp
 # ------------------
 
+# TimeStampToken = ContentInfo
+
 SetOfTimeStampToken = SetOfContentInfo
 
-CMSAttributeType._map['1.2.840.113549.1.9.16.2.20'] = 'content_time_stamp'
-CMSAttribute._oid_specs['content_time_stamp'] = SetOfTimeStampToken
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.20'] = 'content_time_stamp_token'
+CMSAttribute._oid_specs['content_time_stamp_token'] = SetOfTimeStampToken
 
-# signature-time-stamp: already included in CMS
+# signature-time-stamp
+# --------------------
+# already included in CMS
+# CMSAttributeType._map['1.2.840.113549.1.9.16.2.14'] = 'signature_time_stamp_token'
+
 
 # complete-certificate-references
 # -------------------------------
