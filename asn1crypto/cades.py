@@ -436,11 +436,12 @@ from .core import (
 
 # TODO: handle certificate encoding correctly
 from .cms import AttributeCertificateV2, CMSAttribute, CMSAttributeType, SetOfContentInfo
-from .ocsp import ResponderId
+from .crl import CertificateList
+from .ocsp import BasicOCSPResponse, ResponderId
 from .tsp import IssuerSerial
 # from .tsp import SigningCertificate, SigningCertificateV2,  ContentReference, ContentIdentifier
 # from .tsp import TimeStampToken
-from .x509 import AlgorithmIdentifier, Attributes, CertificatePolicies, DirectoryString, Name
+from .x509 import AlgorithmIdentifier, Attributes, Certificate, CertificatePolicies, DirectoryString, Name
 # from .x509 import Certificate, AlgorithmIdentifier, CertificateList, Name, Attribute
 # from .x509 import GeneralNames, GeneralName, PolicyInformation
 
@@ -787,13 +788,98 @@ class CrlOcspRef(Sequence):
     ]
 
 
-class CompleteRevocationRefs(SequenceOf):
+class CrlOcspRefs(SequenceOf):
     _child_spec = CrlOcspRef
 
 
-class SetOfCompleteRevocationRefs(SetOf):
-    _child_spec = CompleteRevocationRefs
+class SetOfCrlOcspRefs(SetOf):
+    _child_spec = CrlOcspRefs
 
+
+# CompleteRevocationRefs = CrlOcspRefs
+# SetOfCompleteRevocationRefs = SetOfCrlOcspRefs
 
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.22'] = 'complete_revocation_references'
-CMSAttribute._oid_specs['complete_revocation_references'] = SetOfCompleteRevocationRefs
+CMSAttribute._oid_specs['complete_revocation_references'] = SetOfCrlOcspRefs
+
+
+# certificate-values
+# ------------------
+
+
+class CertificateValues(SequenceOf):
+    _child_spec = Certificate
+
+
+class SetOfCertificateValues(SetOf):
+    _child_spec = CertificateValues
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.23'] = 'certificate_values'
+CMSAttribute._oid_specs['certificate_values'] = SetOfCertificateValues
+
+
+# certificate-revocation-values
+# -----------------------------
+
+OtherRevValType = ObjectIdentifier
+
+
+class OtherRevVals(Sequence):
+    _fields = [
+        ('otherRevValType', OtherRevValType),
+        ('otherRevVals', Any),
+    ]
+
+
+class CertificateLists(SequenceOf):
+    _child_spec = CertificateList
+
+
+class BasicOCSPResponses(SequenceOf):
+    _child_spec = BasicOCSPResponse
+
+
+class RevocationValues(Sequence):
+    _fields = [
+        ('crlVals', CertificateLists, {'optional': True, 'explicit': 0}),
+        ('ocspVals', BasicOCSPResponses, {'optional': True, 'explicit': 1}),
+        ('otherRevVals', OtherRevVals, {'optional': True, 'explicit': 2}),
+    ]
+
+
+class SetOfRevocationValues(SetOf):
+    _child_spec = RevocationValues
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.24'] = 'certificate_revocation_values'
+CMSAttribute._oid_specs['certificate_revocation_values'] = SetOfRevocationValues
+
+# CAdES-C-time-stamp
+# ------------------
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.25'] = 'cades_c_time_stamp_token'
+CMSAttribute._oid_specs['cades_c_time_stamp_token'] = SetOfTimeStampToken
+
+# Time-Stamped Certificates and CRLs
+# ----------------------------------
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.26'] = 'certs_crls_time_stamp_token'
+CMSAttribute._oid_specs['certs_crls_time_stamp_token'] = SetOfTimeStampToken
+
+# Archive time-stamp
+# ------------------
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.48'] = 'archive_time_tamp_token'
+CMSAttribute._oid_specs['archive_time_tamp_token'] = SetOfTimeStampToken
+
+# Attribute-certificate-references
+# --------------------------------
+
+# AttributeCertificateRefs = OtherCertIds
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.44'] = 'attribute_certificate_references'
+CMSAttribute._oid_specs['attribute_certificate_references'] = SetOfOtherCertIds
+
+# Attribute-revocation-references
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.45'] = 'attribute_revocation_references'
+CMSAttribute._oid_specs['attribute_revocation_references'] = SetOfCrlOcspRefs
