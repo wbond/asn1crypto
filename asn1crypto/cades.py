@@ -645,9 +645,9 @@ class PostalAddress(SequenceOf):
 
 class SignerLocation(Sequence):
     _fields = [
-        ('countryName', DirectoryString, {'optional': True}),
-        ('localityName', DirectoryString, {'optional': True}),
-        ('postalAdddress', PostalAddress, {'optional': True}),
+        ('countryName', DirectoryString, {'explicit': 0, 'optional': True}),
+        ('localityName', DirectoryString, {'explicit': 1, 'optional': True}),
+        ('postalAdddress', PostalAddress, {'explicit': 2, 'optional': True}),
     ]
 
 
@@ -668,8 +668,8 @@ CertifiedAttributes = AttributeCertificateV2    # AttributeCertificate from RFC 
 
 class SignerAttributeChoice(Choice):
     _alternatives = [
-        ('claimedAttributes', ClaimedAttributes),
-        ('certifiedAttributes', CertifiedAttributes),
+        ('claimedAttributes', ClaimedAttributes, {'explicit': 0}),
+        ('certifiedAttributes', CertifiedAttributes, {'explicit': 1}),
     ]
 
 
