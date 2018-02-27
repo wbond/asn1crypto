@@ -10,6 +10,13 @@ import shutil
 import tempfile
 import platform
 import site
+import re
+import json
+
+if sys.version_info < (3,):
+    str_cls = unicode  # noqa
+else:
+    str_cls = str
 
 
 OTHER_PACKAGES = [
@@ -41,7 +48,7 @@ def run():
             _pip = _bootstrap_pip(tmpdir)
 
             print("Using pip to install dependencies")
-            _pip(['install', '-q', '--upgrade', '-r', os.path.join(package_root, 'requires', 'ci')])
+            _install_requirements(_pip, tmpdir, os.path.join(package_root, 'requires', 'ci'))
 
             if OTHER_PACKAGES:
                 print("Checking out modularcrypto packages for coverage")
@@ -75,6 +82,7 @@ def _download(url, dest):
         The filesystem path to the saved file
     """
 
+    print('Downloading %s' % url)
     filename = os.path.basename(url)
     dest_path = os.path.join(dest, filename)
 
@@ -82,13 +90,175 @@ def _download(url, dest):
         system_root = os.environ.get('SystemRoot')
         powershell_exe = os.path.join('system32\\WindowsPowerShell\\v1.0\\powershell.exe')
         code = "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;"
-        code += " (New-Object Net.WebClient).DownloadFile('%s', '%s');" % (url, dest_path)
+        code += "(New-Object Net.WebClient).DownloadFile('%s', '%s');" % (url, dest_path)
         _execute([powershell_exe, '-Command', code], dest)
 
     else:
-        _execute(['curl', '--silent', '--show-error', '-O', url], dest)
+        _execute(['curl', '-L', '--silent', '--show-error', '-O', url], dest)
 
     return dest_path
+
+
+def _tuple_from_ver(version_string):
+    """
+    :param version_string:
+        A unicode dotted version string
+
+    :return:
+        A tuple of integers
+    """
+
+    return tuple(map(int, version_string.split('.')))
+
+
+def _install_requirements(_pip, tmpdir, path):
+    """
+    Installs requirements without using Python to download, since
+    different services are limiting to TLS 1.2, and older version of
+    Python do not support that
+
+    :param _pip:
+        A function that will execute pip
+
+    :param tmpdir:
+        A unicode path to a temporary diretory to use for downloads
+
+    :param path:
+        A unicoe filesystem path to a requirements file
+    """
+
+    from pip.pep425tags import get_supported
+    valid_tags = tuple(get_supported()) + (('py2.py3', 'none', 'any'),)
+
+    packages = _parse_requires(path)
+    for p in packages:
+        pkg = p['pkg']
+        if p['type'] == 'url':
+            if pkg.endswith('.zip') or pkg.endswith('.tar.gz') or pkg.endswith('.whl'):
+                url = pkg
+            else:
+                raise Exception('Unable to install package from URL that is not an archive')
+        else:
+            pypi_json_url = 'https://pypi.python.org/pypi/%s/json' % pkg
+            json_dest = _download(pypi_json_url, tmpdir)
+            with open(json_dest, 'rb') as f:
+                pkg_info = json.loads(f.read().decode('utf-8'))
+            latest = pkg_info['info']['version']
+            if p['type'] == '>=':
+                if _tuple_from_ver(p['ver']) > _tuple_from_ver(latest):
+                    raise Exception('Unable to find version %s of %s, newest is %s' % (p['ver'], pkg, latest))
+                version = latest
+            elif p['type'] == '==':
+                if p['ver'] not in pkg_info['releases']:
+                    raise Exception('Unable to find version %s of %s' % (p['ver'], pkg))
+                version = p['ver']
+            else:
+                version = latest
+
+            whl = None
+            tar_bz2 = None
+            tar_gz = None
+            for download in pkg_info['releases'][version]:
+                if download['url'].endswith('.whl'):
+                    parts = os.path.basename(download['url']).split('-')
+                    tag_python = parts[-3]
+                    tag_abi = parts[-2]
+                    tag_platform = parts[-1].split('.')[0]
+                    if (tag_python, tag_abi, tag_platform) not in valid_tags:
+                        continue
+                    whl = download['url']
+                    break
+                if download['url'].endswith('.tar.bz2'):
+                    tar_bz2 = download['url']
+                if download['url'].endswith('.tar.gz'):
+                    tar_gz = download['url']
+            if whl:
+                url = whl
+            elif tar_bz2:
+                url = tar_bz2
+            elif tar_gz:
+                url = tar_gz
+            else:
+                raise Exception('Unable to find suitable download for %s' % pkg)
+
+        local_path = _download(url, tmpdir)
+        args = ['install', '-q', '--upgrade']
+        if sys.platform == 'darwin' and sys.version_info[0:2] in [(2, 6), (2, 7)]:
+            args.append('--user')
+        args.append(local_path)
+        _pip(args)
+        os.remove(local_path)
+
+
+def _parse_requires(path):
+    """
+    Does basic parsing of pip requirements files, to allow for
+    using something other than Python to do actual TLS requests
+
+    :param path:
+        A path to a requirements file
+
+    :return:
+        A list of dict objects containing the keys:
+         - 'type' ('any', 'url', '==', '>=')
+         - 'pkg'
+         - 'ver' (if 'type' == '==' or 'type' == '>=')
+    """
+
+    python_version = '.'.join(map(str_cls, sys.version_info[0:2]))
+
+    packages = []
+
+    with open(path, 'rb') as f:
+        contents = f.read().decode('utf-8')
+
+    for line in re.split(r'\r?\n', contents):
+        line = line.strip()
+        if not len(line):
+            continue
+        if re.match(r'^\s*#', line):
+            continue
+        if ';' in line:
+            package, cond = line.split(';', 1)
+            package = package.strip()
+            cond = cond.strip()
+            cond = cond.replace('python_version', repr(python_version))
+            if not eval(cond):
+                continue
+        else:
+            package = line.strip()
+
+
+        if re.match(r'^\s*-r\s*', package):
+            sub_req_file = re.sub(r'^\s*-r\s*', '', package)
+            sub_req_file = os.path.abspath(os.path.join(os.path.dirname(path), sub_req_file))
+            packages.extend(_parse_requires(sub_req_file))
+            continue
+
+        if re.match(r'https?://', package):
+            packages.append({'type': 'url', 'pkg': package})
+            continue
+
+        if '>=' in package:
+            parts = package.split('>=')
+            package = parts[0].strip()
+            ver = parts[1].strip()
+            packages.append({'type': '>=', 'pkg': package, 'ver': ver})
+            continue
+
+        if '==' in package:
+            parts = package.split('==')
+            package = parts[0].strip()
+            ver = parts[1].strip()
+            packages.append({'type': '==', 'pkg': package, 'ver': ver})
+            continue
+
+        if re.search(r'[^ a-zA-Z0-9\-]', package):
+            raise Exception('Unsupported requirements format version constraint: %s' % package)
+
+        packages.append({'type': 'any', 'pkg': package})
+
+    return packages
 
 
 def _execute(params, cwd):
