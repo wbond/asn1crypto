@@ -18,6 +18,8 @@ Other type classes are defined that help compose the types listed above.
 
 ContentInfo is the main structure
 
+All camelCase key names have been converterd to under_score_notation
+
 -----------------
 ASN.1 Definitions
 -----------------
@@ -462,22 +464,22 @@ class OtherHashValue(OctetString):
 
 class OtherHashAlgAndValue(Sequence):
     _fields = [
-        ('hashAlgorithm', AlgorithmIdentifier),
-        ('hashValue', OtherHashValue),
+        ('hash_algorithm', AlgorithmIdentifier),
+        ('hash_value', OtherHashValue),
     ]
 
 
 class OtherHash(Choice):
     _alternatives = [
-        ('sha1Hash', OtherHashValue),
-        ('otherHash', OtherHashAlgAndValue),
+        ('sha1_hash', OtherHashValue),
+        ('other_hash', OtherHashAlgAndValue),
     ]
 
 
 class OtherCertId(Sequence):
     _fields = [
-        ('otherCertHash', OtherHash),
-        ('issuerSerial', IssuerSerial, {'optional': True}),
+        ('other_cert_hash', OtherHash),
+        ('issuer_serial', IssuerSerial, {'optional': True}),
     ]
 
 
@@ -514,9 +516,11 @@ class SigPolicyHash(OtherHashAlgAndValue):
 
 
 class SigPolicyQualifierId(ObjectIdentifier):
+    """S/MIME Signature Policy Qualifier"""
+    # Don't confuse with x509 PolicyQualifierId which is for certification practice staments
     _map = {
         '1.2.840.113549.1.9.16.5.1': 'uri',
-        '1.2.840.113549.1.9.16.5.2': 'unotice',
+        '1.2.840.113549.1.9.16.5.2': 'user_notice',     # unotice in RFC
     }
 
 
@@ -525,10 +529,12 @@ class SPuri(IA5String):
 
 
 class DisplayText(Choice):
+    # Note: x509.py already defines DisplayText (rfc3280), but this one doesn't include IA5String (rfc2459)
+    #   This should be updated in future versions of CAdES
     _alternatives = [
-        ('visibleString', VisibleString),
-        ('bmpString', BMPString),
-        ('utf8String', UTF8String),
+        ('visible_string', VisibleString),
+        ('bmp_string', BMPString),
+        ('utf8_string', UTF8String),
     ]
 
 
@@ -539,26 +545,28 @@ class NoticeNumbers(SequenceOf):
 class NoticeReference(Sequence):
     _fields = [
         ('organization', DisplayText),
-        ('noticeNumbers', NoticeNumbers),
+        ('notice_numbers', NoticeNumbers),
     ]
 
 
 class SPUserNotice(Sequence):
+    # Note: x509.py already defines UserNotice with the same structures,
+    #     but it's redefined here because DisplayText has a small difference
     _fields = [
-        ('noticeRef', NoticeReference, {'optional': True}),
-        ('explicitText', DisplayText, {'optional': True}),
+        ('notice_ref', NoticeReference, {'optional': True}),
+        ('explicit_text', DisplayText, {'optional': True}),
     ]
 
 
 class SigPolicyQualifierInfo(Sequence):
     _fields = [
-        ('sigPolicyQualifierId', SigPolicyQualifierId),
-        ('sigQualifier', Any)     # TODO
+        ('sig_policy_qualifier_id', SigPolicyQualifierId),
+        ('sig_qualifier', Any)
     ]
-    _oid_pair = ('sigPolicyQualifierId', 'sigQualifier')
+    _oid_pair = ('sig_policy_qualifier_id', 'sig_qualifier')
     _oid_specs = {
         'uri': SPuri,
-        'unotice': SPUserNotice,
+        'user_notice': SPUserNotice,            # unotice in RFC
     }
 
 
@@ -568,9 +576,9 @@ class SigPolicyQualifierInfos(SequenceOf):      # should be 1..MAX
 
 class SignaturePolicyId(Sequence):
     _fields = [
-        ('sigPolicyId', SigPolicyId),
-        ('sigPolicyHash', SigPolicyHash),
-        ('sigPolicyQualifiers', SigPolicyQualifierInfos, {'optional': True}),
+        ('sig_policy_id', SigPolicyId),
+        ('sig_policy_hash', SigPolicyHash),
+        ('sig_policy_qualifiers', SigPolicyQualifierInfos, {'optional': True}),
     ]
 
 
@@ -580,8 +588,8 @@ class SignaturePolicyImplied(Null):
 
 class SignaturePolicy(Choice):
     _alternatives = [
-        ('signaturePolicyId', SignaturePolicyId),
-        ('signaturePolicyImplied', SignaturePolicyImplied),     # RFC 5126 states "not used in this version"
+        ('signature_policy_id', SignaturePolicyId),
+        ('signature_policy_implied', SignaturePolicyImplied),     # RFC 5126 states "not used in this version"
     ]
 
 
@@ -601,19 +609,19 @@ CMSAttribute._oid_specs['signature_policy'] = SetOfSignaturePolicy
 
 class CommitmentTypeIdentifier(ObjectIdentifier):
     _map = {
-        '1.2.840.113549.1.9.16.6.1': 'proofOfOrigin',
-        '1.2.840.113549.1.9.16.6.2': 'proofOfReceipt',
-        '1.2.840.113549.1.9.16.6.3': 'proofOfDelivery',
-        '1.2.840.113549.1.9.16.6.4': 'proofOfSender',
-        '1.2.840.113549.1.9.16.6.5': 'proofOfApproval',
-        '1.2.840.113549.1.9.16.6.6': 'proofOfCreation',
+        '1.2.840.113549.1.9.16.6.1': 'proof_of_origin',
+        '1.2.840.113549.1.9.16.6.2': 'proof_of_receipt',
+        '1.2.840.113549.1.9.16.6.3': 'proof_of_delivery',
+        '1.2.840.113549.1.9.16.6.4': 'proof_of_sender',
+        '1.2.840.113549.1.9.16.6.5': 'proof_of_approval',
+        '1.2.840.113549.1.9.16.6.6': 'proof_of_creation',
     }
 
 
 class CommitmentTypeQualifier(Sequence):
     _fields = [
-        ('commitmentTypeIdentifier', CommitmentTypeIdentifier),
-        ('qualifier', Any),
+        ('commitment_type_identifier', CommitmentTypeIdentifier),
+        ('qualifier', Any),     # TODO
     ]
 
 
@@ -623,8 +631,8 @@ class CommitmentTypeQualifiers(SequenceOf):
 
 class CommitmentTypeIndication(Sequence):
     _fields = [
-        ('commitmentTypeId', CommitmentTypeIdentifier),
-        ('commitmentTypeQualifier', CommitmentTypeQualifiers, {'optional': True}),
+        ('commitment_type_id', CommitmentTypeIdentifier),
+        ('commitment_type_qualifier', CommitmentTypeQualifiers, {'optional': True}),
     ]
 
 
@@ -645,9 +653,9 @@ class PostalAddress(SequenceOf):
 
 class SignerLocation(Sequence):
     _fields = [
-        ('countryName', DirectoryString, {'explicit': 0, 'optional': True}),
-        ('localityName', DirectoryString, {'explicit': 1, 'optional': True}),
-        ('postalAdddress', PostalAddress, {'explicit': 2, 'optional': True}),
+        ('country_name', DirectoryString, {'explicit': 0, 'optional': True}),
+        ('locality_name', DirectoryString, {'explicit': 1, 'optional': True}),
+        ('postal_adddress', PostalAddress, {'explicit': 2, 'optional': True}),
     ]
 
 
@@ -668,8 +676,8 @@ CertifiedAttributes = AttributeCertificateV2    # AttributeCertificate from RFC 
 
 class SignerAttributeChoice(Choice):
     _alternatives = [
-        ('claimedAttributes', ClaimedAttributes, {'explicit': 0}),
-        ('certifiedAttributes', CertifiedAttributes, {'explicit': 1}),
+        ('claimed_attributes', ClaimedAttributes, {'explicit': 0}),
+        ('certified_attributes', CertifiedAttributes, {'explicit': 1}),
     ]
 
 
@@ -723,16 +731,16 @@ CMSAttribute._oid_specs['complete_certificate_references'] = SetOfOtherCertIds
 
 class CrlIdentifier(Sequence):
     _fields = [
-        ('crlissuer', Name),
-        ('crlIssuedTime', UTCTime),
-        ('crlNumber', Integer, {'optional': True}),
+        ('crl_issuer', Name),
+        ('crl_issued_time', UTCTime),
+        ('crl_number', Integer, {'optional': True}),
     ]
 
 
 class CrlValidatedId(Sequence):
     _fields = [
-        ('crlHash', OtherHash),
-        ('crlIdentifier', CrlIdentifier, {'optional': True}),
+        ('crl_hash', OtherHash),
+        ('crl_identifier', CrlIdentifier, {'optional': True}),
     ]
 
 
@@ -748,15 +756,15 @@ class CRLListId(Sequence):
 
 class OcspIdentifier(Sequence):
     _fields = [
-        ('ocspResponderID', ResponderId),   # -- As in OCSP response data
-        ('producedAt', GeneralizedTime),    # -- As in OCSP response data
+        ('ocsp_responder_id', ResponderId),   # -- As in OCSP response data
+        ('produced_at', GeneralizedTime),    # -- As in OCSP response data
     ]
 
 
 class OcspResponsesId(Sequence):
     _fields = [
-        ('ocspIdentifier', OcspIdentifier),
-        ('ocspRepHash', OtherHash, {'optional': True}),
+        ('ocsp_identifier', OcspIdentifier),
+        ('ocsp_rep_hash', OtherHash, {'optional': True}),
     ]
 
 
@@ -766,7 +774,7 @@ class OcspResponsesIds(SequenceOf):
 
 class OcspListId(Sequence):
     _fields = [
-        ('ocspResponses', OcspResponsesIds),
+        ('ocsp_responses', OcspResponsesIds),
     ]
 
 
@@ -775,16 +783,16 @@ OtherRevRefType = ObjectIdentifier
 
 class OtherRevRefs(Sequence):
     _fields = [
-        ('otherRevRefType', OtherRevRefType),
-        ('otherRevRefs', Any),  # DEFINED BY otherRevRefType
+        ('other_rev_ref_type', OtherRevRefType),
+        ('other_rev_refs', Any),  # DEFINED BY otherRevRefType
     ]
 
 
 class CrlOcspRef(Sequence):
     _fields = [
-        ('crlids', CRLListId, {'explicit': 0, 'optional': True}),
-        ('ocspids', OcspListId, {'explicit': 1, 'optional': True}),
-        ('otherRev', OtherRevRefs, {'explicit': 2, 'optional': True}),
+        ('crl_ids', CRLListId, {'explicit': 0, 'optional': True}),
+        ('ocsp_ids', OcspListId, {'explicit': 1, 'optional': True}),
+        ('other_rev', OtherRevRefs, {'explicit': 2, 'optional': True}),
     ]
 
 
@@ -827,8 +835,8 @@ OtherRevValType = ObjectIdentifier
 
 class OtherRevVals(Sequence):
     _fields = [
-        ('otherRevValType', OtherRevValType),
-        ('otherRevVals', Any),
+        ('other_rev_val_type', OtherRevValType),
+        ('other_rev_vals', Any),
     ]
 
 
@@ -842,9 +850,9 @@ class BasicOCSPResponses(SequenceOf):
 
 class RevocationValues(Sequence):
     _fields = [
-        ('crlVals', CertificateLists, {'optional': True, 'explicit': 0}),
-        ('ocspVals', BasicOCSPResponses, {'optional': True, 'explicit': 1}),
-        ('otherRevVals', OtherRevVals, {'optional': True, 'explicit': 2}),
+        ('crl_vals', CertificateLists, {'optional': True, 'explicit': 0}),
+        ('ocsp_vals', BasicOCSPResponses, {'optional': True, 'explicit': 1}),
+        ('other_rev_vals', OtherRevVals, {'optional': True, 'explicit': 2}),
     ]
 
 
