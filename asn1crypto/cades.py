@@ -656,7 +656,7 @@ class SetOfCommitmentTypeIndication(SetOf):
 
 
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.16'] = 'commitment_type'
-CMSAttribute._oid_specs['signature_policy'] = SetOfCommitmentTypeIndication
+CMSAttribute._oid_specs['commitment_type'] = SetOfCommitmentTypeIndication
 
 # signer-location
 # ---------------
@@ -679,7 +679,7 @@ class SetOfSignerLocation(SetOf):
 
 
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.17'] = 'signer_location'
-CMSAttribute._oid_specs['signature_policy'] = SetOfSignerLocation
+CMSAttribute._oid_specs['signer_location'] = SetOfSignerLocation
 
 
 # signer-attributes
