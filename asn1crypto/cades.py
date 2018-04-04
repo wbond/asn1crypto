@@ -437,7 +437,7 @@ from .core import (
 # from .cms import CMSAttribute, ContentInfo, SignedData, EncapsulatedContentInfo, SignerInfo, MessageDigest, SigningTime, Countersignature
 
 # TODO: handle certificate encoding correctly
-from .cms import AttributeCertificateV2, CMSAttribute, CMSAttributeType, SetOfContentInfo
+from .cms import AttributeCertificateV2, CMSAttribute, CMSAttributeType, SetOfContentInfo, ContentInfo
 from .crl import CertificateList
 from .ocsp import BasicOCSPResponse, ResponderId
 from .tsp import IssuerSerial
@@ -907,3 +907,7 @@ CMSAttribute._oid_specs['attribute_certificate_references'] = SetOfOtherCertIds
 # Attribute-revocation-references
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.45'] = 'attribute_revocation_references'
 CMSAttribute._oid_specs['attribute_revocation_references'] = SetOfCrlOcspRefs
+
+
+# fake usage
+ContentInfo
