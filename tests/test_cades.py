@@ -32,6 +32,10 @@ class CADESTests(test_cms.CMSTests):
             content['version'].native
         )
         self.assertEqual(
+            'Hello world!\n',
+            content[u'encap_content_info'].native['content']
+        )
+        self.assertEqual(
             'sha512',
             content['digest_algorithms'][0]['algorithm'].native
         )
