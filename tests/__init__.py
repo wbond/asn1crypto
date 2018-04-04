@@ -39,6 +39,7 @@ def test_classes():
 
     from .test_algos import AlgoTests
     from .test_cms import CMSTests
+    from .test_cades import CADESTests
     from .test_crl import CRLTests
     from .test_csr import CSRTests
     from .test_keys import KeysTests
@@ -54,6 +55,7 @@ def test_classes():
     return [
         AlgoTests,
         CMSTests,
+        CADESTests,
         CRLTests,
         CSRTests,
         KeysTests,
