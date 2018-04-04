@@ -60,6 +60,18 @@ class CADESTests(test_cms.CMSTests):
             signed_attrs
         )
         self.assertIn(
+            'content_hints',
+            signed_attrs,
+        )
+        self.assertEqual(
+            'net.sf.jmimemagic.detectors.TextFileDetector',
+            signed_attrs['content_hints'][0]['content_description'].native,
+        )
+        self.assertEqual(
+            'data',
+            signed_attrs['content_hints'][0]['content_type'].native,
+        )
+        self.assertIn(
             'content_type',
             signed_attrs
         )

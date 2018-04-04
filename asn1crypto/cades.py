@@ -437,7 +437,7 @@ from .core import (
 # from .cms import CMSAttribute, ContentInfo, SignedData, EncapsulatedContentInfo, SignerInfo, MessageDigest, SigningTime, Countersignature
 
 # TODO: handle certificate encoding correctly
-from .cms import AttributeCertificateV2, CMSAttribute, CMSAttributeType, SetOfContentInfo, ContentInfo
+from .cms import AttributeCertificateV2, CMSAttribute, CMSAttributeType, SetOfContentInfo, ContentInfo, ContentType
 from .crl import CertificateList
 from .ocsp import BasicOCSPResponse, ResponderId
 from .tsp import IssuerSerial
@@ -458,7 +458,6 @@ from .x509 import AlgorithmIdentifier, Attributes, Certificate, CertificatePolic
 # TODO
 #   content-reference: 1.2.840.113549.1.9.16.2.10
 #   content-identifier: 1.2.840.113549.1.9.16.2.7
-#   content-hints: 1.2.840.113549.1.9.16.2.4
 # Other ESS attributes: check:
 #   equivalentLabels: 1.2.840.113549.1.9.16.2.9
 #   eSSSecurityLabel: 1.2.840.113549.1.9.16.2.2
@@ -909,6 +908,60 @@ CMSAttribute._oid_specs['attribute_certificate_references'] = SetOfOtherCertIds
 # Attribute-revocation-references
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.45'] = 'attribute_revocation_references'
 CMSAttribute._oid_specs['attribute_revocation_references'] = SetOfCrlOcspRefs
+
+
+# Other optional attibutes defined in ESS (RFC 2634)
+# ==================================================
+
+# content-reference
+# -----------------
+
+ContentIdentifier = OctetString
+
+
+class ContentReference(Sequence):
+    _fields = [
+        ('content_type', ContentType),
+        ('signed_content_identifier', ContentIdentifier),
+        ('originator_signature_value', OctetString),
+    ]
+
+
+class SetOfContentReference(SetOf):
+    _child_spec = ContentReference
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.10'] = 'content_reference'
+CMSAttribute._oid_specs['content_reference'] = SetOfContentReference
+
+
+# content-identifier
+# -----------------
+
+class SetOfContentIdentifier(SetOf):
+    _child_spec = ContentIdentifier
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.7'] = 'content_identifier'
+CMSAttribute._oid_specs['content_identifier'] = SetOfContentIdentifier
+
+
+# content-hints
+# -------------
+
+class ContentsHints(Sequence):
+    _fields = [
+        ('content_description', UTF8String, {'optional': True}),
+        ('content_type', ContentType),
+    ]
+
+
+class SetOfContentHints(SetOf):
+    _child_spec = ContentsHints
+
+
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.4'] = 'content_hints'
+CMSAttribute._oid_specs['content_hints'] = SetOfContentHints
 
 
 # fake usage
