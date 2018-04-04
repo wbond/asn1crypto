@@ -893,6 +893,8 @@ CMSAttribute._oid_specs['certs_crls_time_stamp_token'] = SetOfTimeStampToken
 
 # Archive time-stamp
 # ------------------
+CMSAttributeType._map['1.2.840.113549.1.9.16.2.27'] = 'archive_time_tamp_token_v1'
+CMSAttribute._oid_specs['archive_time_tamp_token_v1'] = SetOfTimeStampToken
 CMSAttributeType._map['1.2.840.113549.1.9.16.2.48'] = 'archive_time_tamp_token'
 CMSAttribute._oid_specs['archive_time_tamp_token'] = SetOfTimeStampToken
 
