@@ -47,7 +47,6 @@ class CADESTests(test_cms.CMSTests):
         )
         signed_attrs = signer_info['signed_attrs']
         signed_attrs = {s['type'].native: s['values'] for s in signed_attrs}
-        import ipdb; ipdb.set_trace()
         self.assertIn(
             'signing_certificate_v2',
             signed_attrs
@@ -66,4 +65,3 @@ class CADESTests(test_cms.CMSTests):
         )
         unsigned_attrs = signer_info['unsigned_attrs']
         unsigned_attrs = {s['type'].native: s['values'] for s in unsigned_attrs}
-
