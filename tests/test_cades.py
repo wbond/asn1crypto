@@ -55,6 +55,10 @@ class CADESTests(test_cms.CMSTests):
             'signing_certificate_v2',
             signed_attrs
         )
+        self.assertEqual(
+            40136907034564109132020389771952983570L,
+            signed_attrs['signing_certificate_v2'][0]['certs'][0]['issuer_serial']['serial_number'].native
+        )
         self.assertIn(
             'message_digest',
             signed_attrs
@@ -79,5 +83,7 @@ class CADESTests(test_cms.CMSTests):
             'signing_time',
             signed_attrs
         )
-        unsigned_attrs = signer_info['unsigned_attrs']
-        unsigned_attrs = {s['type'].native: s['values'] for s in unsigned_attrs}
+        self.assertEqual(
+            '2017-03-14 22:04:22+00:00',
+            str(signed_attrs['signing_time'][0].native)
+        )
