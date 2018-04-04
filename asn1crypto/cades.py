@@ -453,6 +453,22 @@ from .x509 import AlgorithmIdentifier, Attributes, Certificate, CertificatePolic
 # TODO: define this
 
 #
+# ESS-Imported Optional attributes (RFC 2634)
+# ===========================================
+# TODO
+#   content-reference: 1.2.840.113549.1.9.16.2.10
+#   content-identifier: 1.2.840.113549.1.9.16.2.7
+#   content-hints: 1.2.840.113549.1.9.16.2.4
+# Other ESS attributes: check:
+#   equivalentLabels: 1.2.840.113549.1.9.16.2.9
+#   eSSSecurityLabel: 1.2.840.113549.1.9.16.2.2
+#   msgSigDigest: 1.2.840.113549.1.9.16.2.5
+#   mlExpansionHistory: 1.2.840.113549.1.9.16.2.3
+#   receiptRequest: 1.2.840.113549.1.9.16.2.1
+#   signingCertificate: 1.2.840.113549.1.9.16.2.12   # included as "signing_certificate" in tsp.py
+#   smimeCapabilities
+#   sMIMEEncryption-KeyPreference
+
 # Basic ES CMS Attributes
 # =======================
 # defined in RFC 5126 (page 35, section 5.7.3.3.) and RFC 3126 (page 24, section 3.8.2)
