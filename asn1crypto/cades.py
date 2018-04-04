@@ -441,7 +441,7 @@ from .cms import AttributeCertificateV2, CMSAttribute, CMSAttributeType, SetOfCo
 from .crl import CertificateList
 from .ocsp import BasicOCSPResponse, ResponderId
 from .tsp import IssuerSerial
-# from .tsp import SigningCertificate, SigningCertificateV2,  ContentReference, ContentIdentifier
+# from .tsp import SigningCertificate, SigningCertificateV2
 # from .tsp import TimeStampToken
 from .x509 import AlgorithmIdentifier, Attributes, Certificate, CertificatePolicies, DirectoryString, Name
 # from .x509 import Certificate, AlgorithmIdentifier, CertificateList, Name, Attribute
