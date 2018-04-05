@@ -65,7 +65,7 @@ class CADESTests(test_cms.CMSTests):
             hashlib.sha1(signature).hexdigest()
         )
         signed_attrs = signer_info['signed_attrs']
-        signed_attrs = {s['type'].native: s['values'] for s in signed_attrs}
+        signed_attrs = dict((s['type'].native, s['values']) for s in signed_attrs)
         self.assertIn(
             'signing_certificate_v2',
             signed_attrs
@@ -123,7 +123,7 @@ class CADESTests(test_cms.CMSTests):
         )
         signer_info = content['signer_infos'][0]
         signed_attrs = signer_info['signed_attrs']
-        signed_attrs = {s['type'].native: s['values'] for s in signed_attrs}
+        signed_attrs = dict((s['type'].native, s['values']) for s in signed_attrs)
         # now we have signature policy
         self.assertIn(
             'signature_policy',
@@ -157,7 +157,7 @@ class CADESTests(test_cms.CMSTests):
         )
         signer_info = content['signer_infos'][0]
         signed_attrs = signer_info['signed_attrs']
-        signed_attrs = {attr['type'].native: attr['values'] for attr in signed_attrs}
+        signed_attrs = dict((attr['type'].native, attr['values']) for attr in signed_attrs)
         self.assertIn(
             'signature_policy',
             signed_attrs
@@ -172,7 +172,7 @@ class CADESTests(test_cms.CMSTests):
         )
         # now we have unsigned attributes
         unsigned_attrs = signer_info['unsigned_attrs']
-        unsigned_attrs = {attr['type'].native: attr['values'] for attr in unsigned_attrs}
+        unsigned_attrs = dict((attr['type'].native, attr['values']) for attr in unsigned_attrs)
         for key in (
             'signature_time_stamp_token',
             'complete_certificate_references',
