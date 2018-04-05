@@ -358,6 +358,8 @@ def _bootstrap_pip(tmpdir):
         print("Downloading get-pip.py")
         if sys.version_info[0:2] == (3, 2):
             path = _download('https://bootstrap.pypa.io/3.2/get-pip.py', tmpdir)
+        elif sys.version_info[0:2] == (2, 6):
+            path = _download('https://bootstrap.pypa.io/2.6/get-pip.py', tmpdir)
         else:
             path = _download('https://bootstrap.pypa.io/get-pip.py', tmpdir)
 
