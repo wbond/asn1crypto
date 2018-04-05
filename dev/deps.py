@@ -305,7 +305,7 @@ def _get_pip_main(download_dir):
     orig_sys_exit = sys.exit
     orig_sys_argv = sys.argv
     sys.exit = lambda c: None
-    sys.argv = ['get-pip.py', '--user', '-vvvv']
+    sys.argv = ['get-pip.py', '--user', '-q']
 
     get_pip_module.main()
 
