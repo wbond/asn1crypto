@@ -434,7 +434,10 @@ from .core import (
 )
 
 # All the commented imports are available
-# from .cms import CMSAttribute, ContentInfo, SignedData, EncapsulatedContentInfo, SignerInfo, MessageDigest, SigningTime, Countersignature
+# from .cms import (
+#     CMSAttribute, ContentInfo, SignedData, EncapsulatedContentInfo,
+#     SignerInfo, MessageDigest, SigningTime, Countersignature,
+# )
 
 # TODO: handle certificate encoding correctly
 from .cms import AttributeCertificateV2, CMSAttribute, CMSAttributeType, SetOfContentInfo, ContentInfo, ContentType
