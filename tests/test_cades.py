@@ -56,7 +56,7 @@ class CADESTests(test_cms.CMSTests):
         )
         signer_certificate_serial = signer_info['sid'].chosen['serial_number'].native
         self.assertEqual(
-            40136907034564109132020389771952983570L,
+            40136907034564109132020389771952983570,
             signer_certificate_serial
         )
         signature = signer_info['signature'].native
@@ -66,27 +66,15 @@ class CADESTests(test_cms.CMSTests):
         )
         signed_attrs = signer_info['signed_attrs']
         signed_attrs = dict((s['type'].native, s['values']) for s in signed_attrs)
-        self.assertIn(
-            'signing_certificate_v2',
-            signed_attrs
-        )
+        self.assertTrue('signing_certificate_v2' in signed_attrs)
         self.assertEqual(
             signer_certificate_serial,
             signed_attrs['signing_certificate_v2'][0]['certs'][0]['issuer_serial']['serial_number'].native
         )
-        self.assertIn(
-            'message_digest',
-            signed_attrs
-        )
+        self.assertTrue('message_digest' in signed_attrs)
         # no signature policy
-        self.assertNotIn(
-            'signature_policy',
-            signed_attrs
-        )
-        self.assertIn(
-            'content_hints',
-            signed_attrs,
-        )
+        self.assertFalse('signature_policy' in signed_attrs)
+        self.assertTrue('content_hints' in signed_attrs)
         self.assertEqual(
             'net.sf.jmimemagic.detectors.TextFileDetector',
             signed_attrs['content_hints'][0]['content_description'].native,
@@ -95,14 +83,8 @@ class CADESTests(test_cms.CMSTests):
             'data',
             signed_attrs['content_hints'][0]['content_type'].native,
         )
-        self.assertIn(
-            'content_type',
-            signed_attrs
-        )
-        self.assertIn(
-            'signing_time',
-            signed_attrs
-        )
+        self.assertTrue('content_type' in signed_attrs)
+        self.assertTrue('signing_time' in signed_attrs)
         self.assertEqual(
             '2017-03-14 22:04:22+00:00',
             str(signed_attrs['signing_time'][0].native)
@@ -125,10 +107,7 @@ class CADESTests(test_cms.CMSTests):
         signed_attrs = signer_info['signed_attrs']
         signed_attrs = dict((s['type'].native, s['values']) for s in signed_attrs)
         # now we have signature policy
-        self.assertIn(
-            'signature_policy',
-            signed_attrs
-        )
+        self.assertTrue('signature_policy' in signed_attrs)
         self.assertEqual(
             'signature_policy_id',
             signed_attrs['signature_policy'][0].name
@@ -158,10 +137,7 @@ class CADESTests(test_cms.CMSTests):
         signer_info = content['signer_infos'][0]
         signed_attrs = signer_info['signed_attrs']
         signed_attrs = dict((attr['type'].native, attr['values']) for attr in signed_attrs)
-        self.assertIn(
-            'signature_policy',
-            signed_attrs
-        )
+        self.assertTrue('signature_policy' in signed_attrs)
         self.assertEqual(
             'signature_policy_id',
             signed_attrs['signature_policy'][0].name
@@ -182,10 +158,7 @@ class CADESTests(test_cms.CMSTests):
             'complete_revocation_references',
             'cades_c_time_stamp_token',
         ):
-            self.assertIn(
-                key,
-                unsigned_attrs
-            )
+            self.assertTrue(key in unsigned_attrs)
         # We still have errors parsing some attribues which should be DER encoded OctetStrings, but are not.
         # unsigned_attrs['certificate_revocation_values'][0].native
         # unsigned_attrs['complete_revocation_references'][0].native
