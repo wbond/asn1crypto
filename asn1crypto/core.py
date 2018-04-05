@@ -4719,7 +4719,7 @@ class GeneralizedTime(AbstractTime):
             date_format = '%Y%m%d%H%M'
         elif strlen == 14:
             date_format = '%Y%m%d%H%M%S'
-        elif strlen == 18:
+        elif strlen > 14:
             date_format = '%Y%m%d%H%M%S.%f'
 
         if date_format:
