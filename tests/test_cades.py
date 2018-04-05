@@ -33,7 +33,7 @@ class CADESTests(test_cms.CMSTests):
             content['version'].native
         )
         self.assertEqual(                   # This is the signed content
-            'Hello world!\n',
+            b'Hello world!\n',
             content['encap_content_info'].native['content']
         )
         self.assertEqual(
