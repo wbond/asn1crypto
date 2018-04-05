@@ -137,3 +137,55 @@ class CADESTests(test_cms.CMSTests):
             'https://sede.060.gob.es/politica_de_firma_anexo_1.pdf',
             signed_attrs['signature_policy'][0].chosen['sig_policy_qualifiers'][0]['sig_qualifier'].native
         )
+
+    def test_parse_cades_epes_a_explicit(self):
+        with open(os.path.join(fixtures_dir, 'cades-epes-a-explicit.der'), 'rb') as f:
+            info = cades.ContentInfo.load(f.read())
+        self.assertEqual(
+            'signed_data',                  # type signed_data
+            info['content_type'].native
+        )
+        content = info['content']
+        self.assertEqual(
+            'sha256',
+            content['digest_algorithms'][0]['algorithm'].native
+        )
+        # now we have no content, signature is 'explicit'
+        self.assertEqual(
+            None,
+            content['encap_content_info'].native['content']
+        )
+        signer_info = content['signer_infos'][0]
+        signed_attrs = signer_info['signed_attrs']
+        signed_attrs = {attr['type'].native: attr['values'] for attr in signed_attrs}
+        self.assertIn(
+            'signature_policy',
+            signed_attrs
+        )
+        self.assertEqual(
+            'signature_policy_id',
+            signed_attrs['signature_policy'][0].name
+        )
+        self.assertEqual(
+            'https://sede.060.gob.es/politica_de_firma_anexo_1.pdf',
+            signed_attrs['signature_policy'][0].chosen['sig_policy_qualifiers'][0]['sig_qualifier'].native
+        )
+        # now we have unsigned attributes
+        unsigned_attrs = signer_info['unsigned_attrs']
+        unsigned_attrs = {attr['type'].native: attr['values'] for attr in unsigned_attrs}
+        for key in (
+            'signature_time_stamp_token',
+            'complete_certificate_references',
+            'certificate_revocation_values',
+            'archive_time_tamp_token',
+            'certificate_values',
+            'complete_revocation_references',
+            'cades_c_time_stamp_token',
+        ):
+            self.assertIn(
+                key,
+                unsigned_attrs
+            )
+        # We still have errors parsing some attribues which should be DER encoded OctetStrings, but are not.
+        # unsigned_attrs['certificate_revocation_values'][0].native
+        # unsigned_attrs['complete_revocation_references'][0].native
