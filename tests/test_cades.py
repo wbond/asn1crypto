@@ -34,7 +34,7 @@ class CADESTests(test_cms.CMSTests):
         )
         self.assertEqual(                   # This is the signed content
             'Hello world!\n',
-            content[u'encap_content_info'].native['content']
+            content['encap_content_info'].native['content']
         )
         self.assertEqual(
             'sha512',                       # message digest algorithm: SHA512
@@ -119,7 +119,7 @@ class CADESTests(test_cms.CMSTests):
         # now we have no content, signature is 'explicit'
         self.assertEqual(
             None,
-            content[u'encap_content_info'].native['content']
+            content['encap_content_info'].native['content']
         )
         signer_info = content['signer_infos'][0]
         signed_attrs = signer_info['signed_attrs']
