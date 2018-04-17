@@ -48,7 +48,7 @@ def run():
             _pip = _bootstrap_pip(tmpdir)
 
             print("Using pip to install dependencies")
-            _pip(['install', '-q', '--upgrade', '-r', os.path.join(package_root, 'requires', 'ci')])
+            _install_requirements(_pip, tmpdir, os.path.join(package_root, 'requires', 'ci'))
 
             if OTHER_PACKAGES:
                 print("Checking out modularcrypto packages for coverage")
