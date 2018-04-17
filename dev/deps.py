@@ -392,7 +392,7 @@ def _bootstrap_pip(tmpdir):
 
     def _pip(args):
         base_args = ['--disable-pip-version-check']
-        if sys.platform == 'win32':
+        if sys.platform == 'win32' and _is_pip_10(pip):
             base_args.append('--no-warn-script-location')
         if certs_path:
             base_args += ['--cert', certs_path]
