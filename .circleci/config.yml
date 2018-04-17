@@ -5,8 +5,6 @@ jobs:
       # This is the last version using macOS 10.12, which has Python 2.6
       xcode: 9.2.0
     steps:
-      - run: sudo pip install --upgrade pip
-      - run: pip install --user --ignore-installed --upgrade virtualenv
       - run: brew update
       - run: brew upgrade python
       - run: brew install pypy
