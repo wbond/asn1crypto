@@ -305,7 +305,7 @@ def _get_pip_main(download_dir):
     orig_sys_exit = sys.exit
     orig_sys_argv = sys.argv
     sys.exit = lambda c: None
-    sys.argv = ['get-pip.py', '--user', '-vvvv']
+    sys.argv = ['get-pip.py', '--user', '-q']
 
     get_pip_module.main()
 
@@ -355,16 +355,21 @@ def _bootstrap_pip(tmpdir):
         print("Downloading cacert.pem from curl")
         certs_path = _download('https://curl.haxx.se/ca/cacert.pem', tmpdir)
 
-        print("Downloading get-pip.py")
-        if sys.version_info[0:2] == (3, 2):
-            path = _download('https://bootstrap.pypa.io/3.2/get-pip.py', tmpdir)
-        elif sys.version_info[0:2] == (2, 6):
-            path = _download('https://bootstrap.pypa.io/2.6/get-pip.py', tmpdir)
-        else:
-            path = _download('https://bootstrap.pypa.io/get-pip.py', tmpdir)
+        if sys.platform == 'darwin' and sys.version_info[0:2] == (2, 6):
+            path = _download('https://github.com/wbond/pip-9.0.3-py26-mac/releases/download/9.0.3%2Bsecuretransport.py26/pip-9.0.3-py2.py3-none-any.whl', tmpdir)
+            sys.path.insert(1, os.path.join(tmpdir, 'pip-9.0.3-py2.py3-none-any.whl'))
 
-        print("Running get-pip.py")
-        _get_pip_main(tmpdir)
+            import pip
+            pip.main(['--cert', certs_path, 'install', '--user', 'setuptools<37', 'wheel<0.30'])
+        else:
+            print("Downloading get-pip.py")
+            if sys.version_info[0:2] == (3, 2):
+                path = _download('https://bootstrap.pypa.io/3.2/get-pip.py', tmpdir)
+            else:
+                path = _download('https://bootstrap.pypa.io/get-pip.py', tmpdir)
+
+            print("Running get-pip.py")
+            _get_pip_main(tmpdir)
 
         import pip
 
