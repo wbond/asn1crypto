@@ -391,7 +391,9 @@ def _bootstrap_pip(tmpdir):
         import pip
 
     def _pip(args):
-        base_args = ['--disable-pip-version-check', '--no-warn-script-location']
+        base_args = ['--disable-pip-version-check']
+        if sys.platform == 'win32':
+            base_args.append('--no-warn-script-location')
         if certs_path:
             base_args += ['--cert', certs_path]
         if sys.platform == 'darwin' and sys.version_info[0:2] in [(2, 6), (2, 7)]:
