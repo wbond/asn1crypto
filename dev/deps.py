@@ -366,14 +366,35 @@ def _stage_requirements(deps_dir, path):
             try:
                 tf = None
                 tf = tarfile.open(local_path, 'r')
-                # .tar.bz2 and .tar.gz may contain a bunch of other things
+                # .tar.bz2 and .tar.gz may contain a bunch of other things.
+                # The following code works for the packages coverage and
+                # configparser, which are the two we currently require that
+                # do not provide wheels
+                base_path = pkg + '-' + version + '/'
+                base_py_path = base_path + pkg + '.py'
+                base_pkg_path = base_path + pkg + '/'
+                src_path = base_path + 'src/'
+                src_py_path = src_path + pkg + '.py'
+                src_pkg_path = src_path + pkg + '/'
                 members = []
                 for ti in tf.getmembers():
                     fn = ti.name
-                    if fn.startswith(pkg + '/') or fn.startswith(pkg + '\\') or fn.startswith(pkg + '.py'):
-                        print('Found member: %s' % fn)
-                        members.append(fn)
-                tf.extractall(deps_dir, members)
+                    if fn == src_py_path or fn == base_py_path:
+                        members.append((ti, pkg + '.py'))
+                        continue
+                    if fn == src_py_path.replace('/', '\\') or fn == base_py_path.replace('/', '\\'):
+                        members.append((ti, pkg + '.py'))
+                        continue
+                    if fn.startswith(base_pkg_path) or fn.startswith(base_pkg_path.replace('/', '\\')):
+                        members.append((ti, fn[len(base_pkg_path):]))
+                        continue
+                    if fn.startswith(src_pkg_path) or fn.startswith(src_pkg_path.replace('/', '\\')):
+                        members.append((ti, fn[len(src_pkg_path):]))
+                        continue
+                for ti, path in members:
+                    mf = tf.extractfile(ti)
+                    with open(os.path.join(deps_dir, path), 'wb') as f:
+                        f.write(mf.read())
             finally:
                 if tf:
                     tf.close()
