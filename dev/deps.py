@@ -177,7 +177,9 @@ def _pep425_get_abi():
     try:
         soabi = sysconfig.get_config_var('SOABI')
         if soabi:
-            return soabi.replace('cpython-', 'cp').replace('.', '_').replace('-', '_')
+            if soabi.startswith('cpython-'):
+                return 'cp%s' % soabi.split('-')[1]
+            return soabi.replace('.', '_').replace('-', '_')
     except (IOError, NameError):
         pass
 
