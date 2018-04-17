@@ -274,9 +274,6 @@ def _pep425tags():
 
     tags.append(('py2.py3', 'none', 'any'))
 
-    print('PEP 425 Tags:')
-    for tag in tags:
-        print('  %r' % (tag, ))
     return tags
 
 
