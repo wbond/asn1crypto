@@ -15,6 +15,7 @@ import json
 import tarfile
 import zipfile
 import platform
+import ctypes
 
 if sys.version_info >= (2, 7):
     import sysconfig
@@ -370,6 +371,7 @@ def _stage_requirements(deps_dir, path):
                 for ti in tf.getmembers():
                     fn = ti.name
                     if fn.startswith(pkg + '/') or fn.startswith(pkg + '\\') or fn.startswith(pkg + '.py'):
+                        print('Found member: %s' % fn)
                         members.append(fn)
                 tf.extractall(deps_dir, members)
             finally:
