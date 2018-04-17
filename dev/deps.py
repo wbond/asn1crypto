@@ -386,18 +386,21 @@ def _stage_requirements(deps_dir, path):
                         members.append((ti, pkg + '.py'))
                         continue
                     if fn.startswith(base_pkg_path) or fn.startswith(base_pkg_path.replace('/', '\\')):
-                        members.append((ti, fn[len(base_pkg_path):]))
+                        members.append((ti, fn[len(base_pkg_path) - len(pkg) - 1:].replace('\\', '/')))
                         continue
                     if fn.startswith(src_pkg_path) or fn.startswith(src_pkg_path.replace('/', '\\')):
-                        members.append((ti, fn[len(src_pkg_path):]))
+                        members.append((ti, fn[len(src_pkg_path) - len(pkg) - 1:].replace('\\', '/')))
                         continue
                 for ti, path in members:
                     mf = tf.extractfile(ti)
+                    # Dirs won't return a file
                     if mf:
-                        with open(os.path.join(deps_dir, path), 'wb') as f:
+                        dst_path = os.path.join(deps_dir, path)
+                        dst_dir = os.path.dirname(dst_path)
+                        if not os.path.exists(dst_dir):
+                            os.makedirs(dst_dir)
+                        with open(dst_path, 'wb') as f:
                             f.write(mf.read())
-                    else:
-                        print('No file for %s' % ti.name)
             finally:
                 if tf:
                     tf.close()
