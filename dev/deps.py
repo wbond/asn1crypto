@@ -361,7 +361,10 @@ def _bootstrap_pip(tmpdir):
         to pass to pip.
     """
 
-    os.environ['PIP_NO_WARN_SCRIPT_LOCATION'] = b'0' if sys.version_info < (3,) else '0'
+    if sys.version_info < (3,):
+        os.environ[b'PIP_NO_WARN_SCRIPT_LOCATION'] = b'0'
+    else:
+        os.environ['PIP_NO_WARN_SCRIPT_LOCATION'] = '0'
 
     print("Downloading cacert.pem from curl")
     certs_path = _download('https://curl.haxx.se/ca/cacert.pem', tmpdir)
