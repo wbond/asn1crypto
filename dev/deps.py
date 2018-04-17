@@ -361,16 +361,16 @@ def _bootstrap_pip(tmpdir):
         to pass to pip.
     """
 
+    print("Downloading cacert.pem from curl")
+    certs_path = _download('https://curl.haxx.se/ca/cacert.pem', tmpdir)
+
     try:
         import pip
 
         print('Upgrading pip')
         _pip_main(pip, ['install', '-q', '--upgrade', 'pip'])
-        certs_path = None
 
     except ImportError:
-        print("Downloading cacert.pem from curl")
-        certs_path = _download('https://curl.haxx.se/ca/cacert.pem', tmpdir)
 
         if sys.platform == 'darwin' and sys.version_info[0:2] == (2, 6):
             path = _download('https://github.com/wbond/pip-9.0.3-py26-mac/releases/download/9.0.3%2Bsecuretransport.py26/pip-9.0.3-py2.py3-none-any.whl', tmpdir)
