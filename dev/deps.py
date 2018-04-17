@@ -111,6 +111,16 @@ def _tuple_from_ver(version_string):
     return tuple(map(int, version_string.split('.')))
 
 
+def _is_pip_10(pip_module):
+    return tuple(map(int, pip_module.__version__.split('.'))) >= (10, )
+
+
+def _pip_main(pip_module, args):
+    if _is_pip_10(pip_module):
+        return pip_module._internal.main(args)
+    return pip_module.main(args)
+
+
 def _install_requirements(_pip, tmpdir, path):
     """
     Installs requirements without using Python to download, since
@@ -129,12 +139,10 @@ def _install_requirements(_pip, tmpdir, path):
 
     import pip
 
-    pip_version_info = tuple(map(int, pip.__version__.split('.')))
-
-    if pip_version_info < (10, ):
-        from pip.pep425tags import get_supported
-    else:
+    if _is_pip_10(pip):
         from pip._internal.pep425tags import get_supported
+    else:
+        from pip.pep425tags import get_supported
 
     valid_tags = tuple(get_supported()) + (('py2.py3', 'none', 'any'),)
 
@@ -313,7 +321,8 @@ def _get_pip_main(download_dir):
     orig_sys_exit = sys.exit
     orig_sys_argv = sys.argv
     sys.exit = lambda c: None
-    sys.argv = ['get-pip.py', '--user', '-q']
+    # Don't put pip in arv[0] or Windows builds get fussy
+    sys.argv = ['get.py', '--user', '-q']
 
     get_pip_module.main()
 
@@ -356,7 +365,7 @@ def _bootstrap_pip(tmpdir):
         import pip
 
         print('Upgrading pip')
-        pip.main(['install', '-q', '--upgrade', 'pip'])
+        _pip_main(pip, ['install', '-q', '--upgrade', 'pip'])
         certs_path = None
 
     except ImportError:
@@ -368,7 +377,7 @@ def _bootstrap_pip(tmpdir):
             sys.path.insert(1, os.path.join(tmpdir, 'pip-9.0.3-py2.py3-none-any.whl'))
 
             import pip
-            pip.main(['--cert', certs_path, 'install', '--user', 'setuptools<37', 'wheel<0.30'])
+            _pip_main(pip, ['--cert', certs_path, 'install', '--user', 'setuptools<37', 'wheel<0.30'])
         else:
             print("Downloading get-pip.py")
             if sys.version_info[0:2] == (3, 2):
@@ -392,6 +401,6 @@ def _bootstrap_pip(tmpdir):
                 if arg == 'install':
                     new_args.append('--user')
             args = new_args
-        pip.main(base_args + args)
+        _pip_main(pip, base_args + args)
 
     return _pip
