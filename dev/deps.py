@@ -361,6 +361,8 @@ def _bootstrap_pip(tmpdir):
         to pass to pip.
     """
 
+    os.environ['PIP_NO_WARN_SCRIPT_LOCATION'] = '0'
+
     print("Downloading cacert.pem from curl")
     certs_path = _download('https://curl.haxx.se/ca/cacert.pem', tmpdir)
 
@@ -392,8 +394,6 @@ def _bootstrap_pip(tmpdir):
 
     def _pip(args):
         base_args = ['--disable-pip-version-check']
-        if sys.platform == 'win32' and _is_pip_10(pip):
-            base_args.append('--no-warn-script-location')
         if certs_path:
             base_args += ['--cert', certs_path]
         if sys.platform == 'darwin' and sys.version_info[0:2] in [(2, 6), (2, 7)]:
