@@ -393,8 +393,11 @@ def _stage_requirements(deps_dir, path):
                         continue
                 for ti, path in members:
                     mf = tf.extractfile(ti)
-                    with open(os.path.join(deps_dir, path), 'wb') as f:
-                        f.write(mf.read())
+                    if mf:
+                        with open(os.path.join(deps_dir, path), 'wb') as f:
+                            f.write(mf.read())
+                    else:
+                        print('No file for %s' % ti.name)
             finally:
                 if tf:
                     tf.close()
