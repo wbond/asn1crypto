@@ -127,7 +127,15 @@ def _install_requirements(_pip, tmpdir, path):
         A unicoe filesystem path to a requirements file
     """
 
-    from pip.pep425tags import get_supported
+    import pip
+
+    pip_version_info = tuple(map(int, pip.__version__.split('.')))
+
+    if pip_version_info < (10, ):
+        from pip.pep425tags import get_supported
+    else:
+        from pip._internal.pep425tags import get_supported
+
     valid_tags = tuple(get_supported()) + (('py2.py3', 'none', 'any'),)
 
     packages = _parse_requires(path)
