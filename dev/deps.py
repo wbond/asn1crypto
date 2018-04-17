@@ -371,25 +371,16 @@ def _stage_requirements(deps_dir, path):
                 # configparser, which are the two we currently require that
                 # do not provide wheels
                 base_path = pkg + '-' + version + '/'
-                base_py_path = base_path + pkg + '.py'
                 base_pkg_path = base_path + pkg + '/'
                 src_path = base_path + 'src/'
-                src_py_path = src_path + pkg + '.py'
-                src_pkg_path = src_path + pkg + '/'
                 members = []
                 for ti in tf.getmembers():
                     fn = ti.name
-                    if fn == src_py_path or fn == base_py_path:
-                        members.append((ti, pkg + '.py'))
-                        continue
-                    if fn == src_py_path.replace('/', '\\') or fn == base_py_path.replace('/', '\\'):
-                        members.append((ti, pkg + '.py'))
-                        continue
                     if fn.startswith(base_pkg_path) or fn.startswith(base_pkg_path.replace('/', '\\')):
                         members.append((ti, fn[len(base_pkg_path) - len(pkg) - 1:].replace('\\', '/')))
                         continue
-                    if fn.startswith(src_pkg_path) or fn.startswith(src_pkg_path.replace('/', '\\')):
-                        members.append((ti, fn[len(src_pkg_path) - len(pkg) - 1:].replace('\\', '/')))
+                    if fn.startswith(src_path) or fn.startswith(src_path.replace('/', '\\')):
+                        members.append((ti, fn[len(src_path):].replace('\\', '/')))
                         continue
                 for ti, path in members:
                     mf = tf.extractfile(ti)
