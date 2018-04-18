@@ -387,6 +387,27 @@ def _extract_package(deps_dir, pkg_path):
         A unicode string of the path to the archive
     """
 
+    if pkg_path.endswith('.exe'):
+        try:
+            zf = None
+            zf = zipfile.ZipFile(pkg_path, 'r')
+            # Exes have a PLATLIB folder containing everything we want
+            for zi in zf.infolist():
+                if not zi.filename.startswith('PLATLIB'):
+                    continue
+                data = _extract_info(zf, zi)
+                if data is not None:
+                    dst_path = os.path.join(deps_dir, zi.filename[8:])
+                    dst_dir = os.path.dirname(dst_path)
+                    if not os.path.exists(dst_dir):
+                        os.makedirs(dst_dir)
+                    with open(dst_path, 'wb') as f:
+                        f.write(data)
+        finally:
+            if zf:
+                zf.close()
+        return
+
     if pkg_path.endswith('.whl'):
         try:
             zf = None
@@ -460,6 +481,12 @@ def _stage_requirements(deps_dir, path):
 
     valid_tags = _pep425tags()
 
+    exe_suffix = None
+    if sys.platform == 'win32' and _pep425_implementation() == 'cp':
+        win_arch = 'win32' if sys.maxsize == 2147483647 else 'win-amd64'
+        version_info = sys.version_info
+        exe_suffix = '.%s-py%d.%d.exe' % (win_arch, version_info[0], version_info[1])
+
     packages = _parse_requires(path)
     for p in packages:
         pkg = p['pkg']
@@ -492,7 +519,10 @@ def _stage_requirements(deps_dir, path):
             whl = None
             tar_bz2 = None
             tar_gz = None
+            exe = None
             for download in pkg_info['releases'][version]:
+                if exe_suffix and download['url'].endswith(exe_suffix):
+                    exe = download['url']
                 if download['url'].endswith('.whl'):
                     parts = os.path.basename(download['url']).split('-')
                     tag_impl = parts[-3]
@@ -510,7 +540,9 @@ def _stage_requirements(deps_dir, path):
                     whl = wheels[tag]
                     break
 
-            if whl:
+            if exe_suffix and exe:
+                url = exe
+            elif whl:
                 url = whl
             elif tar_bz2:
                 url = tar_bz2
@@ -542,6 +574,7 @@ def _parse_requires(path):
     """
 
     python_version = '.'.join(map(str_cls, sys.version_info[0:2]))
+    sys_platform = sys.platform
 
     packages = []
 
@@ -558,6 +591,7 @@ def _parse_requires(path):
             package, cond = line.split(';', 1)
             package = package.strip()
             cond = cond.strip()
+            cond = cond.replace('sys_platform', repr(sys_platform))
             cond = cond.replace('python_version', repr(python_version))
             if not eval(cond):
                 continue
