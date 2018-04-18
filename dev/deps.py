@@ -26,16 +26,6 @@ else:
     str_cls = str
 
 
-OTHER_PACKAGES = [
-    'https://github.com/wbond/oscrypto.git',
-    'https://github.com/wbond/certbuilder.git',
-    'https://github.com/wbond/certvalidator.git',
-    'https://github.com/wbond/crlbuilder.git',
-    'https://github.com/wbond/csrbuilder.git',
-    'https://github.com/wbond/ocspbuilder.git',
-]
-
-
 def run():
     """
     Installs required development dependencies. Uses git to checkout other
@@ -50,21 +40,23 @@ def run():
         shutil.rmtree(deps_dir, ignore_errors=True)
     os.mkdir(deps_dir)
 
+    with open(os.path.join(os.path.dirname(__file__), 'modularcrypto.json'), 'rb') as f:
+        modularcrypto_packages = json.loads(f.read().decode('utf-8'))
+
     try:
         print("Staging ci dependencies")
         _stage_requirements(deps_dir, os.path.join(package_root, 'requires', 'ci'))
 
-        if OTHER_PACKAGES:
-            print("Checking out modularcrypto packages for coverage")
-            for pkg_url in OTHER_PACKAGES:
-                pkg_name = os.path.basename(pkg_url).replace('.git', '')
-                pkg_dir = os.path.join(build_root, pkg_name)
-                if os.path.exists(pkg_dir):
-                    print("%s is already present" % pkg_name)
-                    continue
-                print("Cloning %s" % pkg_url)
-                _execute(['git', 'clone', pkg_url], build_root)
-            print()
+        print("Checking out modularcrypto packages for coverage")
+        for pkg_name in modularcrypto_packages:
+            pkg_url = 'https://github.com/wbond/%s.git' % pkg_name
+            pkg_dir = os.path.join(build_root, pkg_name)
+            if os.path.exists(pkg_dir):
+                print("%s is already present" % pkg_name)
+                continue
+            print("Cloning %s" % pkg_url)
+            _execute(['git', 'clone', pkg_url], build_root)
+        print()
 
     except (Exception):
         if os.path.exists(deps_dir):

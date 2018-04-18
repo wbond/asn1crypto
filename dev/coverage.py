@@ -36,6 +36,9 @@ def run(ci=False):
         A bool - if the tests ran successfully
     """
 
+    with open(os.path.join(os.path.dirname(__file__), 'modularcrypto.json'), 'rb') as f:
+        modularcrypto_packages = json.loads(f.read().decode('utf-8'))
+
     xml_report_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'coverage.xml'))
     if os.path.exists(xml_report_path):
         os.unlink(xml_report_path)
@@ -50,7 +53,7 @@ def run(ci=False):
     if ci:
         suite = unittest.TestSuite()
         loader = unittest.TestLoader()
-        for package_name in ['oscrypto', 'certbuilder', 'certvalidator', 'crlbuilder', 'csrbuild', 'ocspbuilder']:
+        for package_name in modularcrypto_packages:
             for test_class in _load_package_tests(package_name):
                 suite.addTest(loader.loadTestsFromTestCase(test_class))
 
