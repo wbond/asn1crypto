@@ -33,6 +33,13 @@ def run():
     """
 
     print('Python ' + sys.version.replace('\n', ''))
+
+    try:
+        import oscrypto
+        print('\noscrypto backend: %s' % oscrypto.backend())
+    except (ImportError):
+        pass
+
     if run_lint:
         print('')
         lint_result = run_lint()
