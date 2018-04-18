@@ -3,6 +3,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import sys
 import os
+import imp
 
 package_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 build_root = os.path.abspath(os.path.join(package_root, '..'))
@@ -35,7 +36,9 @@ def run():
     print('Python ' + sys.version.replace('\n', ''))
 
     try:
-        import oscrypto
+        oscrypto_tests_module_info = imp.find_module('tests', [os.path.join(build_root, 'oscrypto')])
+        oscrypto_tests = imp.load_module('oscrypto.tests', *oscrypto_tests_module_info)
+        oscrypto = oscrypto_tests.local_oscrypto()
         print('\noscrypto backend: %s' % oscrypto.backend())
     except (ImportError):
         pass
