@@ -218,8 +218,11 @@ Existing releases can be found at https://pypi.python.org/pypi/asn1crypto.
 
 ## CI Tasks
 
-A task named `deps` exists to ensure a modern version of `pip` is installed,
-along with all necessary testing dependencies.
+A task named `deps` exists to download and stage all necessary testing
+dependencies. On posix platforms, `curl` is used for downloads and on Windows
+PowerShell with `Net.WebClient` is used. This configuration sidesteps issues
+related to getting pip to work properly and messing with `site-packages` for
+the version of Python being used.
 
 The `ci` task runs `lint` (if flake8 is available for the version of Python) and
 `coverage` (or `tests` if coverage is not available for the version of Python).
