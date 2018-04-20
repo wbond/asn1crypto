@@ -5,8 +5,9 @@ import sys
 import os
 import imp
 
-package_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-build_root = os.path.abspath(os.path.join(package_root, '..'))
+from . import build_root
+
+
 deps_dir = os.path.join(build_root, 'modularcrypto-deps')
 if os.path.exists(deps_dir):
     sys.path.insert(1, deps_dir)

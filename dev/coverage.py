@@ -11,6 +11,8 @@ import platform as _plat
 import subprocess
 from fnmatch import fnmatch
 
+from . import package_name, package_root, other_packages
+
 if sys.version_info < (3,):
     str_cls = unicode  # noqa
     from urllib2 import Request, urlopen, HTTPError
@@ -36,14 +38,11 @@ def run(ci=False):
         A bool - if the tests ran successfully
     """
 
-    with open(os.path.join(os.path.dirname(__file__), 'modularcrypto.json'), 'rb') as f:
-        modularcrypto_packages = json.loads(f.read().decode('utf-8'))
-
-    xml_report_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'coverage.xml'))
+    xml_report_path = os.path.join(package_root, 'coverage.xml')
     if os.path.exists(xml_report_path):
         os.unlink(xml_report_path)
 
-    cov = coverage.Coverage(include='oscrypto/*.py')
+    cov = coverage.Coverage(include='%s/*.py' % package_name)
     cov.start()
 
     from .tests import run as run_tests
@@ -53,8 +52,8 @@ def run(ci=False):
     if ci:
         suite = unittest.TestSuite()
         loader = unittest.TestLoader()
-        for package_name in modularcrypto_packages:
-            for test_class in _load_package_tests(package_name):
+        for other_package in other_packages:
+            for test_class in _load_package_tests(other_package):
                 suite.addTest(loader.loadTestsFromTestCase(test_class))
 
         if suite.countTestCases() > 0:
@@ -159,7 +158,7 @@ def _codecov_submit():
         else:
             root = os.getcwd()
     else:
-        root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        root = package_root
         if not os.path.exists(os.path.join(root, '.git')):
             print('git repository not found, not submitting coverage data')
             return

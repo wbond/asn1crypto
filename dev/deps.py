@@ -10,6 +10,7 @@ import json
 import tarfile
 import zipfile
 
+from . import package_root, build_root, other_packages
 from ._pep425 import _pep425tags, _pep425_implementation
 
 if sys.version_info < (3,):
@@ -24,27 +25,21 @@ def run():
     modularcrypto repos for more accurate coverage data.
     """
 
-    package_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    build_root = os.path.abspath(os.path.join(package_root, '..'))
-
     deps_dir = os.path.join(build_root, 'modularcrypto-deps')
     if os.path.exists(deps_dir):
         shutil.rmtree(deps_dir, ignore_errors=True)
     os.mkdir(deps_dir)
-
-    with open(os.path.join(os.path.dirname(__file__), 'modularcrypto.json'), 'rb') as f:
-        modularcrypto_packages = json.loads(f.read().decode('utf-8'))
 
     try:
         print("Staging ci dependencies")
         _stage_requirements(deps_dir, os.path.join(package_root, 'requires', 'ci'))
 
         print("Checking out modularcrypto packages for coverage")
-        for pkg_name in modularcrypto_packages:
-            pkg_url = 'https://github.com/wbond/%s.git' % pkg_name
-            pkg_dir = os.path.join(build_root, pkg_name)
+        for other_package in other_packages:
+            pkg_url = 'https://github.com/wbond/%s.git' % other_package
+            pkg_dir = os.path.join(build_root, other_package)
             if os.path.exists(pkg_dir):
-                print("%s is already present" % pkg_name)
+                print("%s is already present" % other_package)
                 continue
             print("Cloning %s" % pkg_url)
             _execute(['git', 'clone', pkg_url], build_root)
