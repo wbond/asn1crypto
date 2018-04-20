@@ -128,11 +128,11 @@ def _codecov_submit():
             'branch': os.getenv('APPVEYOR_REPO_BRANCH'),
             'build': os.getenv('APPVEYOR_JOB_ID'),
             'pr': os.getenv('APPVEYOR_PULL_REQUEST_NUMBER'),
-            'job': '/'.join(
+            'job': '/'.join((
                 os.getenv('APPVEYOR_ACCOUNT_NAME'),
                 os.getenv('APPVEYOR_PROJECT_SLUG'),
                 os.getenv('APPVEYOR_BUILD_VERSION')
-            ),
+            )),
             'tag': os.getenv('APPVEYOR_REPO_TAG_NAME'),
             'slug': os.getenv('APPVEYOR_REPO_NAME'),
             'commit': os.getenv('APPVEYOR_REPO_COMMIT'),
