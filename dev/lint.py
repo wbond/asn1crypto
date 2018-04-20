@@ -20,7 +20,7 @@ def run():
         A bool - if flake8 did not find any errors
     """
 
-    print('Running flake8')
+    print('Running flake8 %s' % flake8.__version__)
 
     flake8_style = get_style_guide(config_file=os.path.join(package_root, 'tox.ini'))
 
