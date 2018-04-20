@@ -27,11 +27,12 @@ def run():
     flake8_style = get_style_guide(config_file=config_file)
 
     paths = []
-    for root, _, filenames in os.walk('asn1crypto'):
-        for filename in filenames:
-            if not filename.endswith('.py'):
-                continue
-            paths.append(os.path.join(root, filename))
+    for _dir in ['asn1crypto', 'dev', 'tests']:
+        for root, _, filenames in os.walk(_dir):
+            for filename in filenames:
+                if not filename.endswith('.py'):
+                    continue
+                paths.append(os.path.join(root, filename))
     report = flake8_style.check_files(paths)
     success = report.total_errors == 0
     if success:

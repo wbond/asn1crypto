@@ -7,7 +7,7 @@ import zlib
 import sys
 from datetime import datetime
 
-from asn1crypto import cms, util, core
+from asn1crypto import cms, util
 from ._unittest_compat import patch
 
 patch()

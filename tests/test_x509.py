@@ -1857,7 +1857,7 @@ class X509Tests(unittest.TestCase):
                 b'\x80\x0f20170918151736Z\x81\x0f20180101041421Z'
             ),
         )
-    
+
     @data('private_key_usage_period_value_info')
     def private_key_usage_period_value(self, relative_path, private_key_usage_period_value):
         cert = self._load_cert(relative_path)

@@ -144,6 +144,7 @@ class MyOids(core.ObjectIdentifier):
         '4.5.6': 'def',
     }
 
+
 class ApplicationTaggedInteger(core.Integer):
     # This class attribute may be a 2-element tuple of integers,
     # or a tuple of 2-element tuple of integers. The first form
@@ -643,7 +644,8 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(a._bytes, a.copy()._bytes)
 
     def test_indefinite_length_octet_string_2(self):
-        data = b'$\x80\x04\r\x8d\xff\xf0\x98\x076\xaf\x93nB:\xcf\xcc\x04\x15\x92w\xf7\xf0\xe4y\xff\xc7\xdc3\xb2\xd0={\x1a\x18mDr\xaaI\x00\x00'
+        data = b'$\x80\x04\r\x8d\xff\xf0\x98\x076\xaf\x93nB:\xcf\xcc\x04\x15' \
+            b'\x92w\xf7\xf0\xe4y\xff\xc7\xdc3\xb2\xd0={\x1a\x18mDr\xaaI\x00\x00'
         a = core.OctetString.load(data)
         self.assertEqual(
             b'\x8d\xff\xf0\x98\x076\xaf\x93nB:\xcf\xcc\x92w\xf7\xf0\xe4y\xff\xc7\xdc3\xb2\xd0={\x1a\x18mDr\xaaI',

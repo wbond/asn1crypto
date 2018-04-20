@@ -12,15 +12,15 @@ import subprocess
 from fnmatch import fnmatch
 
 if sys.version_info < (3,):
-    str_cls = unicode
-    from urllib2 import Request, urlopen, URLError, HTTPError
+    str_cls = unicode  # noqa
+    from urllib2 import Request, urlopen, HTTPError
     from urllib import urlencode
     import cgi
     from io import open
 else:
     str_cls = str
     from urllib.request import Request, urlopen
-    from urllib.error import URLError, HTTPError
+    from urllib.error import HTTPError
     from urllib.parse import urlencode
 
 
@@ -43,7 +43,7 @@ def run(ci=False):
     if os.path.exists(xml_report_path):
         os.unlink(xml_report_path)
 
-    cov = coverage.Coverage(include='asn1crypto/*.py')
+    cov = coverage.Coverage(include='oscrypto/*.py')
     cov.start()
 
     from .tests import run as run_tests
@@ -120,13 +120,20 @@ def _codecov_submit():
 
     elif os.getenv('CI') == 'True' and os.getenv('APPVEYOR') == 'True':
         # http://www.appveyor.com/docs/environment-variables
-        build_url = 'https://ci.appveyor.com/project/%s/build/%s' % (os.getenv('APPVEYOR_REPO_NAME'), os.getenv('APPVEYOR_BUILD_VERSION'))
+        build_url = 'https://ci.appveyor.com/project/%s/build/%s' % (
+            os.getenv('APPVEYOR_REPO_NAME'),
+            os.getenv('APPVEYOR_BUILD_VERSION')
+        )
         query = {
             'service': "appveyor",
             'branch': os.getenv('APPVEYOR_REPO_BRANCH'),
             'build': os.getenv('APPVEYOR_JOB_ID'),
             'pr': os.getenv('APPVEYOR_PULL_REQUEST_NUMBER'),
-            'job': '/'.join((os.getenv('APPVEYOR_ACCOUNT_NAME'), os.getenv('APPVEYOR_PROJECT_SLUG'), os.getenv('APPVEYOR_BUILD_VERSION'))),
+            'job': '/'.join(
+                os.getenv('APPVEYOR_ACCOUNT_NAME'),
+                os.getenv('APPVEYOR_PROJECT_SLUG'),
+                os.getenv('APPVEYOR_BUILD_VERSION')
+            ),
             'tag': os.getenv('APPVEYOR_REPO_TAG_NAME'),
             'slug': os.getenv('APPVEYOR_REPO_NAME'),
             'commit': os.getenv('APPVEYOR_REPO_COMMIT'),
@@ -201,7 +208,7 @@ def _codecov_submit():
     payload += '# path=coverage.xml\n'
     with open(os.path.join(root, 'coverage.xml'), 'r', encoding='utf-8') as f:
         payload += f.read() + '\n'
-    payload +='<<<<<< EOF\n'
+    payload += '<<<<<< EOF\n'
 
     url = 'https://codecov.io/upload/v4'
     headers = {
@@ -225,7 +232,7 @@ def _codecov_submit():
     encoding = info[1] or 'utf-8'
     text = info[2].decode(encoding).strip()
     parts = text.split()
-    result, upload_url = parts[0], parts[1]
+    upload_url = parts[1]
 
     headers = {
         'Content-Type': 'text/plain',
@@ -234,7 +241,7 @@ def _codecov_submit():
     }
 
     print('Uploading coverage data to codecov.io S3 bucket')
-    put_info = _do_request(
+    _do_request(
         'PUT',
         upload_url,
         headers,
@@ -433,7 +440,7 @@ def _gitignore(root):
     return (dir_patterns, file_patterns)
 
 
-def _do_request(method, url, headers, data=None, query_params=None, timeout=30):
+def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
     """
     Performs an HTTP request
 

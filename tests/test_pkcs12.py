@@ -3,11 +3,9 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import unittest
 import os
-import zlib
 import sys
-from datetime import datetime
 
-from asn1crypto import pkcs12, util, core
+from asn1crypto import pkcs12
 from ._unittest_compat import patch
 
 patch()
@@ -103,7 +101,6 @@ class PKCS12Tests(unittest.TestCase):
             ['testcertificate'],
             attr_0['values'].native
         )
-
 
         attr_1 = certbag['bag_attributes'][1]
 
