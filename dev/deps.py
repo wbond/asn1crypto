@@ -1,24 +1,16 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import imp
 import os
 import subprocess
 import sys
-import warnings
 import shutil
-import tempfile
-import platform
-import site
 import re
 import json
 import tarfile
 import zipfile
-import platform
-import ctypes
 
-if sys.version_info >= (2, 7):
-    import sysconfig
+from ._pep425 import _pep425tags, _pep425_implementation
 
 if sys.version_info < (3,):
     str_cls = unicode  # noqa
@@ -65,6 +57,7 @@ def run():
 
     return True
 
+
 def _download(url, dest):
     """
     Downloads a URL to a directory
@@ -84,7 +77,6 @@ def _download(url, dest):
     dest_path = os.path.join(dest, filename)
 
     if sys.platform == 'win32':
-        system_root = os.environ.get('SystemRoot')
         powershell_exe = os.path.join('system32\\WindowsPowerShell\\v1.0\\powershell.exe')
         code = "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;"
         code += "(New-Object Net.WebClient).DownloadFile('%s', '%s');" % (url, dest_path)
@@ -106,167 +98,6 @@ def _tuple_from_ver(version_string):
     """
 
     return tuple(map(int, version_string.split('.')))
-
-
-def _pep425_implementation():
-    """
-    :return:
-        A 2 character unicode string of the implementation - 'cp' for cpython
-        or 'pp' for PyPy
-    """
-
-    return 'pp' if hasattr(sys, 'pypy_version_info') else 'cp'
-
-
-def _pep425_version():
-    """
-    :return:
-        A tuple of integers representing the Python version number
-    """
-
-    if hasattr(sys, 'pypy_version_info'):
-        return (sys.version_info[0], sys.pypy_version_info.major,
-                sys.pypy_version_info.minor)
-    else:
-        return (sys.version_info[0], sys.version_info[1])
-
-
-def _pep425_supports_manylinux():
-    """
-    :return:
-        A boolean indicating if the machine can use manylinux1 packages
-    """
-
-    try:
-        import _manylinux
-        return bool(_manylinux.manylinux1_compatible)
-    except (ImportError, AttributeError):
-        pass
-
-    # Check for glibc 2.5
-    try:
-        proc = ctypes.CDLL(None)
-        gnu_get_libc_version = proc.gnu_get_libc_version
-        gnu_get_libc_version.restype = ctypes.c_char_p
-
-        ver = gnu_get_libc_version()
-        if not isinstance(ver, str_cls):
-            ver = ver.decode('ascii')
-        match = re.match(r'(\d+)\.(\d+)', ver)
-        return match and match.group(1) == '2' and int(match.group(2)) >= 5
-
-    except (AttributeError):
-        return False
-
-
-def _pep425_get_abi():
-    """
-    :return:
-        A unicode string of the system abi. Will be something like: "cp27m",
-        "cp33m", etc.
-    """
-
-    try:
-        soabi = sysconfig.get_config_var('SOABI')
-        if soabi:
-            if soabi.startswith('cpython-'):
-                return 'cp%s' % soabi.split('-')[1]
-            return soabi.replace('.', '_').replace('-', '_')
-    except (IOError, NameError):
-        pass
-
-    impl = _pep425_implementation()
-    suffix = ''
-    if impl == 'cp':
-        suffix += 'm'
-    if sys.maxunicode == 0x10ffff and sys.version_info < (3, 3):
-        suffix += 'u'
-    return '%s%s%s' % (impl, ''.join(map(str_cls, _pep425_version())), suffix)
-
-
-def _pep425tags():
-    """
-    :return:
-        A list of 3-element tuples with unicode strings or None:
-         [0] implementation tag - cp33, pp27, cp26, py2, py2.py3
-         [1] abi tag - cp26m, None
-         [2] arch tag - linux_x86_64, macosx_10_10_x85_64, etc
-    """
-
-    tags = []
-
-    versions = []
-    version_info = _pep425_version()
-    major = version_info[:-1]
-    for minor in range(version_info[-1], -1, -1):
-        versions.append(''.join(map(str, major + (minor,))))
-
-    impl = _pep425_implementation()
-
-    abis = []
-    abi = _pep425_get_abi()
-    if abi:
-        abis.append(abi)
-    abi3s = set()
-    for suffix in imp.get_suffixes():
-        if suffix[0].startswith('.abi'):
-            abi3s.add(suffix[0].split('.', 2)[1])
-    abis.extend(sorted(list(abi3s)))
-    abis.append('none')
-
-    if sys.platform == 'darwin':
-        plat_ver = platform.mac_ver()
-        ver_parts = plat_ver[0].split('.')
-        minor = int(ver_parts[1])
-        arch = plat_ver[2]
-        if sys.maxsize == 2147483647:
-            arch = 'i386'
-        arches = []
-        while minor > 5:
-            arches.append('macosx_10_%s_%s' % (minor, arch))
-            arches.append('macosx_10_%s_intel' % (minor,))
-            arches.append('macosx_10_%s_universal' % (minor,))
-            minor -= 1
-    else:
-        if sys.platform == 'win32':
-            if 'amd64' in sys.version.lower():
-                arches = ['win_amd64']
-            arches = [sys.platform]
-        elif hasattr(os, 'uname'):
-            (plat, _, _, _, machine) = os.uname()
-            plat = plat.lower().replace('/', '')
-            machine.replace(' ', '_').replace('/', '_')
-            if plat == 'linux' and sys.maxsize == 2147483647:
-                machine = 'i686'
-            arch = '%s_%s' % (plat, machine)
-            if _pep425_supports_manylinux():
-                arches = [arch.replace('linux', 'manylinux1'), arch]
-            else:
-                arches = [arch]
-
-    for abi in abis:
-        for arch in arches:
-            tags.append(('%s%s' % (impl, versions[0]), abi, arch))
-
-    for version in versions[1:]:
-        for abi in abi3s:
-            for arch in arches:
-                tags.append(('%s%s' % (impl, version), abi, arch))
-
-    for arch in arches:
-        tags.append(('py%s' % (versions[0][0]), 'none', arch))
-
-    tags.append(('%s%s' % (impl, versions[0]), 'none', 'any'))
-    tags.append(('%s%s' % (impl, versions[0][0]), 'none', 'any'))
-
-    for i, version in enumerate(versions):
-        tags.append(('py%s' % (version,), 'none', 'any'))
-        if i == 0:
-            tags.append(('py%s' % (version[0]), 'none', 'any'))
-
-    tags.append(('py2.py3', 'none', 'any'))
-
-    return tags
 
 
 def _open_archive(path):
@@ -597,7 +428,6 @@ def _parse_requires(path):
                 continue
         else:
             package = line.strip()
-
 
         if re.match(r'^\s*-r\s*', package):
             sub_req_file = re.sub(r'^\s*-r\s*', '', package)
