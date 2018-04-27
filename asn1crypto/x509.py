@@ -1697,6 +1697,8 @@ class KeyPurposeId(ObjectIdentifier):
         '1.3.6.1.5.5.7.3.29': 'cmc_archive',
         # https://tools.ietf.org/html/draft-ietf-sidr-bgpsec-pki-profiles-15#page-6
         '1.3.6.1.5.5.7.3.30': 'bgpspec_router',
+        # https://www.ietf.org/proceedings/44/I-D/draft-ietf-ipsec-pki-req-01.txt
+        '1.3.6.1.5.5.8.2.2': 'ike_intermediate',
         # https://msdn.microsoft.com/en-us/library/windows/desktop/aa378132(v=vs.85).aspx
         # and https://support.microsoft.com/en-us/kb/287547
         '1.3.6.1.4.1.311.10.3.1': 'microsoft_trust_list_signing',
