@@ -2580,6 +2580,22 @@ class Certificate(Sequence):
         return self._issuer_serial
 
     @property
+    def not_valid_after(self):
+        """
+        :return:
+            A datetime of latest time when the certificate is still valid
+        """
+        return self['tbs_certificate']['validity']['not_after'].native
+
+    @property
+    def not_valid_before(self):
+        """
+        :return:
+            A datetime of the earliest time when the certificate is valid
+        """
+        return self['tbs_certificate']['validity']['not_before'].native
+
+    @property
     def authority_key_identifier(self):
         """
         :return:
