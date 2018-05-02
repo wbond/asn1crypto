@@ -3390,3 +3390,9 @@ class X509Tests(unittest.TestCase):
             '{}',
             x509.DirectoryString.load(b'\x14\x02{}').native
         )
+
+    def test_validity_after_before(self):
+        cert = self._load_cert("androguard.pem")
+
+        self.assertEqual(cert.not_valid_after, datetime(2118, 1, 28, 12, 27, 39, tzinfo=util.timezone.utc))
+        self.assertEqual(cert.not_valid_before, datetime(2018, 2, 21, 12, 27, 39, tzinfo=util.timezone.utc))
