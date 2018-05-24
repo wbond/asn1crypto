@@ -3527,7 +3527,10 @@ class Sequence(Asn1Value):
         is_any = issubclass(field_spec, Any)
 
         if issubclass(value_spec, Choice):
-            if not isinstance(value, Asn1Value):
+            is_asn1value = isinstance(value, Asn1Value)
+            is_tuple = isinstance(value, tuple) and len(value) == 2
+            is_dict = isinstance(value, dict) and len(value) == 1
+            if not is_asn1value and not is_tuple and not is_dict:
                 raise ValueError(unwrap(
                     '''
                     Can not set a native python value to %s, which has the
@@ -3536,6 +3539,8 @@ class Sequence(Asn1Value):
                     field_name,
                     type_name(value_spec)
                 ))
+            if is_tuple or is_dict:
+                value = value_spec(value)
             if not isinstance(value, value_spec):
                 wrapper = value_spec()
                 wrapper.validate(value.class_, value.tag, value.contents)

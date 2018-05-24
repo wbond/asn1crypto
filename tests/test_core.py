@@ -783,3 +783,13 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(42, inum.native)
 
         self.assertEqual(der, ato.dump(force=True))
+
+    def test_sequence_choice_field_by_tuple(self):
+        val = ExplicitField({'field': ('one', 32)})
+        self.assertEqual('one', val['field'].name)
+        self.assertEqual(32, val['field'].chosen.native)
+
+    def test_sequence_choice_field_by_dict(self):
+        val = ExplicitField({'field': {'two': 32}})
+        self.assertEqual('two', val['field'].name)
+        self.assertEqual(32, val['field'].chosen.native)
