@@ -18,7 +18,7 @@ A fast, pure Python library for parsing and serializing ASN.1 structures.
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/wbond/asn1crypto?branch=master&svg=true)](https://ci.appveyor.com/project/wbond/asn1crypto)
 [![CircleCI](https://circleci.com/gh/wbond/asn1crypto.svg?style=shield)](https://circleci.com/gh/wbond/asn1crypto)
 [![Codecov](https://codecov.io/gh/wbond/asn1crypto/branch/master/graph/badge.svg)](https://codecov.io/gh/wbond/asn1crypto)
-[![PyPI](https://img.shields.io/pypi/v/asn1crypto.svg)](https://pypi.python.org/pypi/asn1crypto)
+[![PyPI](https://img.shields.io/pypi/v/asn1crypto.svg)](https://pypi.org/project/asn1crypto/)
 
 ## Features
 
@@ -44,8 +44,8 @@ a bunch of ASN.1 structures for use with various common cryptography standards:
 
 ## Why Another Python ASN.1 Library?
 
-Python has long had the [pyasn1](https://pypi.python.org/pypi/pyasn1) and
-[pyasn1_modules](https://pypi.python.org/pypi/pyasn1-modules) available for
+Python has long had the [pyasn1](https://pypi.org/project/pyasn1/) and
+[pyasn1_modules](https://pypi.org/project/pyasn1-modules/) available for
 parsing and serializing ASN.1 structures. While the project does include a
 comprehensive set of tools for parsing and serializing, the performance of the
 library can be very poor, especially when dealing with bit fields and parsing
@@ -214,7 +214,7 @@ Releases are created by:
    python run.py release
    ```
 
-Existing releases can be found at https://pypi.python.org/pypi/asn1crypto.
+Existing releases can be found at https://pypi.org/project/asn1crypto/.
 
 ## CI Tasks
 
