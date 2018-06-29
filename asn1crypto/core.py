@@ -5083,9 +5083,11 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                     ))
                 info, _ = _parse(to_parse, len(to_parse))
                 parsed_class, parsed_method, parsed_tag, parsed_header, to_parse, parsed_trailer = info
-                explicit_header += parsed_header
-                explicit_trailer = parsed_trailer + explicit_trailer
 
+                if not isinstance(value, Choice):
+                    explicit_header += parsed_header
+                    explicit_trailer = parsed_trailer + explicit_trailer
+                
             value = _build(*info, spec=spec, spec_params={'no_explicit': True})
             value._header = explicit_header
             value._trailer = explicit_trailer

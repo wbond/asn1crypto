@@ -191,6 +191,43 @@ class ApplicationTaggedOuter(core.Sequence):
     ]
 
 
+class SpcPeImageFlags(core.BitString):
+    _map = {
+        0: "includeResources",
+        1: "includeDebugInfo",
+        2: "includeImportAddressTable",
+    }
+
+
+class SpcSerializedObject(core.Sequence):
+    _fields = [
+        ("classId", core.OctetString),
+        ("serializedData", core.OctetString),
+    ]
+
+
+class SpcString(core.Choice):
+    _alternatives = [
+        ("unicode", core.BMPString, {"implicit": 0}),
+        ("ascii", core.IA5String, {"implicit": 1}),
+    ]
+
+
+class SpcLink(core.Choice):
+    _alternatives = [
+        ("url", core.IA5String, {"implicit": 0}),
+        ("moniker", SpcSerializedObject, {"implicit": 1}),
+        ("file", SpcString, {"explicit": 2})
+    ]
+
+
+class SpcPeImageData(core.Sequence):
+    _fields = [
+        ("flags", SpcPeImageFlags, {"default": "includeResources"}),
+        ("file", SpcLink, {"explicit": 0})
+    ]
+
+
 @data_decorator
 class CoreTests(unittest.TestCase):
 
@@ -798,3 +835,46 @@ class CoreTests(unittest.TestCase):
         val = ExplicitField({'field': {'two': 32}})
         self.assertEqual('two', val['field'].name)
         self.assertEqual(32, val['field'].chosen.native)
+
+    def test_nested_explicit_tag_choice(self):
+        # Explicitly tagged values have a _header that contains
+        # the explicit tag and the header for the contained value.
+        # When parsing nested Choice values, it is necessary to not pull
+        # up the next Choice value's header, since Choice values
+        # themselves don't have their own header and it will result in
+        # duplication.
+        data = b'\x30\x09\x03\x01\x00\xa0\x04\xa2\x02\x80\x00'
+        image_data = SpcPeImageData.load(data, strict=True)
+        self.assertEqual(data[2:5],  image_data['flags'].dump())
+        self.assertEqual(data[5:11],  image_data['file'].dump())
+        self.assertEqual(data[5:7],  image_data['file']._header)
+        self.assertEqual(data[7:11],  image_data['file'].chosen.dump())
+        self.assertEqual(data[7:9],  image_data['file'].chosen._header)
+        self.assertEqual(data[9:11],  image_data['file'].chosen.chosen.dump())
+        self.assertEqual(data[9:11],  image_data['file'].chosen.chosen._header)
+
+        image_data2 = SpcPeImageData.load(data, strict=True)
+        self.assertEqual(data[2:5],  image_data2['flags'].dump(True))
+        self.assertEqual(data[5:11],  image_data2['file'].dump(True))
+        self.assertEqual(data[5:7],  image_data2['file']._header)
+        self.assertEqual(data[7:11],  image_data2['file'].chosen.dump(True))
+        self.assertEqual(data[7:9],  image_data2['file'].chosen._header)
+        self.assertEqual(data[9:11],  image_data2['file'].chosen.chosen.dump(True))
+        self.assertEqual(data[9:11],  image_data2['file'].chosen.chosen._header)
+
+    def test_choice_dump_header_native(self):
+        s = SpcString({'unicode': 'test'})
+        self.assertEqual(b'\x80\x08\x00t\x00e\x00s\x00t', s.dump())
+        self.assertEqual(b'', s._header)
+        self.assertEqual('test', s.native)
+        self.assertEqual(b'\x80\x08', s.chosen._header)
+        self.assertEqual('test', s.chosen.native)
+
+        l = SpcLink('file', {'unicode': 'test'})
+        self.assertEqual(b'\xa2\x0a\x80\x08\x00t\x00e\x00s\x00t', l.dump())
+        self.assertEqual(b'', l._header)
+        self.assertEqual('test', l.native)
+        self.assertEqual(b'\xa2\x0a', l.chosen._header)
+        self.assertEqual('test', l.chosen.native)
+        self.assertEqual(b'\x80\x08', l.chosen.chosen._header)
+        self.assertEqual('test', l.chosen.chosen.native
