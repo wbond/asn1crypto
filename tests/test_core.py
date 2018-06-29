@@ -294,6 +294,11 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(der_bytes, bs.dump())
         self.assertEqual(native, core.BitString.load(der_bytes).native)
 
+    def test_bit_string_load_dump(self):
+        bs = core.BitString.load(b'\x03\x01\x00')
+        self.assertEqual(tuple(), bs.native)
+        self.assertEqual(b'\x03\x01\x00', bs.dump(True))
+
     def test_cast(self):
         a = core.OctetBitString(b'\x00\x01\x02\x03')
         self.assertEqual(b'\x00\x01\x02\x03', a.native)

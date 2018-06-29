@@ -2144,8 +2144,8 @@ class BitString(Constructable, Castable, Primitive, ValueMap, object):
         """
 
         extra_bits = int_from_bytes(self.contents[0:1])
-        bit_string = '{0:b}'.format(int_from_bytes(self.contents[1:]))
         byte_len = len(self.contents[1:])
+        bit_string = '' if byte_len == 0 else '{0:b}'.format(int_from_bytes(self.contents[1:]))
         bit_len = len(bit_string)
 
         # Left-pad the bit string to a byte multiple to ensure we didn't
