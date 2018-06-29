@@ -3392,7 +3392,7 @@ class X509Tests(unittest.TestCase):
         )
 
     def test_validity_after_before(self):
-        cert = self._load_cert("androguard.pem")
+        cert = self._load_cert("androguard-signing-key.pkcs7.pem")
 
         self.assertEqual(cert.not_valid_after, datetime(2118, 1, 28, 12, 27, 39, tzinfo=util.timezone.utc))
         self.assertEqual(cert.not_valid_before, datetime(2018, 2, 21, 12, 27, 39, tzinfo=util.timezone.utc))
