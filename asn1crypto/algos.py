@@ -572,6 +572,7 @@ class EncryptionAlgorithmId(ObjectIdentifier):
         '1.3.14.3.2.7': 'des',
         '1.2.840.113549.3.7': 'tripledes_3key',
         '1.2.840.113549.3.2': 'rc2',
+        '1.2.840.113549.3.4': 'pkcs12_sha1_rc4_128',
         '1.2.840.113549.3.9': 'rc5',
         # From http://csrc.nist.gov/groups/ST/crypto_apps_infra/csor/algorithms.html#AES
         '2.16.840.1.101.3.4.1.1': 'aes128_ecb',
