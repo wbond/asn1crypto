@@ -54,23 +54,20 @@ import copy
 import math
 import re
 import sys
+from collections import OrderedDict
+from io import BytesIO
 
 from . import _teletex_codec
 from ._errors import unwrap
-from ._ordereddict import OrderedDict
 from ._types import type_name, str_cls, byte_cls, int_types, chr_cls
 from .parser import _parse, _dump_header
 from .util import int_to_bytes, int_from_bytes, timezone, extended_datetime
 
 if sys.version_info <= (3,):
-    from cStringIO import StringIO as BytesIO
-
     range = xrange  # noqa
     _PY2 = True
 
 else:
-    from io import BytesIO
-
     _PY2 = False
 
 

@@ -4,7 +4,6 @@
 Miscellaneous data helpers, including functions for converting integers to and
 from bytes and UTC timezone. Exports the following items:
 
- - OrderedDict()
  - int_from_bytes()
  - int_to_bytes()
  - timezone.utc
@@ -22,7 +21,6 @@ from datetime import datetime, date, time
 
 from ._errors import unwrap
 from ._iri import iri_to_uri, uri_to_iri  # noqa
-from ._ordereddict import OrderedDict  # noqa
 from ._types import type_name
 
 if sys.platform == 'win32':

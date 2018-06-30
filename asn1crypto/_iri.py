@@ -54,19 +54,7 @@ def iri_to_uri(value):
         ))
 
     scheme = None
-    # Python 2.6 doesn't split properly is the URL doesn't start with http:// or https://
-    if sys.version_info < (2, 7) and not value.startswith('http://') and not value.startswith('https://'):
-        real_prefix = None
-        prefix_match = re.match('^[^:]*://', value)
-        if prefix_match:
-            real_prefix = prefix_match.group(0)
-            value = 'http://' + value[len(real_prefix):]
-        parsed = urlsplit(value)
-        if real_prefix:
-            value = real_prefix + value[7:]
-            scheme = _urlquote(real_prefix[:-3])
-    else:
-        parsed = urlsplit(value)
+    parsed = urlsplit(value)
 
     if scheme is None:
         scheme = _urlquote(parsed.scheme)

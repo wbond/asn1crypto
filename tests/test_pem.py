@@ -4,8 +4,9 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import unittest
 import sys
 import os
+from collections import OrderedDict
 
-from asn1crypto import pem, util
+from asn1crypto import pem
 
 from .unittest_data import data_decorator, data
 from ._unittest_compat import patch
@@ -99,7 +100,7 @@ class PEMTests(unittest.TestCase):
                 'keys/test-aes128.key',
                 'keys/test-aes128-der.key',
                 'RSA PRIVATE KEY',
-                util.OrderedDict([
+                OrderedDict([
                     ('Proc-Type', '4,ENCRYPTED'),
                     ('DEK-Info', 'AES-128-CBC,01F6EE04516C912788B11BD7377626C2')
                 ])
