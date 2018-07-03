@@ -377,7 +377,7 @@ class IPAddress(OctetString):
     @property
     def native(self):
         """
-        The a native Python datatype representation of this value
+        The native Python datatype representation of this value
 
         :return:
             A unicode string or None
