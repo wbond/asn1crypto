@@ -6,6 +6,7 @@ import os
 import zlib
 import sys
 from datetime import datetime
+from collections import OrderedDict
 
 from asn1crypto import cms, util
 from ._unittest_compat import patch
@@ -258,10 +259,10 @@ class CMSTests(unittest.TestCase):
             recipient['version'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 (
                     'issuer',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('country_name', 'US'),
                         ('state_or_province_name', 'Massachusetts'),
                         ('locality_name', 'Newbury'),
@@ -356,7 +357,7 @@ class CMSTests(unittest.TestCase):
         )
         self.assertEqual(
             [
-                util.OrderedDict([
+                OrderedDict([
                     ('algorithm', 'sha256'),
                     ('parameters', None),
                 ])
@@ -394,10 +395,10 @@ class CMSTests(unittest.TestCase):
             signer['version'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 (
                     'issuer',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('country_name', 'US'),
                         ('state_or_province_name', 'Massachusetts'),
                         ('locality_name', 'Newbury'),
@@ -415,7 +416,7 @@ class CMSTests(unittest.TestCase):
             signer['sid'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('algorithm', 'sha256'),
                 ('parameters', None),
             ]),
@@ -455,7 +456,7 @@ class CMSTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('algorithm', 'rsassa_pkcs1v15'),
                 ('parameters', None),
             ]),
@@ -494,7 +495,7 @@ class CMSTests(unittest.TestCase):
         )
         self.assertEqual(
             [
-                util.OrderedDict([
+                OrderedDict([
                     ('algorithm', 'sha256'),
                     ('parameters', None),
                 ])
@@ -532,10 +533,10 @@ class CMSTests(unittest.TestCase):
             signer['version'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 (
                     'issuer',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('country_name', 'US'),
                         ('state_or_province_name', 'Massachusetts'),
                         ('locality_name', 'Newbury'),
@@ -553,7 +554,7 @@ class CMSTests(unittest.TestCase):
             signer['sid'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('algorithm', 'sha256'),
                 ('parameters', None),
             ]),
@@ -593,7 +594,7 @@ class CMSTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('algorithm', 'rsassa_pkcs1v15'),
                 ('parameters', None),
             ]),
@@ -619,7 +620,7 @@ class CMSTests(unittest.TestCase):
         with open(os.path.join(fixtures_dir, 'cms-signed-indefinite-length.der'), 'rb') as f:
             info = cms.ContentInfo.load(f.read())
             signed_data = info['content']
-            self.assertIsInstance(signed_data.native, util.OrderedDict)
+            self.assertIsInstance(signed_data.native, OrderedDict)
 
     def test_parse_content_info_cms_signed_digested_data(self):
         with open(os.path.join(fixtures_dir, 'cms-signed-digested.der'), 'rb') as f:
@@ -638,7 +639,7 @@ class CMSTests(unittest.TestCase):
         )
         self.assertEqual(
             [
-                util.OrderedDict([
+                OrderedDict([
                     ('algorithm', 'sha256'),
                     ('parameters', None),
                 ])
@@ -650,18 +651,18 @@ class CMSTests(unittest.TestCase):
             encap_content_info['content_type'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('version', 'v0'),
                 (
                     'digest_algorithm',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('algorithm', 'sha1'),
                         ('parameters', None),
                     ])
                 ),
                 (
                     'encap_content_info',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('content_type', 'data'),
                         ('content', b'This is the message to encapsulate in PKCS#7/CMS\n'),
                     ])
@@ -696,10 +697,10 @@ class CMSTests(unittest.TestCase):
             signer['version'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 (
                     'issuer',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('country_name', 'US'),
                         ('state_or_province_name', 'Massachusetts'),
                         ('locality_name', 'Newbury'),
@@ -717,7 +718,7 @@ class CMSTests(unittest.TestCase):
             signer['sid'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('algorithm', 'sha256'),
                 ('parameters', None),
             ]),
@@ -732,7 +733,7 @@ class CMSTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('algorithm', 'rsassa_pkcs1v15'),
                 ('parameters', None),
             ]),
@@ -771,7 +772,7 @@ class CMSTests(unittest.TestCase):
         )
         self.assertEqual(
             [
-                util.OrderedDict([
+                OrderedDict([
                     ('algorithm', 'sha256'),
                     ('parameters', None),
                 ])
@@ -783,18 +784,18 @@ class CMSTests(unittest.TestCase):
             encap_content_info['content_type'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('version', 'v0'),
                 (
                     'digest_algorithm',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('algorithm', 'sha1'),
                         ('parameters', None),
                     ])
                 ),
                 (
                     'encap_content_info',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('content_type', 'data'),
                         ('content', b'This is the message to encapsulate in PKCS#7/CMS\n'),
                     ])
@@ -829,10 +830,10 @@ class CMSTests(unittest.TestCase):
             signer['version'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 (
                     'issuer',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('country_name', 'US'),
                         ('state_or_province_name', 'Massachusetts'),
                         ('locality_name', 'Newbury'),
@@ -850,7 +851,7 @@ class CMSTests(unittest.TestCase):
             signer['sid'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('algorithm', 'sha256'),
                 ('parameters', None),
             ]),
@@ -865,7 +866,7 @@ class CMSTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('algorithm', 'rsassa_pkcs1v15'),
                 ('parameters', None),
             ]),
@@ -891,7 +892,7 @@ class CMSTests(unittest.TestCase):
         with open(os.path.join(fixtures_dir, 'mozilla-generated-by-openssl.pkcs7.der'), 'rb') as f:
             content = cms.ContentInfo.load(f.read())['content']
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('organizational_unit_name', 'Testing'),
                 ('country_name', 'US'),
                 ('locality_name', 'Mountain View'),

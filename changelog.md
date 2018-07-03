@@ -1,5 +1,10 @@
 # changelog
 
+## UNRELEASED
+
+ - Backwards compatibility break: Removed suport for end of life Pythons 2.6,
+   3.2, and 3.3.
+
 ## 0.24.0
 
  - `x509.Certificate().self_signed` will no longer return `"yes"` under any

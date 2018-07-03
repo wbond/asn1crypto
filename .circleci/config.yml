@@ -2,15 +2,13 @@ version: 2
 jobs:
   build:
     macos:
-      # This is the last version using macOS 10.12, which has Python 2.6
+      # This is the last version using macOS 10.12
       xcode: 9.2.0
     steps:
       - run: brew update
       - run: brew upgrade python
       - run: brew install pypy
       - checkout
-      - run: /usr/bin/python2.6 run.py deps
-      - run: /usr/bin/python2.6 run.py ci
       - run: /usr/bin/python2.7 run.py deps
       - run: /usr/bin/python2.7 run.py ci
       - run:

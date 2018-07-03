@@ -23,10 +23,10 @@ import socket
 import stringprep
 import sys
 import unicodedata
+from collections import OrderedDict
 
 from ._errors import unwrap
 from ._iri import iri_to_uri, uri_to_iri
-from ._ordereddict import OrderedDict
 from ._types import type_name, str_cls, bytes_to_list
 from .algos import AlgorithmIdentifier, AnyAlgorithmIdentifier, DigestAlgorithm, SignedDigestAlgorithm
 from .core import (

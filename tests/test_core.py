@@ -4,6 +4,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import unittest
 import os
 from datetime import datetime
+from collections import OrderedDict
 
 from asn1crypto import core, util
 
@@ -525,7 +526,7 @@ class CoreTests(unittest.TestCase):
         val = ExplicitFieldDefault.load(b'\x30\x0f\x03\x02\x06@\xa2\x090\x07\x06\x02*\x03\x02\x01\x01')
         self.assertEqual(set(['one']), val['bits'].native)
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('id', '1.2.3'),
                 ('value', 1)
             ]),
@@ -815,7 +816,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(((1, 20), (2, 12)), ati.explicit)
         self.assertEqual(0, ati.class_)
         self.assertEqual(16, ati.tag)
-        self.assertEqual(util.OrderedDict([('innernumber', 42)]), ati.native)
+        self.assertEqual(OrderedDict([('innernumber', 42)]), ati.native)
 
         inum = ati['innernumber']
         self.assertEqual(((2, 21),), inum.explicit)

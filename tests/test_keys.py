@@ -3,8 +3,9 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import unittest
 import os
+from collections import OrderedDict
 
-from asn1crypto import keys, core, util
+from asn1crypto import keys, core
 
 from .unittest_data import data_decorator, data
 from ._unittest_compat import patch
@@ -149,18 +150,18 @@ class KeysTests(unittest.TestCase):
             key['private_key'].native
         )
         self.assertEqual(
-            util.OrderedDict([
+            OrderedDict([
                 ('version', 'ecdpVer1'),
                 (
                     'field_id',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('field_type', 'prime_field'),
                         ('parameters', 115792089210356248762697446949407573530086143415290314195533631308867097853951)
                     ])
                 ),
                 (
                     'curve',
-                    util.OrderedDict([
+                    OrderedDict([
                         (
                             'a',
                             b'\xFF\xFF\xFF\xFF\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00'
@@ -498,18 +499,18 @@ class KeysTests(unittest.TestCase):
 
         curve = (
             'specified',
-            util.OrderedDict([
+            OrderedDict([
                 ('version', 'ecdpVer1'),
                 (
                     'field_id',
-                    util.OrderedDict([
+                    OrderedDict([
                         ('field_type', 'prime_field'),
                         ('parameters', 115792089210356248762697446949407573530086143415290314195533631308867097853951)
                     ])
                 ),
                 (
                     'curve',
-                    util.OrderedDict([
+                    OrderedDict([
                         (
                             'a',
                             b'\xFF\xFF\xFF\xFF\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00'
