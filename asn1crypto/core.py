@@ -3706,6 +3706,7 @@ class Sequence(Asn1Value):
                 index += 1
 
         except (ValueError, TypeError) as e:
+            self.children = None
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
             raise e
@@ -3777,6 +3778,7 @@ class Sequence(Asn1Value):
                         name = str_cls(index)
                     self._native[name] = child.native
             except (ValueError, TypeError) as e:
+                self._native = None
                 args = e.args[1:]
                 e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
                 raise e
@@ -4209,6 +4211,7 @@ class SequenceOf(Asn1Value):
                         child._parse_children(recurse=True)
                 self.children.append(child)
         except (ValueError, TypeError) as e:
+            self.children = None
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
             raise e

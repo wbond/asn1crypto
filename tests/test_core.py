@@ -878,3 +878,17 @@ class CoreTests(unittest.TestCase):
         self.assertEqual('test', link.chosen.native)
         self.assertEqual(b'\x80\x08', link.chosen.chosen._header)
         self.assertEqual('test', link.chosen.chosen.native)
+
+    def test_parse_broken_sequence_fields_repeatedly(self):
+        s = Seq.load(b'\x30\x06\x88\x00\x00\x00\x00\x00')
+        with self.assertRaises(ValueError):
+            s.native
+        with self.assertRaises(ValueError):
+            s.native
+
+    def test_parse_broken_sequenceof_children_repeatedly(self):
+        s = SequenceOfInts.load(b'\x30\x06\x88\x00\x00\x00\x00\x00')
+        with self.assertRaises(ValueError):
+            s.native
+        with self.assertRaises(ValueError):
+            s.native
