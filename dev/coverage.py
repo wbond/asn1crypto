@@ -1,12 +1,15 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import cgi
+import codecs
 import coverage
 import imp
 import json
 import os
 import unittest
 import sys
+import tempfile
 import platform as _plat
 import subprocess
 from fnmatch import fnmatch
@@ -15,14 +18,12 @@ from . import package_name, package_root, other_packages
 
 if sys.version_info < (3,):
     str_cls = unicode  # noqa
-    from urllib2 import Request, urlopen, HTTPError
+    from urllib2 import URLError
     from urllib import urlencode
-    import cgi
     from io import open
 else:
     str_cls = str
-    from urllib.request import Request, urlopen
-    from urllib.error import HTTPError
+    from urllib.error import URLError
     from urllib.parse import urlencode
 
 
@@ -444,7 +445,7 @@ def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
     Performs an HTTP request
 
     :param method:
-        A unicode string of 'GET', 'POST', 'PUT', or 'DELETE'
+        A unicode string of 'POST' or 'PUT'
 
     :param url;
         A unicode string of the URL to request
@@ -473,9 +474,6 @@ def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
     if query_params:
         url += '?' + urlencode(query_params).replace('+', '%20')
 
-    request = Request(url)
-    request.get_method = lambda: method
-
     if isinstance(data, dict):
         data_bytes = {}
         for key in data:
@@ -485,29 +483,107 @@ def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
     if isinstance(data, str_cls):
         raise TypeError('data must be a byte string')
 
-    for key in headers:
-        value = headers[key]
-        if sys.version_info < (3,):
-            key = key.encode('iso-8859-1')
-            value = value.encode('iso-8859-1')
-        request.add_header(key, value)
+    try:
+        tempfd, tempf_path = tempfile.mkstemp('-coverage')
+        os.write(tempfd, data or b'')
+        os.close(tempfd)
 
-    response = urlopen(request, data, timeout)
-    if sys.version_info < (3,):
-        status = response.getcode()
-        try:
-            content_type, params = cgi.parse_header(response.headers['Content-Type'].strip())
-            encoding = params.get('charset')
-        except (KeyError):
-            content_type = None
-            encoding = None
+        if sys.platform == 'win32':
+            powershell_exe = os.path.join('system32\\WindowsPowerShell\\v1.0\\powershell.exe')
+            code = "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12;"
+            code += "$wc = New-Object Net.WebClient;"
+            for key in headers:
+                code += "$wc.Headers.add('%s','%s');" % (key, headers[key])
+            code += "$out = $wc.UploadFile('%s', '%s', '%s');" % (url, method, tempf_path)
+            code += "[System.Text.Encoding]::GetEncoding('ISO-8859-1').GetString($wc.ResponseHeaders.ToByteArray())"
+
+            # To properly obtain bytes, we use BitConverter to get hex dash
+            # encoding (e.g. AE-09-3F) and they decode in python
+            code += " + [System.BitConverter]::ToString($out);"
+            stdout, stderr = _execute([powershell_exe, '-Command', code], os.getcwd())
+            if stdout[-2:] == b'\r\n' and b'\r\n\r\n' in stdout:
+                # An extra trailing crlf is added at the end by powershell
+                stdout = stdout[0:-2]
+                parts = stdout.split(b'\r\n\r\n', 1)
+                if len(parts) == 2:
+                    stdout = parts[0] + b'\r\n\r\n' + codecs.decode(parts[1].replace(b'-', b''), 'hex_codec')
+
+        else:
+            args = ['curl', '--request', method, '--location', '--silent', '--show-error', '--include']
+            for key in headers:
+                args.append('--header')
+                args.append("%s: %s" % (key, headers[key]))
+            args.append('--data-binary')
+            args.append('@%s' % tempf_path)
+            args.append(url)
+            stdout, stderr = _execute(args, os.getcwd())
+    finally:
+        if tempf_path and os.path.exists(tempf_path):
+            os.remove(tempf_path)
+
+    if len(stderr) > 0:
+        raise URLError("Error %sing %s:\n%s" % (method, url, stderr))
+
+    parts = stdout.split(b'\r\n\r\n', 1)
+    if len(parts) != 2:
+        raise URLError("Error %sing %s, response data malformed:\n%s" % (method, url, stdout))
+    header_block, body = parts
+
+    content_type_header = None
+    content_len_header = None
+    for hline in header_block.decode('iso-8859-1').splitlines():
+        hline_parts = hline.split(':', 1)
+        if len(hline_parts) != 2:
+            continue
+        name, val = hline_parts
+        name = name.strip().lower()
+        val = val.strip()
+        if name == 'content-type':
+            content_type_header = val
+        if name == 'content-length':
+            content_len_header = val
+
+    if content_type_header is None and content_len_header != '0':
+        raise URLError("Error %sing %s, no content-type header:\n%s" % (method, url, stdout))
+
+    if content_type_header is None:
+        content_type = 'text/plain'
+        encoding = 'utf-8'
     else:
-        status = response.status
-        content_type = response.info().get_content_type()
-        encoding = response.headers.get_content_charset()
-    if status != 200:
-        raise HTTPError('Unexpected HTTP %d response' % status)
-    return (content_type, encoding, response.read())
+        content_type, params = cgi.parse_header(content_type_header)
+        encoding = params.get('charset')
+
+    return (content_type, encoding, body)
+
+
+def _execute(params, cwd):
+    """
+    Executes a subprocess
+
+    :param params:
+        A list of the executable and arguments to pass to it
+
+    :param cwd:
+        The working directory to execute the command in
+
+    :return:
+        A 2-element tuple of (stdout, stderr)
+    """
+
+    proc = subprocess.Popen(
+        params,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=cwd
+    )
+    stdout, stderr = proc.communicate()
+    code = proc.wait()
+    if code != 0:
+        e = OSError('subprocess exit code was non-zero')
+        e.stdout = stdout
+        e.stderr = stderr
+        raise e
+    return (stdout, stderr)
 
 
 if __name__ == '__main__':
