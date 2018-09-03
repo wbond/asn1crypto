@@ -509,7 +509,17 @@ def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
                     stdout = parts[0] + b'\r\n\r\n' + codecs.decode(parts[1].replace(b'-', b''), 'hex_codec')
 
         else:
-            args = ['curl', '--request', method, '--location', '--silent', '--show-error', '--include']
+            args = [
+                'curl',
+                '--request',
+                method,
+                '--location',
+                '--silent',
+                '--show-error',
+                '--include',
+                # Prevent curl from asking for an HTTP "100 Continue" response
+                '--header', 'Expect:'
+            ]
             for key in headers:
                 args.append('--header')
                 args.append("%s: %s" % (key, headers[key]))
