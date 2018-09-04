@@ -163,7 +163,7 @@ class URI(IA5String):
         if not isinstance(other, URI):
             return False
 
-        return iri_to_uri(self.native) == iri_to_uri(other.native)
+        return iri_to_uri(self.native, True) == iri_to_uri(other.native, True)
 
     def __unicode__(self):
         """
