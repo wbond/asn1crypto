@@ -479,7 +479,7 @@ def _execute(params, cwd):
     stdout, stderr = proc.communicate()
     code = proc.wait()
     if code != 0:
-        e = OSError('subprocess exit code was non-zero')
+        e = OSError('subprocess exit code for %r was %d: %s' % (params, code, stderr))
         e.stdout = stdout
         e.stderr = stderr
         raise e
