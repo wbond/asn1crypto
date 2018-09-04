@@ -17,3 +17,7 @@ other_packages = [
 
 package_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 build_root = os.path.abspath(os.path.join(package_root, '..'))
+
+md_source_map = {}
+
+definition_replacements = {}
