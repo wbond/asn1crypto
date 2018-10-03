@@ -1045,8 +1045,8 @@ class Choice(Asn1Value):
         :param name:
             The name of the alternative to be set - used with value.
             Alternatively this may be a dict with a single key being the name
-            and the value being the value, or a two-element tuple of the the
-            name and the value.
+            and the value being the value, or a two-element tuple of the name
+            and the value.
 
         :param value:
             The alternative value to set - used with name
@@ -4924,7 +4924,7 @@ def _build_id_tuple(params, spec):
         A 2-element integer tuple in the form (class_, tag)
     """
 
-    # Handle situations where the the spec is not known at setup time
+    # Handle situations where the spec is not known at setup time
     if spec is None:
         return (None, None)
 
