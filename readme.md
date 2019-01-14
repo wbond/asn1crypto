@@ -94,7 +94,7 @@ under 8 seconds. With *pyasn1*, using definitions from *pyasn1-modules*, the
 same parsing took over 4,100 seconds.
 
 For smaller structures the performance difference can range from a few times
-faster to an order of magnitude of more.
+faster to an order of magnitude or more.
 
 ## Related Crypto Libraries
 
