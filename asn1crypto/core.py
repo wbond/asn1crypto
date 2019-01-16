@@ -123,7 +123,7 @@ def load(encoded_data, strict=False):
      - 5: Null
      - 6: ObjectIdentifier
      - 7: ObjectDescriptor
-     - 8: InstanceOf
+     - 8: InstanceOf, External
      - 9: Real
      - 10: Enumerated
      - 11: EmbeddedPdv
@@ -584,10 +584,13 @@ class Asn1Value(object):
         elif hasattr(self, 'chosen'):
             self.chosen.debug(nest_level + 2)
         else:
-            if _PY2 and isinstance(self.native, byte_cls):
-                print('%s    Native: b%s' % (prefix, repr(self.native)))
+            if hasattr(self, 'native'):
+                if _PY2 and isinstance(self.native, byte_cls):
+                    print('%s    Native: b%s' % (prefix, repr(self.native)))
+                else:
+                    print('%s    Native: %s' % (prefix, self.native))
             else:
-                print('%s    Native: %s' % (prefix, self.native))
+                print('%s    No Native representation available' % (prefix,))
 
     def dump(self, force=False):
         """
@@ -617,7 +620,6 @@ class Asn1Value(object):
             self._trailer = b''
 
         return self._header + contents
-
 
 class ValueMap():
     """
@@ -999,6 +1001,10 @@ class Choice(Asn1Value):
     # A dict that maps alternative names to an index in _alternatives
     _name_map = None
 
+    # A dict with keys being the name of a field and the value being a unicode
+    # string of the method name on self to call to get the spec for that field
+    _spec_callbacks = None
+
     @classmethod
     def load(cls, encoded_data, strict=False, **kwargs):
         """
@@ -1110,6 +1116,9 @@ class Choice(Asn1Value):
                 self._choice = self._name_map[name]
                 _, spec, params = self._alternatives[self._choice]
 
+                if self._spec_callbacks and self.name in self._spec_callbacks:
+                    spec = self._spec_callbacks[name]()
+
                 if not isinstance(value, spec):
                     value = spec(value, **params)
                 else:
@@ -1144,6 +1153,9 @@ class Choice(Asn1Value):
 
         try:
             _, spec, params = self._alternatives[self._choice]
+
+            if self._spec_callbacks and self.name in self._spec_callbacks:
+                spec = self._spec_callbacks[self.name](self)
             self._parsed, _ = _parse_build(self.contents, spec=spec, spec_params=params)
         except (ValueError, TypeError) as e:
             args = e.args[1:]
@@ -1167,7 +1179,6 @@ class Choice(Asn1Value):
         :return:
             The .native value from the contained value object
         """
-
         return self.chosen.native
 
     def validate(self, class_, tag, contents):
@@ -2952,7 +2963,6 @@ class InstanceOf(Primitive):
 
     tag = 8
 
-
 class Real(Primitive):
     """
     Represents a real number from ASN.1 - no Python implementation
@@ -3212,7 +3222,6 @@ class Sequence(Asn1Value):
         """
         Builds a child object if the child has only been parsed into a tuple so far
         """
-
         child = self.children[index]
         if child.__class__ == tuple:
             child = self.children[index] = _build(*child)
@@ -3469,7 +3478,6 @@ class Sequence(Asn1Value):
         name, field_spec, field_params = self._fields[index]
         value_spec = field_spec
         spec_override = None
-
         if self._spec_callbacks is not None and name in self._spec_callbacks:
             callback = self._spec_callbacks[name]
             spec_override = callback(self)
@@ -4953,7 +4961,6 @@ def _build_id_tuple(params, spec):
 
     return (required_class, required_tag)
 
-
 _UNIVERSAL_SPECS = {
     1: Boolean,
     2: Integer,
@@ -5026,7 +5033,6 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
     :return:
         An object of the type spec, or if not specified, a child of Asn1Value
     """
-
     if spec_params is not None:
         _tag_type_to_explicit_implicit(spec_params)
 
@@ -5034,7 +5040,6 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
         return VOID
 
     header_set = False
-
     # If an explicit specification was passed in, make sure it matches
     if spec is not None:
         # If there is explicit tagging and contents, we have to split
@@ -5086,7 +5091,6 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                     ))
                 info, _ = _parse(to_parse, len(to_parse))
                 parsed_class, parsed_method, parsed_tag, parsed_header, to_parse, parsed_trailer = info
-
                 if not isinstance(value, Choice):
                     explicit_header += parsed_header
                     explicit_trailer = parsed_trailer + explicit_trailer
@@ -5102,7 +5106,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
             else:
                 value = spec(contents=contents)
 
-            if spec is Any:
+            if issubclass(spec, Any) or isinstance(spec, Any):
                 pass
 
             elif isinstance(value, Choice):
