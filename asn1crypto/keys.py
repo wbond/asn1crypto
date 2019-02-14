@@ -363,7 +363,9 @@ class NamedCurve(ObjectIdentifier):
         '1.2.840.10045.3.1.5': 'prime239v2',
         '1.2.840.10045.3.1.6': 'prime239v3',
         # https://tools.ietf.org/html/rfc5480#page-5
+        # http://www.secg.org/sec2-v2.pdf
         '1.3.132.0.1': 'sect163k1',
+        '1.3.132.0.10': 'secp256k1',
         '1.3.132.0.15': 'sect163r2',
         '1.2.840.10045.3.1.1': 'secp192r1',
         '1.3.132.0.33': 'secp224r1',
