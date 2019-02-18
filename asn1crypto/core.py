@@ -982,6 +982,10 @@ class Choice(Asn1Value):
     # The Asn1Value object for the chosen alternative
     _parsed = None
 
+    # Choice overrides .contents to be a property so that the code expecting
+    # the .contents attribute will get the .contents of the chosen alternative
+    _contents = None
+
     # A list of tuples in one of the following forms.
     #
     # Option 1, a unicode string field name and a value class
@@ -1122,6 +1126,27 @@ class Choice(Asn1Value):
             raise e
 
     @property
+    def contents(self):
+        """
+        :return:
+            A byte string of the DER-encoded contents of the chosen alternative
+        """
+
+        if self._parsed is not None:
+            return self._parsed.contents
+
+        return self._contents
+
+    @contents.setter
+    def contents(self, value):
+        """
+        :param value:
+            A byte string of the DER-encoded contents of the chosen alternative
+        """
+
+        self._contents = value
+
+    @property
     def name(self):
         """
         :return:
@@ -1144,7 +1169,7 @@ class Choice(Asn1Value):
 
         try:
             _, spec, params = self._alternatives[self._choice]
-            self._parsed, _ = _parse_build(self.contents, spec=spec, spec_params=params)
+            self._parsed, _ = _parse_build(self._contents, spec=spec, spec_params=params)
         except (ValueError, TypeError) as e:
             args = e.args[1:]
             e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
@@ -1271,13 +1296,13 @@ class Choice(Asn1Value):
             A byte string of the DER-encoded value
         """
 
-        self.contents = self.chosen.dump(force=force)
+        self._contents = self.chosen.dump(force=force)
         if self._header is None or force:
             self._header = b''
             if self.explicit is not None:
                 for class_, tag in self.explicit:
-                    self._header = _dump_header(class_, 1, tag, self._header + self.contents) + self._header
-        return self._header + self.contents
+                    self._header = _dump_header(class_, 1, tag, self._header + self._contents) + self._header
+        return self._header + self._contents
 
 
 class Concat(object):
@@ -3312,8 +3337,6 @@ class Sequence(Asn1Value):
         invalid_value = False
         if isinstance(new_value, Any):
             invalid_value = new_value.parsed is None
-        elif isinstance(new_value, Choice):
-            invalid_value = new_value.chosen.contents is None
         else:
             invalid_value = new_value.contents is None
 

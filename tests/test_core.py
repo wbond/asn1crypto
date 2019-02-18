@@ -100,6 +100,19 @@ class SeqChoiceOldApi(core.Choice):
     ]
 
 
+class ChoiceChoice(core.Choice):
+    _alternatives = [
+        ('num', NumChoice, {'explicit': 0}),
+        ('seq', SeqChoice, {'explicit': 1}),
+    ]
+
+
+class CCSeq(core.Sequence):
+    _fields = [
+        ('cc', ChoiceChoice)
+    ]
+
+
 class ExplicitField(core.Sequence):
     _fields = [
         ('field', NumChoice, {'tag_type': 'explicit', 'tag': 0}),
@@ -393,6 +406,14 @@ class CoreTests(unittest.TestCase):
             NumChoice.load(b'\xA0\x03\x02\x01\x00\x00', strict=True)
         with self.assertRaises(ValueError):
             NumChoiceOldApi.load(b'\xA0\x03\x02\x01\x00\x00', strict=True)
+
+    def test_sequece_choice_choice(self):
+        CCSeq({
+            'cc': ChoiceChoice(
+                'num',
+                NumChoice('one', core.Integer(0))
+            )
+        })
 
     def test_bit_string_item_access(self):
         named = core.BitString()
