@@ -3578,12 +3578,30 @@ class Sequence(Asn1Value):
                 new_value.parse(value_spec)
 
         elif (not specs_different or is_any) and not isinstance(value, value_spec):
+            if (not is_any or specs_different) and isinstance(value, Asn1Value):
+                raise TypeError(unwrap(
+                    '''
+                    %s value must be %s, not %s
+                    ''',
+                    field_name,
+                    type_name(value_spec),
+                    type_name(value)
+                ))
             new_value = value_spec(value, **field_params)
 
         else:
             if isinstance(value, value_spec):
                 new_value = value
             else:
+                if isinstance(value, Asn1Value):
+                    raise TypeError(unwrap(
+                        '''
+                        %s value must be %s, not %s
+                        ''',
+                        field_name,
+                        type_name(value_spec),
+                        type_name(value)
+                    ))
                 new_value = value_spec(value)
 
             # For when the field is OctetString or OctetBitString with embedded

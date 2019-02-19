@@ -56,6 +56,30 @@ class CopySeq(core.Sequence):
     ]
 
 
+class NestSeqAny(core.Sequence):
+    _fields = [
+        ('id', core.ObjectIdentifier),
+        ('value', core.Any),
+    ]
+
+    _oid_pair = ('id', 'value')
+    _oid_specs = {
+        '3.4.5': Seq,
+    }
+
+
+class NestSeqExplicit(core.Sequence):
+    _fields = [
+        ('id', core.ObjectIdentifier),
+        ('value', NamedBits),
+    ]
+
+    _oid_pair = ('id', 'value')
+    _oid_specs = {
+        '3.4.5': Seq,
+    }
+
+
 class Enum(core.Enumerated):
     _map = {
         0: 'a',
@@ -913,3 +937,31 @@ class CoreTests(unittest.TestCase):
             s.native
         with self.assertRaises(ValueError):
             s.native
+
+    def test_wrong_asn1value(self):
+        with self.assertRaises(TypeError):
+            Seq({
+                'id': core.Integer(1),
+                'value': 1
+            })
+
+    def test_wrong_asn1value2(self):
+        with self.assertRaises(TypeError):
+            CopySeq({
+                'name': core.UTF8String('Test'),
+                'pair': core.Integer(1)
+            })
+
+    def test_wrong_asn1value3(self):
+        with self.assertRaises(TypeError):
+            NestSeqAny({
+                'id': '3.4.5',
+                'value': core.Integer(1)
+            })
+
+    def test_wrong_asn1value4(self):
+        with self.assertRaises(TypeError):
+            NestSeqExplicit({
+                'id': '3.4.5',
+                'value': core.Integer(1)
+            })
