@@ -49,6 +49,7 @@ from .core import (
     SetOf,
 )
 from .util import int_from_bytes, int_to_bytes
+from asn1crypto.algos import RSASSAPSSParams
 
 
 class OtherPrimeInfo(Sequence):
@@ -934,6 +935,8 @@ class PublicKeyAlgorithmId(ObjectIdentifier):
         '1.2.840.113549.1.1.1': 'rsa',
         # https://tools.ietf.org/html/rfc3447#page-47
         '1.2.840.113549.1.1.7': 'rsaes_oaep',
+        # https://tools.ietf.org/html/rfc4055#page-8
+        '1.2.840.113549.1.1.10': 'rsassa_pss',
         # https://tools.ietf.org/html/rfc3279#page-18
         '1.2.840.10040.4.1': 'dsa',
         # https://tools.ietf.org/html/rfc3279#page-13
@@ -960,6 +963,7 @@ class PublicKeyAlgorithm(_ForceNullParameters, Sequence):
         'ec': ECDomainParameters,
         'dh': DomainParameters,
         'rsaes_oaep': RSAESOAEPParams,
+        'rsassa_pss': RSASSAPSSParams,
     }
 
 
@@ -979,6 +983,7 @@ class PublicKeyInfo(Sequence):
         return {
             'rsa': RSAPublicKey,
             'rsaes_oaep': RSAPublicKey,
+            'rsassa_pss': RSAPublicKey,
             'dsa': Integer,
             # We override the field spec with ECPoint so that users can easily
             # decompose the byte string into the constituent X and Y coords
