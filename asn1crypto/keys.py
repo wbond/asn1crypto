@@ -466,6 +466,8 @@ class PrivateKeyAlgorithmId(ObjectIdentifier):
     _map = {
         # https://tools.ietf.org/html/rfc3279#page-19
         '1.2.840.113549.1.1.1': 'rsa',
+        # https://tools.ietf.org/html/rfc4055#page-8
+        '1.2.840.113549.1.1.10': 'rsassa_pss',
         # https://tools.ietf.org/html/rfc3279#page-18
         '1.2.840.10040.4.1': 'dsa',
         # https://tools.ietf.org/html/rfc3279#page-13
@@ -488,6 +490,7 @@ class PrivateKeyAlgorithm(_ForceNullParameters, Sequence):
     _oid_specs = {
         'dsa': DSAParams,
         'ec': ECDomainParameters,
+        'rsassa_pss': RSASSAPSSParams,
     }
 
 
@@ -507,6 +510,7 @@ class PrivateKeyInfo(Sequence):
         algorithm = self['private_key_algorithm']['algorithm'].native
         return {
             'rsa': RSAPrivateKey,
+            'rsassa_pss': RSAPrivateKey,
             'dsa': Integer,
             'ec': ECPrivateKey,
         }[algorithm]
