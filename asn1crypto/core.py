@@ -2477,6 +2477,12 @@ class IntegerOctetString(Constructable, Castable, Primitive):
 
     tag = 4
 
+    # An explicit length in bytes the integer should be encoded to. This should
+    # generally not be used since DER defines a canonical encoding, however some
+    # use of this, such as when storing elliptic curve private keys, requires an
+    # exact number of bytes, even if the leading bytes are null.
+    _encoded_width = None
+
     def set(self, value):
         """
         Sets the value of the object
@@ -2498,7 +2504,7 @@ class IntegerOctetString(Constructable, Castable, Primitive):
             ))
 
         self._native = value
-        self.contents = int_to_bytes(value, signed=False)
+        self.contents = int_to_bytes(value, signed=False, width=self._encoded_width)
         self._header = None
         if self._indefinite:
             self._indefinite = False
@@ -2521,6 +2527,19 @@ class IntegerOctetString(Constructable, Castable, Primitive):
         if self._native is None:
             self._native = int_from_bytes(self._merge_chunks())
         return self._native
+
+    def set_encoded_width(self, width):
+        """
+        Set the explicit enoding width for the integer
+
+        :param width:
+            An integer byte width to encode the integer to
+        """
+
+        self._encoded_width = width
+        # Make sure the encoded value is up-to-date with the proper width
+        if self.contents is not None and len(self.contents) != width:
+            self.set(self.native)
 
 
 class ParsableOctetString(Constructable, Castable, Primitive):

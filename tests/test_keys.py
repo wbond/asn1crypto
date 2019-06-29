@@ -503,3 +503,79 @@ class KeysTests(unittest.TestCase):
             public_key = keys.PublicKeyInfo.load(f.read())
 
         self.assertEqual(curve, public_key.curve)
+
+    def test_named_curve_register(self):
+        keys.NamedCurve.register('customcurve', '1.2.3.4.5.6.7.8', 16)
+
+        k = keys.NamedCurve('customcurve')
+        self.assertEqual('customcurve', k.native)
+        self.assertEqual('1.2.3.4.5.6.7.8', k.dotted)
+
+        k = keys.ECPrivateKey({
+            'version': 1,
+            'private_key': 1,
+            'parameters': keys.ECDomainParameters(('named', 'customcurve')),
+        })
+
+        self.assertEqual('ecPrivkeyVer1', k['version'].native)
+        self.assertEqual(1, k['private_key'].native)
+        self.assertEqual('customcurve', k['parameters'].native)
+        self.assertEqual(
+            b'\x04\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01',
+            k['private_key'].dump()
+        )
+
+    def test_ec_private_key_width(self):
+        k = keys.ECPrivateKey({
+            'version': 1,
+            'private_key': 1,
+            'parameters': keys.ECDomainParameters(('named', 'secp256r1')),
+        })
+
+        self.assertEqual('ecPrivkeyVer1', k['version'].native)
+        self.assertEqual(1, k['private_key'].native)
+        self.assertEqual('secp256r1', k['parameters'].native)
+        self.assertEqual(
+            b'\x04\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01',
+            k['private_key'].dump()
+        )
+
+    def test_ec_private_key_width_dotted(self):
+        k = keys.ECPrivateKey({
+            'version': 1,
+            'private_key': 1,
+            'parameters': keys.ECDomainParameters(('named', '1.3.132.0.10')),
+        })
+
+        self.assertEqual('ecPrivkeyVer1', k['version'].native)
+        self.assertEqual(1, k['private_key'].native)
+        self.assertEqual('secp256k1', k['parameters'].native)
+        self.assertEqual(
+            b'\x04\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01',
+            k['private_key'].dump()
+        )
+
+    def test_ec_private_key_info_width(self):
+        pki = keys.PrivateKeyInfo({
+            'version': 0,
+            'private_key_algorithm': {
+                'algorithm': 'ec',
+                'parameters': ('named', 'secp256r1'),
+            },
+            'private_key': {
+                'version': 1,
+                'private_key': 1
+            }
+        })
+
+        k = pki['private_key'].parsed
+        self.assertEqual('ecPrivkeyVer1', k['version'].native)
+        self.assertEqual(1, k['private_key'].native)
+        self.assertEqual(None, k['parameters'].native)
+        self.assertEqual(
+            b'\x04\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+            b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01',
+            k['private_key'].dump()
+        )

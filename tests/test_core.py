@@ -1032,3 +1032,13 @@ class CoreTests(unittest.TestCase):
                 'id': '3.4.5',
                 'value': core.Integer(1)
             })
+
+    def test_integer_octet_string_encoded_width(self):
+        a = core.IntegerOctetString(1)
+        self.assertEqual(1, a.native)
+        self.assertEqual(b'\x04\x01\x01', a.dump())
+
+        b = core.IntegerOctetString(1)
+        b.set_encoded_width(4)
+        self.assertEqual(1, b.native)
+        self.assertEqual(b'\x04\x04\x00\x00\x00\x01', b.dump())

@@ -373,6 +373,74 @@ class NamedCurve(ObjectIdentifier):
         '1.3.132.0.39': 'sect571r1',
     }
 
+    _key_sizes = {
+        # Order values used to compute these sourced from
+        # http://cr.openjdk.java.net/~vinnie/7194075/webrev-3/src/share/classes/sun/security/ec/CurveDB.java.html
+        '1.2.840.10045.3.0.1': 21,
+        '1.2.840.10045.3.0.2': 21,
+        '1.2.840.10045.3.0.3': 21,
+        '1.2.840.10045.3.0.4': 21,
+        '1.2.840.10045.3.0.5': 24,
+        '1.2.840.10045.3.0.6': 24,
+        '1.2.840.10045.3.0.7': 24,
+        '1.2.840.10045.3.0.8': 24,
+        '1.2.840.10045.3.0.9': 24,
+        '1.2.840.10045.3.0.10': 25,
+        '1.2.840.10045.3.0.11': 30,
+        '1.2.840.10045.3.0.12': 30,
+        '1.2.840.10045.3.0.13': 30,
+        '1.2.840.10045.3.0.14': 30,
+        '1.2.840.10045.3.0.15': 30,
+        '1.2.840.10045.3.0.16': 33,
+        '1.2.840.10045.3.0.17': 37,
+        '1.2.840.10045.3.0.18': 45,
+        '1.2.840.10045.3.0.19': 45,
+        '1.2.840.10045.3.0.20': 53,
+        '1.2.840.10045.3.1.2': 24,
+        '1.2.840.10045.3.1.3': 24,
+        '1.2.840.10045.3.1.4': 30,
+        '1.2.840.10045.3.1.5': 30,
+        '1.2.840.10045.3.1.6': 30,
+        # Order values used to compute these sourced from
+        # http://www.secg.org/SEC2-Ver-1.0.pdf
+        '1.3.132.0.1': 21,
+        '1.3.132.0.10': 32,
+        '1.3.132.0.15': 21,
+        '1.2.840.10045.3.1.1': 24,
+        '1.3.132.0.33': 28,
+        '1.3.132.0.26': 29,
+        '1.2.840.10045.3.1.7': 32,
+        '1.3.132.0.27': 29,
+        '1.3.132.0.16': 36,
+        '1.3.132.0.17': 36,
+        '1.3.132.0.34': 48,
+        '1.3.132.0.36': 51,
+        '1.3.132.0.37': 51,
+        '1.3.132.0.35': 66,
+        '1.3.132.0.38': 72,
+        '1.3.132.0.39': 72,
+    }
+
+    @classmethod
+    def register(cls, name, oid, key_size):
+        """
+        Registers a new named elliptic curve that is not included in the
+        default list of named curves
+
+        :param name:
+            A unicode string of the curve name
+
+        :param oid:
+            A unicode string of the dotted format OID
+
+        :param key_size:
+            An integer of the number of bytes the private key should be
+            encoded to
+        """
+
+        cls._map[oid] = name
+        cls._key_sizes[oid] = key_size
+
 
 class ECDomainParameters(Choice):
     """
@@ -384,6 +452,31 @@ class ECDomainParameters(Choice):
         ('named', NamedCurve),
         ('implicit_ca', Null),
     ]
+
+    @property
+    def key_size(self):
+        if self.name == 'implicit_ca':
+            raise ValueError(unwrap(
+                '''
+                Unable to calculate key_size from ECDomainParameters
+                that are implicitly defined by the CA key
+                '''
+            ))
+
+        if self.name == 'specified':
+            order = self.chosen['order'].native
+            return math.ceil(math.log(order, 2.0) / 8.0)
+
+        oid = self.chosen.dotted
+        if oid not in NamedCurve._key_sizes:
+            raise ValueError(unwrap(
+                '''
+                The asn1crypto.keys.NamedCurve %s does not have a registered key length,
+                please call asn1crypto.keys.NamedCurve.register()
+                ''',
+                repr(oid)
+            ))
+        return NamedCurve._key_sizes[oid]
 
 
 class ECPrivateKeyVersion(Integer):
@@ -408,6 +501,48 @@ class ECPrivateKey(Sequence):
         ('parameters', ECDomainParameters, {'explicit': 0, 'optional': True}),
         ('public_key', ECPointBitString, {'explicit': 1, 'optional': True}),
     ]
+
+    # Ensures the key is set to the correct length when encoding
+    _key_size = None
+
+    # This is necessary to ensure the private_key IntegerOctetString is encoded properly
+    def __setitem__(self, key, value):
+        res = super(ECPrivateKey, self).__setitem__(key, value)
+
+        if key == 'private_key':
+            if self._key_size is None:
+                # Infer the key_size from the existing private key if possible
+                pkey_contents = self['private_key'].contents
+                if isinstance(pkey_contents, byte_cls) and len(pkey_contents) > 1:
+                    self.set_key_size(len(self['private_key'].contents))
+
+            elif self._key_size is not None:
+                self._update_key_size()
+
+        elif key == 'parameters' and isinstance(self['parameters'], ECDomainParameters) and \
+                self['parameters'].name != 'implicit_ca':
+            self.set_key_size(self['parameters'].key_size)
+
+        return res
+
+    def set_key_size(self, key_size):
+        """
+        Sets the key_size to ensure the private key is encoded to the proper length
+
+        :param key_size:
+            An integer byte length to encode the private_key to
+        """
+
+        self._key_size = key_size
+        self._update_key_size()
+
+    def _update_key_size(self):
+        """
+        Ensure the private_key explicit encoding width is set
+        """
+
+        if self._key_size is not None and isinstance(self['private_key'], IntegerOctetString):
+            self['private_key'].set_encoded_width(self._key_size)
 
 
 class DSAParams(Sequence):
@@ -577,6 +712,25 @@ class PrivateKeyInfo(Sequence):
             container._public_key = public_key
 
         return container
+
+    # This is necessary to ensure any contained ECPrivateKey is the
+    # correct size
+    def __setitem__(self, key, value):
+        res = super(PrivateKeyInfo, self).__setitem__(key, value)
+
+        algorithm = self['private_key_algorithm']
+
+        # When possible, use the parameter info to make sure the private key encoding
+        # retains any necessary leading bytes, instead of them being dropped
+        if (key == 'private_key_algorithm' or key == 'private_key') and \
+                algorithm['algorithm'].native == 'ec' and \
+                isinstance(algorithm['parameters'], ECDomainParameters) and \
+                algorithm['parameters'].name != 'implicit_ca' and \
+                isinstance(self['private_key'], ParsableOctetString) and \
+                isinstance(self['private_key'].parsed, ECPrivateKey):
+            self['private_key'].parsed.set_key_size(algorithm['parameters'].key_size)
+
+        return res
 
     def unwrap(self):
         """
