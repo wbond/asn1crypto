@@ -377,42 +377,6 @@ class KeysTests(unittest.TestCase):
         )
 
     @data('key_pairs', True)
-    def compare_fingerprints(self, private_key_file, public_key_file, *_):
-        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
-            private_key = keys.PrivateKeyInfo.load(f.read())
-        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
-            public_key = keys.PublicKeyInfo.load(f.read())
-
-        self.assertEqual(private_key.fingerprint, public_key.fingerprint)
-
-    @data('key_pairs', True)
-    def compute_public_key(self, private_key_file, public_key_file, *_):
-        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
-            private_key = keys.PrivateKeyInfo.load(f.read())
-        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
-            public_key = keys.PublicKeyInfo.load(f.read())
-
-        self.assertEqual(public_key['public_key'].native, private_key._compute_public_key().native)
-
-    @data('key_pairs', True)
-    def public_key_property(self, private_key_file, public_key_file, *_):
-        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
-            private_key = keys.PrivateKeyInfo.load(f.read())
-        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
-            public_key = keys.PublicKeyInfo.load(f.read())
-
-        self.assertEqual(public_key['public_key'].native, private_key.public_key.native)
-
-    @data('key_pairs', True)
-    def public_key_info_property(self, private_key_file, public_key_file, *_):
-        with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
-            private_key = keys.PrivateKeyInfo.load(f.read())
-        with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
-            public_key = keys.PublicKeyInfo.load(f.read())
-
-        self.assertEqual(public_key.dump(), private_key.public_key_info.dump())
-
-    @data('key_pairs', True)
     def algorithm_name(self, private_key_file, public_key_file, algorithm, _):
         with open(os.path.join(fixtures_dir, private_key_file), 'rb') as f:
             private_key = keys.PrivateKeyInfo.load(f.read())
@@ -456,15 +420,6 @@ class KeysTests(unittest.TestCase):
                 'keys/test-der.key',
             ),
         )
-
-    @data('key_variations', True)
-    def unwrap(self, wrapped_private_key_file, unwrapped_private_key_file):
-        with open(os.path.join(fixtures_dir, wrapped_private_key_file), 'rb') as f:
-            private_key = keys.PrivateKeyInfo.load(f.read())
-        with open(os.path.join(fixtures_dir, unwrapped_private_key_file), 'rb') as f:
-            unwrapped_bytes = f.read()
-
-        self.assertEqual(unwrapped_bytes, private_key.unwrap().dump())
 
     def test_curve_invalid(self):
         with open(os.path.join(fixtures_dir, 'keys/test-pkcs8-der.key'), 'rb') as f:

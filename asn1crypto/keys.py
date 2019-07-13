@@ -19,17 +19,8 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import hashlib
 import math
 
-from ._elliptic_curve import (
-    SECP192R1_BASE_POINT,
-    SECP224R1_BASE_POINT,
-    SECP256R1_BASE_POINT,
-    SECP384R1_BASE_POINT,
-    SECP521R1_BASE_POINT,
-    PrimeCurve,
-    PrimePoint,
-)
-from ._errors import unwrap
-from ._types import type_name, str_cls, byte_cls
+from ._errors import unwrap, APIException
+from ._types import type_name, byte_cls
 from .algos import _ForceNullParameters, DigestAlgorithm, EncryptionAlgorithm, RSAESOAEPParams
 from .core import (
     Any,
@@ -587,79 +578,6 @@ class PrivateKeyInfo(Sequence):
 
         return container
 
-    def _compute_public_key(self):
-        """
-        Computes the public key corresponding to the current private key.
-
-        :return:
-            For RSA keys, an RSAPublicKey object. For DSA keys, an Integer
-            object. For EC keys, an ECPointBitString.
-        """
-
-        if self.algorithm == 'dsa':
-            params = self['private_key_algorithm']['parameters']
-            return Integer(pow(
-                params['g'].native,
-                self['private_key'].parsed.native,
-                params['p'].native
-            ))
-
-        if self.algorithm == 'rsa':
-            key = self['private_key'].parsed
-            return RSAPublicKey({
-                'modulus': key['modulus'],
-                'public_exponent': key['public_exponent'],
-            })
-
-        if self.algorithm == 'ec':
-            curve_type, details = self.curve
-
-            if curve_type == 'implicit_ca':
-                raise ValueError(unwrap(
-                    '''
-                    Unable to compute public key for EC key using Implicit CA
-                    parameters
-                    '''
-                ))
-
-            if curve_type == 'specified':
-                if details['field_id']['field_type'] == 'characteristic_two_field':
-                    raise ValueError(unwrap(
-                        '''
-                        Unable to compute public key for EC key over a
-                        characteristic two field
-                        '''
-                    ))
-
-                curve = PrimeCurve(
-                    details['field_id']['parameters'],
-                    int_from_bytes(details['curve']['a']),
-                    int_from_bytes(details['curve']['b'])
-                )
-                base_x, base_y = self['private_key_algorithm']['parameters'].chosen['base'].to_coords()
-                base_point = PrimePoint(curve, base_x, base_y)
-
-            elif curve_type == 'named':
-                if details not in ('secp192r1', 'secp224r1', 'secp256r1', 'secp384r1', 'secp521r1'):
-                    raise ValueError(unwrap(
-                        '''
-                        Unable to compute public key for EC named curve %s,
-                        parameters not currently included
-                        ''',
-                        details
-                    ))
-
-                base_point = {
-                    'secp192r1': SECP192R1_BASE_POINT,
-                    'secp224r1': SECP224R1_BASE_POINT,
-                    'secp256r1': SECP256R1_BASE_POINT,
-                    'secp384r1': SECP384R1_BASE_POINT,
-                    'secp521r1': SECP521R1_BASE_POINT,
-                }[details]
-
-            public_point = base_point * self['private_key'].parsed['private_key'].native
-            return ECPointBitString.from_coords(public_point.x, public_point.y)
-
     def unwrap(self):
         """
         Unwraps the private key into an RSAPrivateKey, DSAPrivateKey or
@@ -669,25 +587,9 @@ class PrivateKeyInfo(Sequence):
             An RSAPrivateKey, DSAPrivateKey or ECPrivateKey object
         """
 
-        if self.algorithm == 'rsa':
-            return self['private_key'].parsed
-
-        if self.algorithm == 'dsa':
-            params = self['private_key_algorithm']['parameters']
-            return DSAPrivateKey({
-                'version': 0,
-                'p': params['p'],
-                'q': params['q'],
-                'g': params['g'],
-                'public_key': self.public_key,
-                'private_key': self['private_key'].parsed,
-            })
-
-        if self.algorithm == 'ec':
-            output = self['private_key'].parsed
-            output['parameters'] = self['private_key_algorithm']['parameters']
-            output['public_key'] = self.public_key
-            return output
+        raise APIException(
+            'asn1crypto.keys.PrivateKeyInfo().unwrap() has been removed, '
+            'please use oscrypto.asymmetric.PrivateKey().unwrap() instead')
 
     @property
     def curve(self):
@@ -797,17 +699,9 @@ class PrivateKeyInfo(Sequence):
             object. If an EC key, an ECPointBitString object.
         """
 
-        if self._public_key is None:
-            if self.algorithm == 'ec':
-                key = self['private_key'].parsed
-                if key['public_key']:
-                    self._public_key = key['public_key'].untag()
-                else:
-                    self._public_key = self._compute_public_key()
-            else:
-                self._public_key = self._compute_public_key()
-
-        return self._public_key
+        raise APIException(
+            'asn1crypto.keys.PrivateKeyInfo().public_key has been removed, '
+            'please use oscrypto.asymmetric.PrivateKey().public_key.unwrap() instead')
 
     @property
     def public_key_info(self):
@@ -816,13 +710,9 @@ class PrivateKeyInfo(Sequence):
             A PublicKeyInfo object derived from this private key.
         """
 
-        return PublicKeyInfo({
-            'algorithm': {
-                'algorithm': self.algorithm,
-                'parameters': self['private_key_algorithm']['parameters']
-            },
-            'public_key': self.public_key
-        })
+        raise APIException(
+            'asn1crypto.keys.PrivateKeyInfo().public_key_info has been removed, '
+            'please use oscrypto.asymmetric.PrivateKey().public_key.asn1 instead')
 
     @property
     def fingerprint(self):
@@ -838,51 +728,9 @@ class PrivateKeyInfo(Sequence):
             on the key type)
         """
 
-        if self._fingerprint is None:
-            params = self['private_key_algorithm']['parameters']
-            key = self['private_key'].parsed
-
-            if self.algorithm == 'rsa':
-                to_hash = '%d:%d' % (
-                    key['modulus'].native,
-                    key['public_exponent'].native,
-                )
-
-            elif self.algorithm == 'dsa':
-                public_key = self.public_key
-                to_hash = '%d:%d:%d:%d' % (
-                    params['p'].native,
-                    params['q'].native,
-                    params['g'].native,
-                    public_key.native,
-                )
-
-            elif self.algorithm == 'ec':
-                public_key = key['public_key'].native
-                if public_key is None:
-                    public_key = self.public_key.native
-
-                if params.name == 'named':
-                    to_hash = '%s:' % params.chosen.native
-                    to_hash = to_hash.encode('utf-8')
-                    to_hash += public_key
-
-                elif params.name == 'implicit_ca':
-                    to_hash = public_key
-
-                elif params.name == 'specified':
-                    to_hash = '%s:' % params.chosen['field_id']['parameters'].native
-                    to_hash = to_hash.encode('utf-8')
-                    to_hash += b':' + params.chosen['curve']['a'].native
-                    to_hash += b':' + params.chosen['curve']['b'].native
-                    to_hash += public_key
-
-            if isinstance(to_hash, str_cls):
-                to_hash = to_hash.encode('utf-8')
-
-            self._fingerprint = hashlib.sha256(to_hash).digest()
-
-        return self._fingerprint
+        raise APIException(
+            'asn1crypto.keys.PrivateKeyInfo().fingerprint has been removed, '
+            'please use oscrypto.asymmetric.PrivateKey().fingerprint instead')
 
 
 class EncryptedPrivateKeyInfo(Sequence):
@@ -1048,19 +896,9 @@ class PublicKeyInfo(Sequence):
             An RSAPublicKey object
         """
 
-        if self.algorithm == 'rsa':
-            return self['public_key'].parsed
-
-        key_type = self.algorithm.upper()
-        a_an = 'an' if key_type == 'EC' else 'a'
-        raise ValueError(unwrap(
-            '''
-            Only RSA public keys may be unwrapped - this key is %s %s public
-            key
-            ''',
-            a_an,
-            key_type
-        ))
+        raise APIException(
+            'asn1crypto.keys.PublicKeyInfo().unwrap() has been removed, '
+            'please use oscrypto.asymmetric.PublicKey().unwrap() instead')
 
     @property
     def curve(self):
@@ -1205,47 +1043,6 @@ class PublicKeyInfo(Sequence):
             on the key type)
         """
 
-        if self._fingerprint is None:
-            key_type = self['algorithm']['algorithm'].native
-            params = self['algorithm']['parameters']
-
-            if key_type == 'rsa':
-                key = self['public_key'].parsed
-                to_hash = '%d:%d' % (
-                    key['modulus'].native,
-                    key['public_exponent'].native,
-                )
-
-            elif key_type == 'dsa':
-                key = self['public_key'].parsed
-                to_hash = '%d:%d:%d:%d' % (
-                    params['p'].native,
-                    params['q'].native,
-                    params['g'].native,
-                    key.native,
-                )
-
-            elif key_type == 'ec':
-                key = self['public_key']
-
-                if params.name == 'named':
-                    to_hash = '%s:' % params.chosen.native
-                    to_hash = to_hash.encode('utf-8')
-                    to_hash += key.native
-
-                elif params.name == 'implicit_ca':
-                    to_hash = key.native
-
-                elif params.name == 'specified':
-                    to_hash = '%s:' % params.chosen['field_id']['parameters'].native
-                    to_hash = to_hash.encode('utf-8')
-                    to_hash += b':' + params.chosen['curve']['a'].native
-                    to_hash += b':' + params.chosen['curve']['b'].native
-                    to_hash += key.native
-
-            if isinstance(to_hash, str_cls):
-                to_hash = to_hash.encode('utf-8')
-
-            self._fingerprint = hashlib.sha256(to_hash).digest()
-
-        return self._fingerprint
+        raise APIException(
+            'asn1crypto.keys.PublicKeyInfo().fingerprint has been removed, '
+            'please use oscrypto.asymmetric.PublicKey().fingerprint instead')
