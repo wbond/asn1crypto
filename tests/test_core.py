@@ -431,6 +431,11 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             NumChoiceOldApi.load(b'\xA0\x03\x02\x01\x00\x00', strict=True)
 
+    def test_choice_parse_return(self):
+        nc = NumChoice.load(b'\xA0\x03\x02\x01\x00\x00')
+        nc._parsed = None
+        self.assertEqual(0, nc.parse().native)
+
     def test_sequece_choice_choice(self):
         CCSeq({
             'cc': ChoiceChoice(
