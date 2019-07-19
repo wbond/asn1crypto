@@ -1,14 +1,16 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import os
 import unittest
 import re
 import sys
 
 from tests import test_classes
+import asn1crypto
 
 
-def run(matcher=None):
+def run(matcher=None, ci=False):
     """
     Runs the tests
 
@@ -19,6 +21,10 @@ def run(matcher=None):
     :return:
         A bool - if the tests succeeded
     """
+
+    if not ci:
+        print('Python ' + sys.version.replace('\n', ''))
+        print('\nasn1crypto: %s, %s\n' % (asn1crypto.__version__, os.path.dirname(asn1crypto.__file__)))
 
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
