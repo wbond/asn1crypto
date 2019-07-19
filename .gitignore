@@ -6,6 +6,7 @@ tests/output/
 tmp/
 *.egg-info/
 *.pyc
+*.pyo
 .python-version
 .DS_Store
 .coverage

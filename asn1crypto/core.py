@@ -1164,16 +1164,15 @@ class Choice(Asn1Value):
             An Asn1Value object of the chosen alternative
         """
 
-        if self._parsed is not None:
-            return self._parsed
-
-        try:
-            _, spec, params = self._alternatives[self._choice]
-            self._parsed, _ = _parse_build(self._contents, spec=spec, spec_params=params)
-        except (ValueError, TypeError) as e:
-            args = e.args[1:]
-            e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
-            raise e
+        if self._parsed is None:
+            try:
+                _, spec, params = self._alternatives[self._choice]
+                self._parsed, _ = _parse_build(self._contents, spec=spec, spec_params=params)
+            except (ValueError, TypeError) as e:
+                args = e.args[1:]
+                e.args = (e.args[0] + '\n    while parsing %s' % type_name(self),) + args
+                raise e
+        return self._parsed
 
     @property
     def chosen(self):
