@@ -32,6 +32,7 @@ from .algos import (
     EncryptionAlgorithm,
     HmacAlgorithm,
     KdfAlgorithm,
+    RSAESOAEPParams,
     SignedDigestAlgorithm,
 )
 from .core import (
@@ -677,6 +678,11 @@ class KeyEncryptionAlgorithm(_ForceNullParameters, Sequence):
         ('algorithm', KeyEncryptionAlgorithmId),
         ('parameters', Any, {'optional': True}),
     ]
+
+    _oid_pair = ('algorithm', 'parameters')
+    _oid_specs = {
+        'rsaes_oaep': RSAESOAEPParams,
+    }
 
 
 class KeyTransRecipientInfo(Sequence):
