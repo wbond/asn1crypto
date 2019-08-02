@@ -279,7 +279,7 @@ class CMSTests(unittest.TestCase):
             recipient['rid'].native
         )
         self.assertEqual(
-            'rsa',
+            'rsaes_pkcs1v15',
             recipient['key_encryption_algorithm']['algorithm'].native
         )
         self.assertEqual(
