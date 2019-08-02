@@ -649,7 +649,7 @@ class RecipientIdentifier(Choice):
 
 class KeyEncryptionAlgorithmId(ObjectIdentifier):
     _map = {
-        '1.2.840.113549.1.1.1': 'rsa',
+        '1.2.840.113549.1.1.1': 'rsaes_pkcs1v15',
         '1.2.840.113549.1.1.7': 'rsaes_oaep',
         '2.16.840.1.101.3.4.1.5': 'aes128_wrap',
         '2.16.840.1.101.3.4.1.8': 'aes128_wrap_pad',
@@ -657,6 +657,18 @@ class KeyEncryptionAlgorithmId(ObjectIdentifier):
         '2.16.840.1.101.3.4.1.28': 'aes192_wrap_pad',
         '2.16.840.1.101.3.4.1.45': 'aes256_wrap',
         '2.16.840.1.101.3.4.1.48': 'aes256_wrap_pad',
+    }
+
+    _reverse_map = {
+        'rsa': '1.2.840.113549.1.1.1',
+        'rsaes_pkcs1v15': '1.2.840.113549.1.1.1',
+        'rsaes_oaep': '1.2.840.113549.1.1.7',
+        'aes128_wrap': '2.16.840.1.101.3.4.1.5',
+        'aes128_wrap_pad': '2.16.840.1.101.3.4.1.8',
+        'aes192_wrap': '2.16.840.1.101.3.4.1.25',
+        'aes192_wrap_pad': '2.16.840.1.101.3.4.1.28',
+        'aes256_wrap': '2.16.840.1.101.3.4.1.45',
+        'aes256_wrap_pad': '2.16.840.1.101.3.4.1.48',
     }
 
 
