@@ -104,8 +104,14 @@ class CMSAttributeType(ObjectIdentifier):
         '1.2.840.113549.1.9.16.2.14': 'signature_time_stamp_token',
         # https://tools.ietf.org/html/rfc6211#page-5
         '1.2.840.113549.1.9.52': 'cms_algorithm_protection',
-        "1.3.6.1.4.1.311.2.4.1": "ms_spc_nested_signature",
-        "1.3.6.1.4.1.311.3.3.1": "ms_timestamping_signature",
+        # https://docs.microsoft.com/en-us/previous-versions/hh968145(v%3Dvs.85)
+        '1.3.6.1.4.1.311.2.4.1': 'microsoft_nested_signature',
+        # Some places refer to this as SPC_RFC3161_OBJID, others szOID_RFC3161_counterSign.
+        # https://docs.microsoft.com/en-us/windows/win32/api/wincrypt/ns-wincrypt-crypt_algorithm_identifier
+        # refers to szOID_RFC3161_counterSign as "1.2.840.113549.1.9.16.1.4",
+        # but that OID is also called szOID_TIMESTAMP_TOKEN. Because of there being
+        # no canonical source for this OID, we give it our own name
+        '1.3.6.1.4.1.311.3.3.1': 'microsoft_time_stamp_token',
     }
 
 
@@ -950,6 +956,6 @@ CMSAttribute._oid_specs = {
     'counter_signature': SignerInfos,
     'signature_time_stamp_token': SetOfContentInfo,
     'cms_algorithm_protection': SetOfCMSAlgorithmProtection,
-    'ms_spc_nested_signature': SetOfContentInfo,
-    'ms_timestamping_signature': SetOfContentInfo,
+    'microsoft_nested_signature': SetOfContentInfo,
+    'microsoft_time_stamp_token': SetOfContentInfo,
 }
