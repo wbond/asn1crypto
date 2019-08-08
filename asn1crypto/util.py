@@ -49,12 +49,15 @@ if sys.version_info <= (3,):
             If the byte string should be encoded using two's complement
 
         :param width:
-            None == auto, otherwise an integer of the byte width for the return
-            value
+            If None, the minimal possible size (but at least 1),
+            otherwise an integer of the byte width for the return value
 
         :return:
             A byte string
         """
+
+        if value == 0 and width == 0:
+            return b''
 
         # Handle negatives in two's complement
         is_neg = False
@@ -73,6 +76,8 @@ if sys.version_info <= (3,):
             output = b'\x00' + output
 
         if width is not None:
+            if len(output) > width:
+                raise OverflowError('int too big to convert')
             if is_neg:
                 pad_char = b'\xFF'
             else:
@@ -146,8 +151,8 @@ else:
             If the byte string should be encoded using two's complement
 
         :param width:
-            None == auto, otherwise an integer of the byte width for the return
-            value
+            If None, the minimal possible size (but at least 1),
+            otherwise an integer of the byte width for the return value
 
         :return:
             A byte string

@@ -31,6 +31,54 @@ utc = util.timezone.utc
 @data_decorator
 class UtilTests(unittest.TestCase):
 
+    def test_int_to_bytes(self):
+        self.assertEqual(util.int_to_bytes(0, False, 0), b'')
+        self.assertEqual(util.int_to_bytes(0, False), b'\x00')
+        self.assertEqual(util.int_to_bytes(0, False, 3), b'\x00\x00\x00')
+        self.assertEqual(util.int_to_bytes(0, True, 0), b'')
+        self.assertEqual(util.int_to_bytes(0, True), b'\x00')
+        self.assertEqual(util.int_to_bytes(0, True, 3), b'\x00\x00\x00')
+
+        self.assertEqual(util.int_to_bytes(128, False), b'\x80')
+        self.assertEqual(util.int_to_bytes(128, False, 3), b'\x00\x00\x80')
+        self.assertEqual(util.int_to_bytes(-128, True), b'\x80')
+        self.assertEqual(util.int_to_bytes(-128, True, 3), b'\xff\xff\x80')
+
+        self.assertEqual(util.int_to_bytes(255, False), b'\xff')
+        self.assertEqual(util.int_to_bytes(255, False, 3), b'\x00\x00\xff')
+        self.assertEqual(util.int_to_bytes(-1, True), b'\xff')
+        self.assertEqual(util.int_to_bytes(-1, True, 3), b'\xff\xff\xff')
+
+        self.assertEqual(util.int_to_bytes(12345678, False), b'\xbc\x61\x4e')
+        self.assertEqual(util.int_to_bytes(12345678, False, 3), b'\xbc\x61\x4e')
+        self.assertEqual(util.int_to_bytes(12345678, False, 5), b'\x00\x00\xbc\x61\x4e')
+        self.assertEqual(util.int_to_bytes(12345678 - 2 ** 24, True), b'\xbc\x61\x4e')
+        self.assertEqual(util.int_to_bytes(12345678 - 2 ** 24, True, 3), b'\xbc\x61\x4e')
+        self.assertEqual(util.int_to_bytes(12345678 - 2 ** 24, True, 5), b'\xff\xff\xbc\x61\x4e')
+
+        with self.assertRaises(OverflowError):
+            util.int_to_bytes(123456789, width=3)
+        with self.assertRaises(OverflowError):
+            util.int_to_bytes(50000, signed=True, width=2)
+
+    def test_int_from_bytes(self):
+        self.assertEqual(util.int_from_bytes(b'', False), 0)
+        self.assertEqual(util.int_from_bytes(b'', True), 0)
+        self.assertEqual(util.int_from_bytes(b'\x00', False), 0)
+        self.assertEqual(util.int_from_bytes(b'\x00', True), 0)
+        self.assertEqual(util.int_from_bytes(b'\x80', False), 128)
+        self.assertEqual(util.int_from_bytes(b'\x80', True), -128)
+        self.assertEqual(util.int_from_bytes(b'\xff', False), 255)
+        self.assertEqual(util.int_from_bytes(b'\xff', True), -1)
+        self.assertEqual(util.int_from_bytes(b'\xbc\x61\x4e', False), 12345678)
+        self.assertEqual(util.int_from_bytes(b'\xbc\x61\x4e', True), 12345678 - 2 ** 24)
+
+    def test_int_fromto_bytes(self):
+        for i in range(-300, 301):
+            self.assertEqual(i, util.int_from_bytes(util.int_to_bytes(i, True), True))
+        for i in range(0, 301):
+            self.assertEqual(i, util.int_from_bytes(util.int_to_bytes(i, False), False))
+
     def test_extended_date_strftime(self):
         self.assertEqual('0000-01-01', util.extended_date(0, 1, 1).strftime('%Y-%m-%d'))
         self.assertEqual('Sat Saturday Jan January', util.extended_date(0, 1, 1).strftime('%a %A %b %B'))
