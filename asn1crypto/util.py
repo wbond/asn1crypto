@@ -8,6 +8,8 @@ from bytes and UTC timezone. Exports the following items:
  - int_from_bytes()
  - int_to_bytes()
  - timezone.utc
+ - utc_with_dst
+ - create_timezone
  - inet_ntop()
  - inet_pton()
  - uri_to_iri()
@@ -18,7 +20,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import math
 import sys
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta, tzinfo
 
 from ._errors import unwrap
 from ._iri import iri_to_uri, uri_to_iri  # noqa
@@ -33,8 +35,6 @@ else:
 
 # Python 2
 if sys.version_info <= (3,):
-
-    from datetime import timedelta, tzinfo
 
     py2 = True
 
@@ -117,21 +117,80 @@ if sys.version_info <= (3,):
 
         return num
 
-    class utc(tzinfo):  # noqa
+    class timezone(tzinfo):  # noqa
+        """
+        Implements datetime.timezone for py2.
+        Only full minute offsets are supported.
+        DST is not supported.
+        """
+        def __init__(self, offset, name=None):
+            """
+            :param offset:
+                A timedelta with this timezone's offset from UTC
 
-        def tzname(self, _):
-            return b'UTC+00:00'
+            :param name:
+                Name of the timezone; if None, generate one.
+            """
+            if not timedelta(hours=-24) < offset < timedelta(hours=24):
+                raise ValueError('Offset must be in [-23:59, 23:59]')
 
-        def utcoffset(self, _):
+            if offset.seconds % 60 or offset.microseconds:
+                raise ValueError('Offset must be full minutes')
+
+            self._offset = offset
+
+            if name is not None:
+                self._name = name
+            elif not offset:
+                self._name = 'UTC'
+            else:
+                self._name = 'UTC' + _format_offset(offset)
+
+        def __eq__(self, other):
+            """
+            Compare two timezones
+
+            :param other:
+                The other timezone to compare to
+
+            :return:
+                A boolean
+            """
+            if type(other) != timezone:
+                return False
+            return self._offset == other._offset
+
+        def tzname(self, dt):
+            """
+            :param dt:
+                A datetime object; ignored.
+
+            :return:
+                Name of this timezone
+            """
+            return self._name
+
+        def utcoffset(self, dt):
+            """
+            :param dt:
+                A datetime object; ignored.
+
+            :return:
+                A timedelta object with the offset from UTC
+            """
+            return self._offset
+
+        def dst(self, dt):
+            """
+            :param dt:
+                A datetime object; ignored.
+
+            :return:
+                Zero timedelta
+            """
             return timedelta(0)
 
-        def dst(self, _):
-            return timedelta(0)
-
-    class timezone():  # noqa
-
-        utc = utc()
-
+    timezone.utc = timezone(timedelta(0))
 
 # Python 3
 else:
@@ -186,6 +245,56 @@ else:
         """
 
         return int.from_bytes(value, 'big', signed=signed)
+
+
+def _format_offset(off):
+    """
+    Format a timedelta into "[+-]HH:MM" format or "" for None
+    """
+    if off is None:
+        return ''
+    mins = off.days * 24 * 60 + off.seconds // 60
+    sign = '-' if mins < 0 else '+'
+    return sign + '%02d:%02d' % divmod(abs(mins), 60)
+
+
+class _UtcWithDst(tzinfo):
+    """
+    Utc class where dst does not return None; required for astimezone
+    """
+
+    def tzname(self, dt):
+        return 'UTC'
+
+    def utcoffset(self, dt):
+        return timedelta(0)
+
+    def dst(self, dt):
+        return timedelta(0)
+
+
+utc_with_dst = _UtcWithDst()
+
+_timezone_cache = {}
+
+
+def create_timezone(offset):
+    """
+    Returns a new datetime.timezone object with the given offset.
+    Uses cached objects if possible.
+
+    :param offset:
+        A datetime.timedelta object; It needs to be in full minutes and between -23:59 and +23:59.
+
+    :return:
+        A datetime.timezone object
+    """
+
+    try:
+        tz = _timezone_cache[offset]
+    except KeyError:
+        tz = _timezone_cache[offset] = timezone(offset)
+    return tz
 
 
 _DAYS_PER_MONTH_YEAR_0 = {

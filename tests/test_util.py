@@ -4,7 +4,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import unittest
 import sys
 import os
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 
 from asn1crypto import util
 
@@ -78,6 +78,55 @@ class UtilTests(unittest.TestCase):
             self.assertEqual(i, util.int_from_bytes(util.int_to_bytes(i, True), True))
         for i in range(0, 301):
             self.assertEqual(i, util.int_from_bytes(util.int_to_bytes(i, False), False))
+
+    def test_timezone(self):
+        delta_plus_5_42 = timedelta(hours=5, minutes=42)
+        delta_minus_5_42 = -delta_plus_5_42
+
+        # limited to +24h
+        with self.assertRaises(ValueError):
+            util.timezone(delta_plus_5_42 * 5)
+
+        # limited to -24h
+        with self.assertRaises(ValueError):
+            util.timezone(delta_minus_5_42 * 5)
+
+        # py2 implementation supports no sub-minutes time zones
+        if py2:
+            with self.assertRaises(ValueError):
+                util.timezone(timedelta(hours=5, minutes=42, seconds=13))
+
+            with self.assertRaises(ValueError):
+                util.timezone(timedelta(hours=5, minutes=42, microseconds=13))
+
+        # test __eq__
+        tz0 = util.timezone(delta_plus_5_42)
+        tz1 = util.timezone(delta_minus_5_42)
+        self.assertEqual(tz0, tz0)
+        self.assertEqual(tz1, tz1)
+        self.assertNotEqual(tz0, tz1)
+        self.assertFalse(tz0 == "not equal to a str")
+
+        # test tzname
+        self.assertEqual('5_42', util.timezone(delta_plus_5_42, '5_42').tzname(None))
+        self.assertEqual('UTC+05:42', util.timezone(delta_plus_5_42).tzname(None))
+        self.assertEqual('UTC-05:42', util.timezone(delta_minus_5_42).tzname(None))
+        if py2 or sys.version_info >= (3, 6):
+            # bpo22241
+            self.assertEqual('UTC', util.timezone(timedelta(0)).tzname(None))
+
+        # test utcoffset
+        self.assertEqual(delta_minus_5_42, util.timezone(delta_minus_5_42).utcoffset(None))
+
+        # test dst
+        self.assertTrue(util.timezone(delta_minus_5_42).dst(None) in set((timedelta(0), None)))
+
+        # test create_timezone
+        self.assertTrue(util.create_timezone(delta_plus_5_42) is util.create_timezone(timedelta(hours=5, minutes=42)))
+        self.assertFalse(util.create_timezone(delta_plus_5_42) is util.create_timezone(delta_minus_5_42))
+
+    def test_utc_with_dst(self):
+        self.assertEqual('UTC', util.utc_with_dst.tzname(None))
 
     def test_extended_date_strftime(self):
         self.assertEqual('0000-01-01', util.extended_date(0, 1, 1).strftime('%Y-%m-%d'))
