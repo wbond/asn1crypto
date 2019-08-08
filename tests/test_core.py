@@ -3,7 +3,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import unittest
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from asn1crypto import core, util
 
@@ -330,6 +330,8 @@ class CoreTests(unittest.TestCase):
             (datetime(2030, 12, 31, 8, 30, 0, tzinfo=util.timezone.utc), b'\x17\x0D301231083000Z'),
             (datetime(2049, 12, 31, 8, 30, 0, tzinfo=util.timezone.utc), b'\x17\x0D491231083000Z'),
             (datetime(1950, 12, 31, 8, 30, 0, tzinfo=util.timezone.utc), b'\x17\x0D501231083000Z'),
+            (datetime(2018, 10, 20, 7, 35, 4, tzinfo=util.timezone(timedelta(hours=7, minutes=40))),
+             b'\x17\x0D181019235504Z'),
         )
 
     @data('utctime_info')
@@ -337,6 +339,66 @@ class CoreTests(unittest.TestCase):
         u = core.UTCTime(native)
         self.assertEqual(der_bytes, u.dump())
         self.assertEqual(native, core.UTCTime.load(der_bytes).native)
+
+    def test_utctime_errors(self):
+        with self.assertRaises(ValueError):
+            # is not aware
+            core.UTCTime(datetime.fromtimestamp(1234567890))
+
+        with self.assertRaises(ValueError):
+            # Is pre 1950
+            core.UTCTime(datetime(1910, 6, 22, 11, 33, 44, tzinfo=util.timezone.utc))
+
+        with self.assertRaises(ValueError):
+            # Is past 2050
+            core.UTCTime(datetime(2106, 2, 7, 6, 28, 16, tzinfo=util.timezone.utc))
+
+    @staticmethod
+    def generalized_time_info():
+        def tz(hours, minutes=0):
+            return util.create_timezone(timedelta(hours=hours, minutes=minutes))
+
+        return (
+            (b'\x18\x1520180405062426.0+0200', datetime(2018, 4, 5, 6, 24, 26, 0, tz(2)), b'\x18\x0f20180405042426Z'),
+            (b'\x18\x0f2018062419-1355', datetime(2018, 6, 24, 19, 0, 0, 0, tz(-13, -55)), b'\x18\x0f20180625085500Z'),
+            (b'\x18\x0d2018062419-13', datetime(2018, 6, 24, 19, 0, 0, 0, tz(-13)), b'\x18\x0f20180625080000Z'),
+            (b'\x18\x0b2018062419Z', datetime(2018, 6, 24, 19, 0, 0, 0, tz(0)), b'\x18\x0f20180624190000Z'),
+            (b'\x18\x122018062419.15+0345', datetime(2018, 6, 24, 19, 9, 0, 0, tz(3, 45)), b'\x18\x0f20180624152400Z'),
+            (
+                b'\x18\x13201806241957,433+02',
+                datetime(2018, 6, 24, 19, 57, 25, 980000, tz(2)),
+                b'\x18\x1220180624175725.98Z',
+            ),
+            (
+                b'\x18\x1620180624195724.215999Z',
+                datetime(2018, 6, 24, 19, 57, 24, 215999, tz(0)),
+                b'\x18\x1620180624195724.215999Z',
+            ),
+            (
+                b'\x18\x150000022910.31337-0815',
+                util.extended_datetime(0, 2, 29, 10, 18, 48, 132000, tz(-8, -15)),
+                b'\x18\x1300000229183348.132Z',
+            ),
+            (b'\x18\x1520180624195724.215999', datetime(2018, 6, 24, 19, 57, 24, 215999), None),
+            (b'\x18\x0a2018062419', datetime(2018, 6, 24, 19, 0, 0, 0), None),
+        )
+
+    @data('generalized_time_info')
+    def generalized_time(self, ber_bytes, native, der_bytes):
+        decoded = core.GeneralizedTime.load(ber_bytes)
+
+        self.assertEqual(decoded.native, native)
+        self.assertEqual(decoded.native.tzinfo, native.tzinfo)
+
+        if der_bytes is not None:
+            encoded = core.GeneralizedTime(native).dump()
+            self.assertEqual(encoded, der_bytes)
+
+            decoded2 = core.GeneralizedTime.load(encoded)
+            self.assertEqual(decoded2.native, native)
+        else:
+            with self.assertRaises(ValueError):
+                encoded = core.GeneralizedTime(native).dump()
 
     @staticmethod
     def type_info():
