@@ -138,6 +138,41 @@ class UtilTests(unittest.TestCase):
             self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_date(0, 1, 1).strftime('%c'))
         self.assertEqual('01/01/00', util.extended_date(0, 1, 1).strftime('%x'))
 
+    def test_extended_datetime_init(self):
+        with self.assertRaises(ValueError):
+            util.extended_datetime(2000, 11, 27)
+
+    def test_extended_date_init(self):
+        with self.assertRaises(ValueError):
+            util.extended_date(2000, 11, 27)
+
+    def test_extended_datetime_properties(self):
+        zone = util.create_timezone(timedelta(hours=12, minutes=45))
+        dt = util.extended_datetime(0, 11, 27, 5, 44, 31, 14889, zone)
+        self.assertEqual(dt.year, 0)
+        self.assertEqual(dt.month, 11)
+        self.assertEqual(dt.day, 27)
+        self.assertEqual(dt.hour, 5)
+        self.assertEqual(dt.minute, 44)
+        self.assertEqual(dt.second, 31)
+        self.assertEqual(dt.microsecond, 14889)
+        self.assertEqual(dt.tzinfo, zone)
+
+    def test_extended_date_properties(self):
+        ext_date = util.extended_date(0, 11, 27)
+        self.assertEqual(ext_date.year, 0)
+        self.assertEqual(ext_date.month, 11)
+        self.assertEqual(ext_date.day, 27)
+
+    def test_extended_datetime_isoformat(self):
+        self.assertEqual('0000-01-01T00:00:00', util.extended_datetime(0, 1, 1).isoformat())
+        self.assertEqual('0000-01-01T00:00:00.001000', util.extended_datetime(0, 1, 1, microsecond=1000).isoformat())
+        self.assertEqual('0000-01-01%00:00:00', util.extended_datetime(0, 1, 1).isoformat(sep='%'))
+
+    def test_extended_date_isoformat(self):
+        self.assertEqual('0000-01-01', util.extended_date(0, 1, 1).isoformat())
+        self.assertEqual('0000-11-27', util.extended_date(0, 11, 27).isoformat())
+
     def test_extended_datetime_strftime(self):
         self.assertEqual('0000-01-01 00:00:00', util.extended_datetime(0, 1, 1).strftime('%Y-%m-%d %H:%M:%S'))
         self.assertEqual('Sat Saturday Jan January', util.extended_datetime(0, 1, 1).strftime('%a %A %b %B'))
@@ -147,6 +182,48 @@ class UtilTests(unittest.TestCase):
         else:
             self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_datetime(0, 1, 1).strftime('%c'))
         self.assertEqual('01/01/00', util.extended_datetime(0, 1, 1).strftime('%x'))
+        self.assertEqual('%Y', util.extended_datetime(0, 1, 1).strftime('%%Y'))
+
+    def test_extended_datetime_replace(self):
+        zone = util.create_timezone(timedelta(hours=12, minutes=45))
+        ext_dt = util.extended_datetime(0, 1, 1, 23, tzinfo=zone)
+        self.assertEqual(ext_dt.replace(year=2040, minute=59), datetime(2040, 1, 1, 23, 59, tzinfo=zone))
+        self.assertEqual(ext_dt.replace(minute=59), util.extended_datetime(0, 1, 1, 23, 59, tzinfo=zone))
+
+    def test_extended_date_replace(self):
+        ext_date = util.extended_date(0, 2, 27)
+        self.assertEqual(ext_date.replace(year=2040), date(2040, 2, 27))
+        self.assertEqual(ext_date.replace(day=29), util.extended_date(0, 2, 29))
+        with self.assertRaises(ValueError):
+            ext_date.replace(day=30)
+
+    def test_extended_datetime_encodings(self):
+        zone = util.create_timezone(timedelta(hours=12, minutes=45))
+
+        # test with microseconds
+        ext_dt = util.extended_datetime(0, 2, 29, 9, 17, 45, 14889, zone)
+        self.assertEqual(str(ext_dt), '0000-02-29 09:17:45.014889+12:45')
+        if py2:
+            self.assertEqual(unicode(ext_dt), '0000-02-29 09:17:45.014889+12:45')  # noqa: F821
+
+        # test without microseconds
+        ext_dt = util.extended_datetime(0, 2, 29, 9, 17, 45, 0, zone)
+        self.assertEqual(str(ext_dt), '0000-02-29 09:17:45+12:45')
+        if py2:
+            self.assertEqual(unicode(ext_dt), '0000-02-29 09:17:45+12:45')  # noqa: F821
+
+    def test_extended_date_encodings(self):
+        ext_date = util.extended_date(0, 2, 29)
+        self.assertEqual(str(ext_date), '0000-02-29')
+        if py2:
+            self.assertEqual(unicode(ext_date), '0000-02-29')  # noqa: F821
+
+    def test_extended_datetime_timestamp(self):
+        if sys.version_info >= (3, 3):
+            zone = util.create_timezone(timedelta(hours=12, minutes=45))
+            ext_dt = util.extended_datetime(0, 12, 31, 23, 0, 0, 14889, zone)
+            dt = datetime(1, 1, 1, 0, 0, 0, 14889, zone)
+            self.assertTrue(abs(dt.timestamp() - ext_dt.timestamp() - 3600.0) < 0.0000001)
 
     def test_extended_date_compare(self):
         self.assertTrue(util.extended_date(0, 1, 1) < date(1, 1, 1))
@@ -177,6 +254,9 @@ class UtilTests(unittest.TestCase):
         self.assertTrue(util.extended_date(0, 1, 3) >= util.extended_date(0, 1, 2))
         self.assertTrue(util.extended_date(0, 1, 3) > util.extended_date(0, 1, 2))
 
+        with self.assertRaises(TypeError):
+            util.extended_date(0, 1, 1) < "0000-01-02"
+
     def test_extended_datetime_compare(self):
         self.assertTrue(util.extended_datetime(0, 1, 1) < datetime(1, 1, 1))
         self.assertTrue(util.extended_datetime(0, 1, 1) <= datetime(1, 1, 1))
@@ -205,6 +285,43 @@ class UtilTests(unittest.TestCase):
         self.assertFalse(util.extended_datetime(0, 1, 3) == util.extended_datetime(0, 1, 2))
         self.assertTrue(util.extended_datetime(0, 1, 3) >= util.extended_datetime(0, 1, 2))
         self.assertTrue(util.extended_datetime(0, 1, 3) > util.extended_datetime(0, 1, 2))
+        self.assertTrue(
+            util.extended_datetime(0, 12, 31, 21, 4, 5, 6, util.create_timezone(timedelta(hours=-8)))
+            == datetime(1, 1, 1, 5, 4, 5, 6, utc)
+        )
+        self.assertTrue(
+            util.extended_datetime(0, 12, 31, 21, 4, 5, 6, util.create_timezone(timedelta(hours=-8)))
+            == datetime(1, 1, 1, 5, 7, 5, 6, util.create_timezone(timedelta(hours=0, minutes=3)))
+        )
+        self.assertFalse(
+            util.extended_datetime(0, 12, 31, 21, 4, 5, 6, util.create_timezone(timedelta(hours=-7)))
+            == datetime(1, 1, 1, 5, 4, 5, 6, utc)
+        )
+        self.assertFalse(util.extended_datetime(0, 1, 1) == util.extended_datetime(0, 1, 1, tzinfo=utc))
+        self.assertFalse(util.extended_datetime(0, 1, 1) == "0000-01-01")
+
+        with self.assertRaises(TypeError):
+            util.extended_datetime(0, 1, 1) < "0000-01-02"
+
+    def test_extended_datetime_arithmetic(self):
+        zone = util.create_timezone(timedelta(hours=12, minutes=45))
+        ext_dt = util.extended_datetime(0, 12, 31, 9, 17, 45, 14889, zone)
+        self.assertEqual(ext_dt + timedelta(hours=20), datetime(1, 1, 1, 5, 17, 45, 14889, zone))
+        self.assertEqual(ext_dt - timedelta(hours=20), util.extended_datetime(0, 12, 30, 13, 17, 45, 14889, zone))
+        self.assertEqual(ext_dt - ext_dt, timedelta(0))
+
+        zone2 = util.create_timezone(timedelta(hours=-8, minutes=-31))
+        ext_dt2 = util.extended_datetime(0, 11, 14, 13, 44, 20, 876543, zone2)
+        expected_diff = timedelta(days=47, hours=-4, minutes=-27, seconds=25, microseconds=-861654)
+        expected_diff -= timedelta(hours=20, minutes=76)
+        self.assertEqual(ext_dt - ext_dt2, expected_diff)
+
+        dt = datetime(400, 12, 31, 9, 17, 45, 14889, zone)
+        self.assertEqual(dt - ext_dt, timedelta(days=util.extended_datetime.DAYS_IN_400_YEARS))
+        self.assertEqual(ext_dt - dt, -timedelta(days=util.extended_datetime.DAYS_IN_400_YEARS))
+
+        with self.assertRaises(TypeError):
+            ext_dt - "test"
 
     def test_extended_datetime_compare_tzinfo(self):
         with self.assertRaises(TypeError):
