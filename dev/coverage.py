@@ -107,8 +107,40 @@ def _load_package_tests(name):
     return tests_module.test_classes()
 
 
-def _codecov_submit():
+def _env_info():
+    """
+    :return:
+        A two-element tuple of unicode strings. The first is the name of the
+        environment, the second the root of the repo. The environment name
+        will be one of: "ci-travis", "ci-circle", "ci-appveyor", "local"
+    """
+
     if os.getenv('CI') == 'true' and os.getenv('TRAVIS') == 'true':
+        return ('ci-travis', os.getenv('TRAVIS_BUILD_DIR'))
+
+    if os.getenv('CI') == 'True' and os.getenv('APPVEYOR') == 'True':
+        return ('ci-appveyor', os.getenv('APPVEYOR_BUILD_FOLDER'))
+
+    if os.getenv('CI') == 'true' and os.getenv('CIRCLECI') == 'true':
+        return ('ci-circle', os.getcwdu() if sys.version_info < (3,) else os.getcwd())
+
+    return ('local', package_root)
+
+
+def _codecov_submit():
+    env_name, root = _env_info()
+
+    try:
+        with open(os.path.join(root, 'codecov.json'), 'rb') as f:
+            json_data = json.loads(f.read().decode('utf-8'))
+    except (OSError, ValueError, UnicodeDecodeError, KeyError):
+        print('error reading codecov.json')
+        return
+
+    if json_data.get('disabled'):
+        return
+
+    if env_name == 'ci-travis':
         # http://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables
         build_url = 'https://travis-ci.org/%s/jobs/%s' % (os.getenv('TRAVIS_REPO_SLUG'), os.getenv('TRAVIS_JOB_ID'))
         query = {
@@ -122,9 +154,8 @@ def _codecov_submit():
             'commit': os.getenv('TRAVIS_COMMIT'),
             'build_url': build_url,
         }
-        root = os.getenv('TRAVIS_BUILD_DIR')
 
-    elif os.getenv('CI') == 'True' and os.getenv('APPVEYOR') == 'True':
+    elif env_name == 'ci-appveyor':
         # http://www.appveyor.com/docs/environment-variables
         build_url = 'https://ci.appveyor.com/project/%s/build/%s' % (
             os.getenv('APPVEYOR_REPO_NAME'),
@@ -145,9 +176,8 @@ def _codecov_submit():
             'commit': os.getenv('APPVEYOR_REPO_COMMIT'),
             'build_url': build_url,
         }
-        root = os.getenv('APPVEYOR_BUILD_FOLDER')
 
-    elif os.getenv('CI') == 'true' and os.getenv('CIRCLECI') == 'true':
+    elif env_name == 'ci-circle':
         # https://circleci.com/docs/environment-variables
         query = {
             'service': 'circleci',
@@ -160,29 +190,14 @@ def _codecov_submit():
             'commit': os.getenv('CIRCLE_SHA1'),
             'build_url': os.getenv('CIRCLE_BUILD_URL'),
         }
-        if sys.version_info < (3,):
-            root = os.getcwdu()
-        else:
-            root = os.getcwd()
+
     else:
-        root = package_root
         if not os.path.exists(os.path.join(root, '.git')):
             print('git repository not found, not submitting coverage data')
             return
         git_status = _git_command(['status', '--porcelain'], root)
         if git_status != '':
             print('git repository has uncommitted changes, not submitting coverage data')
-            return
-
-        slug = None
-        token = None
-        try:
-            with open(os.path.join(root, 'codecov.json'), 'rb') as f:
-                json_data = json.loads(f.read().decode('utf-8'))
-                slug = json_data['slug']
-                token = json_data['token']
-        except (OSError, ValueError, UnicodeDecodeError, KeyError):
-            print('error reading codecov.json')
             return
 
         branch = _git_command(['rev-parse', '--abbrev-ref', 'HEAD'], root)
@@ -194,8 +209,8 @@ def _codecov_submit():
         query = {
             'branch': branch,
             'commit': commit,
-            'slug': slug,
-            'token': token,
+            'slug': json_data['slug'],
+            'token': json_data['token'],
             'build': build_name,
         }
         if tag != 'undefined':
