@@ -49,6 +49,7 @@ Other type classes are defined that help compose the types listed above.
 from __future__ import unicode_literals, division, absolute_import, print_function
 
 from datetime import datetime, timedelta
+from fractions import Fraction
 import binascii
 import copy
 import math
@@ -60,7 +61,7 @@ from ._errors import unwrap
 from ._ordereddict import OrderedDict
 from ._types import type_name, str_cls, byte_cls, int_types, chr_cls
 from .parser import _parse, _dump_header
-from .util import int_to_bytes, int_from_bytes, timezone, extended_datetime
+from .util import int_to_bytes, int_from_bytes, timezone, extended_datetime, create_timezone, utc_with_dst
 
 if sys.version_info <= (3,):
     from cStringIO import StringIO as BytesIO
@@ -4620,52 +4621,131 @@ class AbstractTime(AbstractString):
     """
 
     @property
+    def _parsed_time(self):
+        """
+        The parsed datetime string.
+
+        :return:
+            A dict with the parsed values
+
+        :raises:
+            ValueError - when an invalid value is passed
+        """
+        string = str_cls(self)
+
+        m = self._TIMESTRING_RE.match(string)
+        if not m:
+            raise ValueError(unwrap(
+                '''
+                Error parsing %s to a %s
+                ''',
+                string,
+                type_name(self),
+            ))
+
+        groups = m.groupdict()
+
+        tz = None
+        if groups['zulu']:
+            tz = timezone.utc
+        elif groups['dsign']:
+            sign = 1 if groups['dsign'] == '+' else -1
+            tz = create_timezone(sign * timedelta(
+                hours=int(groups['dhour']),
+                minutes=int(groups['dminute'] or 0)
+            ))
+
+        if groups['fraction']:
+            # Compute fraction in microseconds
+
+            fract = Fraction(
+                int(groups['fraction']),
+                10 ** len(groups['fraction'])
+            ) * 1000000
+
+            if groups['minute'] is None:
+                fract *= 3600
+            elif groups['second'] is None:
+                fract *= 60
+            fract_usec = int(fract.limit_denominator(1))
+        else:
+            fract_usec = 0
+
+        return {
+            'year': int(groups['year']),
+            'month': int(groups['month']),
+            'day': int(groups['day']),
+            'hour': int(groups['hour']),
+            'minute': int(groups['minute'] or 0),
+            'second': int(groups['second'] or 0),
+            'tzinfo': tz,
+            'fraction': fract_usec,
+        }
+
+    @property
     def native(self):
         """
         The native Python datatype representation of this value
 
         :return:
-            A datetime.datetime object in the UTC timezone or None
+            A datetime.datetime object, asn1crypto.util.extended_datetime object or
+            None. The datetime object is usually timezone aware. If it's naive, then
+            it's in the sender's local time; see X.680 sect. 42.3
         """
 
         if self.contents is None:
             return None
 
         if self._native is None:
-            string = str_cls(self)
-            has_timezone = re.search('[-\\+]', string)
+            parsed = self._parsed_time
 
-            # We don't know what timezone it is in, or it is UTC because of a Z
-            # suffix, so we just assume UTC
-            if not has_timezone:
-                string = string.rstrip('Z')
-                date = self._date_by_len(string)
-                self._native = date.replace(tzinfo=timezone.utc)
+            fraction = parsed.pop('fraction', 0)
 
-            else:
-                # Python 2 doesn't support the %z format code, so we have to manually
-                # process the timezone offset.
-                date = self._date_by_len(string[0:-5])
+            value = self._get_datetime(parsed)
 
-                hours = int(string[-4:-2])
-                minutes = int(string[-2:])
-                delta = timedelta(hours=abs(hours), minutes=minutes)
-                if hours < 0:
-                    date -= delta
-                else:
-                    date += delta
+            if fraction:
+                value += timedelta(microseconds=fraction)
 
-                self._native = date.replace(tzinfo=timezone.utc)
+            self._native = value
 
         return self._native
 
 
 class UTCTime(AbstractTime):
     """
-    Represents a UTC time from ASN.1 as a Python datetime.datetime object in UTC
+    Represents a UTC time from ASN.1 as a timezone aware Python datetime.datetime object
     """
 
     tag = 23
+
+    # Regular expression for UTCTime as described in X.680 sect. 43 and ISO 8601
+    _TIMESTRING_RE = re.compile(r'''
+        ^
+        # YYMMDD
+        (?P<year>\d{2})
+        (?P<month>\d{2})
+        (?P<day>\d{2})
+
+        # hhmm or hhmmss
+        (?P<hour>\d{2})
+        (?P<minute>\d{2})
+        (?P<second>\d{2})?
+
+        # Matches nothing, needed because GeneralizedTime uses this.
+        (?P<fraction>)
+
+        # Z or [-+]hhmm
+        (?:
+            (?P<zulu>Z)
+            |
+            (?:
+                (?P<dsign>[-+])
+                (?P<dhour>\d{2})
+                (?P<dminute>\d{2})
+            )
+        )
+        $
+    ''', re.X)
 
     def set(self, value):
         """
@@ -4679,6 +4759,15 @@ class UTCTime(AbstractTime):
         """
 
         if isinstance(value, datetime):
+            if not value.tzinfo:
+                raise ValueError('Must be timezone aware')
+
+            # Convert value to UTC.
+            value = value.astimezone(utc_with_dst)
+
+            if not 1950 <= value.year <= 2049:
+                raise ValueError('Year of the UTCTime is not in range [1950, 2049], use GeneralizedTime instead')
+
             value = value.strftime('%y%m%d%H%M%SZ')
             if _PY2:
                 value = value.decode('ascii')
@@ -4688,32 +4777,24 @@ class UTCTime(AbstractTime):
         # time that .native is called
         self._native = None
 
-    def _date_by_len(self, string):
+    def _get_datetime(self, parsed):
         """
-        Parses a date from a string based on its length
-
-        :param string:
-            A unicode string to parse
+        Create a datetime object from the parsed time.
 
         :return:
-            A datetime.datetime object or a unicode string
+            An aware datetime.datetime object
         """
 
-        strlen = len(string)
-
-        year_num = int(string[0:2])
-        if year_num < 50:
-            prefix = '20'
+        # X.680 only specifies that UTCTime is not using a century.
+        # So "18" could as well mean 2118 or 1318.
+        # X.509 and CMS specify to use UTCTime for years earlier than 2050.
+        # Assume that UTCTime is only used for years [1950, 2049].
+        if parsed['year'] < 50:
+            parsed['year'] += 2000
         else:
-            prefix = '19'
+            parsed['year'] += 1900
 
-        if strlen == 10:
-            return datetime.strptime(prefix + string, '%Y%m%d%H%M')
-
-        if strlen == 12:
-            return datetime.strptime(prefix + string, '%Y%m%d%H%M%S')
-
-        return string
+        return datetime(**parsed)
 
 
 class GeneralizedTime(AbstractTime):
@@ -4723,6 +4804,44 @@ class GeneralizedTime(AbstractTime):
     """
 
     tag = 24
+
+    # Regular expression for GeneralizedTime as described in X.680 sect. 42 and ISO 8601
+    _TIMESTRING_RE = re.compile(r'''
+        ^
+        # YYYYMMDD
+        (?P<year>\d{4})
+        (?P<month>\d{2})
+        (?P<day>\d{2})
+
+        # hh or hhmm or hhmmss
+        (?P<hour>\d{2})
+        (?:
+            (?P<minute>\d{2})
+            (?P<second>\d{2})?
+        )?
+
+        # Optional fraction; [.,]dddd (one or more decimals)
+        # If Seconds are given, it's fractions of Seconds.
+        # Else if Minutes are given, it's fractions of Minutes.
+        # Else it's fractions of Hours.
+        (?:
+            [,.]
+            (?P<fraction>\d+)
+        )?
+
+        # Optional timezone. If left out, the time is in local time.
+        # Z or [-+]hh or [-+]hhmm
+        (?:
+            (?P<zulu>Z)
+            |
+            (?:
+                (?P<dsign>[-+])
+                (?P<dhour>\d{2})
+                (?P<dminute>\d{2})?
+            )
+        )?
+        $
+    ''', re.X)
 
     def set(self, value):
         """
@@ -4737,7 +4856,18 @@ class GeneralizedTime(AbstractTime):
         """
 
         if isinstance(value, (datetime, extended_datetime)):
-            value = value.strftime('%Y%m%d%H%M%SZ')
+            if not value.tzinfo:
+                raise ValueError('Must be timezone aware')
+
+            # Convert value to UTC.
+            value = value.astimezone(utc_with_dst)
+
+            if value.microsecond:
+                fraction = '.' + str(value.microsecond).zfill(6).rstrip('0')
+            else:
+                fraction = ''
+
+            value = value.strftime('%Y%m%d%H%M%S') + fraction + 'Z'
             if _PY2:
                 value = value.decode('ascii')
 
@@ -4746,47 +4876,20 @@ class GeneralizedTime(AbstractTime):
         # time that .native is called
         self._native = None
 
-    def _date_by_len(self, string):
+    def _get_datetime(self, parsed):
         """
-        Parses a date from a string based on its length
-
-        :param string:
-            A unicode string to parse
+        Create a datetime object from the parsed time.
 
         :return:
-            A datetime.datetime object, asn1crypto.util.extended_datetime object or
-            a unicode string
+            A datetime.datetime object or asn1crypto.util.extended_datetime object.
+            It may or may not be aware.
         """
 
-        strlen = len(string)
-
-        date_format = None
-        if strlen == 10:
-            date_format = '%Y%m%d%H'
-        elif strlen == 12:
-            date_format = '%Y%m%d%H%M'
-        elif strlen == 14:
-            date_format = '%Y%m%d%H%M%S'
-        elif strlen == 18:
-            date_format = '%Y%m%d%H%M%S.%f'
-
-        if date_format:
-            if len(string) >= 4 and string[0:4] == '0000':
-                # Year 2000 shares a calendar with year 0, and is supported natively
-                t = datetime.strptime('2000' + string[4:], date_format)
-                return extended_datetime(
-                    0,
-                    t.month,
-                    t.day,
-                    t.hour,
-                    t.minute,
-                    t.second,
-                    t.microsecond,
-                    t.tzinfo
-                )
-            return datetime.strptime(string, date_format)
-
-        return string
+        if parsed['year'] == 0:
+            # datetime does not support year 0. Use extended_datetime instead.
+            return extended_datetime(**parsed)
+        else:
+            return datetime(**parsed)
 
 
 class GraphicString(AbstractString):
