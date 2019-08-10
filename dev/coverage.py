@@ -8,6 +8,7 @@ import imp
 import json
 import os
 import unittest
+import re
 import sys
 import tempfile
 import platform as _plat
@@ -25,6 +26,11 @@ else:
     str_cls = str
     from urllib.error import URLError
     from urllib.parse import urlencode
+
+if sys.version_info < (3, 7):
+    Pattern = re._pattern_type
+else:
+    Pattern = re.Pattern
 
 
 def run(ci=False):
@@ -503,7 +509,7 @@ def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
             stdout, stderr = _execute(
                 [powershell_exe, '-Command', code],
                 os.getcwd(),
-                'Unable to connect to'
+                re.compile(r'Unable to connect to|TLS')
             )
             if stdout[-2:] == b'\r\n' and b'\r\n\r\n' in stdout:
                 # An extra trailing crlf is added at the end by powershell
@@ -530,7 +536,11 @@ def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
             args.append('--data-binary')
             args.append('@%s' % tempf_path)
             args.append(url)
-            stdout, stderr = _execute(args, os.getcwd(), 'Failed to connect to')
+            stdout, stderr = _execute(
+                args,
+                os.getcwd(),
+                re.compile(r'Failed to connect to|TLS|SSLRead')
+            )
     finally:
         if tempf_path and os.path.exists(tempf_path):
             os.remove(tempf_path)
@@ -581,7 +591,7 @@ def _execute(params, cwd, retry=None):
         The working directory to execute the command in
 
     :param retry:
-        If this string is present in stderr, retry the operation
+        If this string is present in stderr, or regex pattern matches stderr, retry the operation
 
     :return:
         A 2-element tuple of (stdout, stderr)
@@ -596,8 +606,12 @@ def _execute(params, cwd, retry=None):
     stdout, stderr = proc.communicate()
     code = proc.wait()
     if code != 0:
-        if retry and retry in stderr.decode('utf-8'):
-            return _execute(params, cwd)
+        if retry:
+            stderr_str = stderr.decode('utf-8')
+            if isinstance(retry, Pattern) and retry.search(stderr_str) is not None:
+                return _execute(params, cwd, retry)
+            elif retry in stderr_str:
+                return _execute(params, cwd, retry)
         e = OSError('subprocess exit code for "%s" was %d: %s' % (' '.join(params), code, stderr))
         e.stdout = stdout
         e.stderr = stderr
