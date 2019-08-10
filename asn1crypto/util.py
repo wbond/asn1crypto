@@ -9,7 +9,7 @@ from bytes and UTC timezone. Exports the following items:
  - int_to_bytes()
  - timezone.utc
  - utc_with_dst
- - create_timezone
+ - create_timezone()
  - inet_ntop()
  - inet_pton()
  - uri_to_iri()
@@ -121,6 +121,7 @@ if sys.version_info <= (3,):
         Only full minute offsets are supported.
         DST is not supported.
         """
+
         def __init__(self, offset, name=None):
             """
             :param offset:
@@ -129,6 +130,7 @@ if sys.version_info <= (3,):
             :param name:
                 Name of the timezone; if None, generate one.
             """
+
             if not timedelta(hours=-24) < offset < timedelta(hours=24):
                 raise ValueError('Offset must be in [-23:59, 23:59]')
 
@@ -154,6 +156,7 @@ if sys.version_info <= (3,):
             :return:
                 A boolean
             """
+
             if type(other) != timezone:
                 return False
             return self._offset == other._offset
@@ -166,6 +169,7 @@ if sys.version_info <= (3,):
             :return:
                 Name of this timezone
             """
+
             return self._name
 
         def utcoffset(self, dt):
@@ -176,6 +180,7 @@ if sys.version_info <= (3,):
             :return:
                 A timedelta object with the offset from UTC
             """
+
             return self._offset
 
         def dst(self, dt):
@@ -186,6 +191,7 @@ if sys.version_info <= (3,):
             :return:
                 Zero timedelta
             """
+
             return timedelta(0)
 
     timezone.utc = timezone(timedelta(0))
@@ -247,6 +253,7 @@ def _format_offset(off):
     """
     Format a timedelta into "[+-]HH:MM" format or "" for None
     """
+
     if off is None:
         return ''
     mins = off.days * 24 * 60 + off.seconds // 60
@@ -326,6 +333,7 @@ class extended_date(object):
         :return:
             The integer 0
         """
+
         return 0
 
     @property
@@ -334,6 +342,7 @@ class extended_date(object):
         :return:
             An integer from 1 to 12
         """
+
         return self._y2k.month
 
     @property
@@ -342,6 +351,7 @@ class extended_date(object):
         :return:
             An integer from 1 to 31
         """
+
         return self._y2k.day
 
     def strftime(self, format):
@@ -405,6 +415,7 @@ class extended_date(object):
         :return:
             A str representing this extended_date, e.g. "0000-01-01"
         """
+
         return self.strftime('%Y-%m-%d')
 
     def __eq__(self, other):
@@ -417,6 +428,7 @@ class extended_date(object):
         :return:
             A boolean
         """
+
         # datetime.date object wouldn't compare equal because it can't be year 0
         if not isinstance(other, self.__class__):
             return False
@@ -432,6 +444,7 @@ class extended_date(object):
         :return:
             A boolean
         """
+
         return not self.__eq__(other)
 
     def _comparison_error(self, other):
@@ -453,6 +466,7 @@ class extended_date(object):
         :return:
             An integer smaller than, equal to, or larger than 0
         """
+
         # self is year 0, other is >= year 1
         if isinstance(other, date):
             return -1
@@ -516,6 +530,7 @@ class extended_datetime(object):
         :return:
             The integer 0
         """
+
         return 0
 
     @property
@@ -524,6 +539,7 @@ class extended_datetime(object):
         :return:
             An integer from 1 to 12
         """
+
         return self._y2k.month
 
     @property
@@ -532,6 +548,7 @@ class extended_datetime(object):
         :return:
             An integer from 1 to 31
         """
+
         return self._y2k.day
 
     @property
@@ -540,6 +557,7 @@ class extended_datetime(object):
         :return:
             An integer from 1 to 24
         """
+
         return self._y2k.hour
 
     @property
@@ -548,6 +566,7 @@ class extended_datetime(object):
         :return:
             An integer from 1 to 60
         """
+
         return self._y2k.minute
 
     @property
@@ -556,6 +575,7 @@ class extended_datetime(object):
         :return:
             An integer from 1 to 60
         """
+
         return self._y2k.second
 
     @property
@@ -564,6 +584,7 @@ class extended_datetime(object):
         :return:
             An integer from 0 to 999999
         """
+
         return self._y2k.microsecond
 
     @property
@@ -572,6 +593,7 @@ class extended_datetime(object):
         :return:
             If object is timezone aware, a datetime.tzinfo object, else None.
         """
+
         return self._y2k.tzinfo
 
     def utcoffset(self):
@@ -579,6 +601,7 @@ class extended_datetime(object):
         :return:
             If object is timezone aware, a datetime.timedelta object, else None.
         """
+
         return self._y2k.utcoffset()
 
     def time(self):
@@ -586,6 +609,7 @@ class extended_datetime(object):
         :return:
             A datetime.time object
         """
+
         return self._y2k.time()
 
     def date(self):
@@ -630,8 +654,7 @@ class extended_datetime(object):
         s = '0000-%02d-%02d%c%02d:%02d:%02d' % (self.month, self.day, sep, self.hour, self.minute, self.second)
         if self.microsecond:
             s += '.%06d' % self.microsecond
-        s += _format_offset(self.utcoffset())
-        return s
+        return s + _format_offset(self.utcoffset())
 
     def replace(self, year=None, *args, **kwargs):
         """
@@ -666,6 +689,7 @@ class extended_datetime(object):
         :return:
             A new extended_datetime or datetime.datetime object
         """
+
         return extended_datetime.from_y2k(self._y2k.astimezone(tz))
 
     def timestamp(self):
@@ -675,6 +699,7 @@ class extended_datetime(object):
         :return:
             A float representing the seconds since 1970-01-01 UTC. This will be a negative value.
         """
+
         return self._y2k.timestamp() - self.DAYS_IN_2000_YEARS * 86400
 
     def __str__(self):
@@ -682,6 +707,7 @@ class extended_datetime(object):
         :return:
             A str representing this extended_datetime, e.g. "0000-01-01 00:00:00.000001-10:00"
         """
+
         return self.isoformat(sep=' ')
 
     def __eq__(self, other):
@@ -694,6 +720,7 @@ class extended_datetime(object):
         :return:
             A boolean
         """
+
         # Only compare against other datetime or extended_datetime objects
         if not isinstance(other, (self.__class__, datetime)):
             return False
@@ -714,6 +741,7 @@ class extended_datetime(object):
         :return:
             A boolean
         """
+
         return not self.__eq__(other)
 
     def _comparison_error(self, other):
@@ -744,6 +772,7 @@ class extended_datetime(object):
         :return:
             An integer smaller than, equal to, or larger than 0
         """
+
         if not isinstance(other, (self.__class__, datetime)):
             self._comparison_error(other)
 
@@ -819,6 +848,7 @@ class extended_datetime(object):
         :return:
             A new extended_datetime or datetime.datetime object.
         """
+
         year = value.year - 2000
 
         if year > 0:

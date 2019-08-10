@@ -4625,12 +4625,13 @@ class AbstractTime(AbstractString):
         """
         The parsed datetime string.
 
-        :return:
-            A dict with the parsed values
-
         :raises:
             ValueError - when an invalid value is passed
+
+        :return:
+            A dict with the parsed values
         """
+
         string = str_cls(self)
 
         m = self._TIMESTRING_RE.match(string)
@@ -4657,7 +4658,6 @@ class AbstractTime(AbstractString):
 
         if groups['fraction']:
             # Compute fraction in microseconds
-
             fract = Fraction(
                 int(groups['fraction']),
                 10 ** len(groups['fraction'])
@@ -4667,7 +4667,9 @@ class AbstractTime(AbstractString):
                 fract *= 3600
             elif groups['second'] is None:
                 fract *= 60
+
             fract_usec = int(fract.limit_denominator(1))
+
         else:
             fract_usec = 0
 
