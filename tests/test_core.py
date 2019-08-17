@@ -435,6 +435,19 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(tuple(), bs.native)
         self.assertEqual(b'\x03\x01\x00', bs.dump(True))
 
+    def test_bit_string_errors(self):
+        with self.assertRaises(ValueError):
+            # unused bits in empty bit string
+            core.BitString.load(b'\x03\x01\x05').native
+
+        with self.assertRaises(ValueError):
+            # too many unused bits
+            core.BitString.load(b'\x03\x03\x0e\x0c\x00').native
+
+        with self.assertRaises(ValueError):
+            # chunk with unused bits is not last chunk
+            core.BitString.load(b'\x23\x80\x03\x02\x01\xfe\x03\x02\x00\x55\x00\x00').native
+
     def test_cast(self):
         a = core.OctetBitString(b'\x00\x01\x02\x03')
         self.assertEqual(b'\x00\x01\x02\x03', a.native)
@@ -848,25 +861,29 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(a._unicode, a.copy()._unicode)
 
     def test_indefinite_length_bit_string(self):
-        data = b'#\x80\x00\x03\x02\x00\x01\x03\x02\x02\x04\x00\x00'
+        data = b'#\x80\x03\x02\x00\x01\x03\x02\x02\x04\x00\x00'
         a = core.BitString.load(data)
         self.assertEqual((0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1), a.native)
 
     def test_indefinite_length_integer_bit_string(self):
-        data = b'#\x80\x00\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
+        data = b'#\x80\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
         a = core.IntegerBitString.load(data)
         self.assertEqual(260, a.native)
 
     def test_indefinite_length_octet_bit_string(self):
-        data = b'#\x80\x00\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
+        data = b'#\x80\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
         a = core.OctetBitString.load(data)
         self.assertEqual(b'\x01\x04', a.native)
         self.assertEqual(b'\x01\x04', a.__bytes__())
         # Test copying moves internal state
         self.assertEqual(a._bytes, a.copy()._bytes)
 
+        with self.assertRaises(ValueError):
+            # octet bit string with unused bits
+            core.OctetBitString.load(b'\x23\x80\x03\x05\x01\x74\x65\x73\x74\x00\x00').native
+
     def test_indefinite_length_parsable_octet_bit_string(self):
-        data = b'#\x80\x00\x03\x03\x00\x0C\x02\x03\x03\x00\x61\x62\x00\x00'
+        data = b'#\x80\x03\x03\x00\x0C\x02\x03\x03\x00\x61\x62\x00\x00'
         a = core.ParsableOctetBitString.load(data)
         self.assertEqual(b'\x0C\x02\x61\x62', a.parsed.dump())
         self.assertEqual(b'\x0C\x02\x61\x62', a.__bytes__())
@@ -875,6 +892,10 @@ class CoreTests(unittest.TestCase):
         # Test copying moves internal state
         self.assertEqual(a._bytes, a.copy()._bytes)
         self.assertEqual(a._parsed, a.copy()._parsed)
+
+        with self.assertRaises(ValueError):
+            # parsable octet bit string with unused bits
+            core.ParsableOctetBitString.load(b'\x23\x80\x03\x03\x04\x02\x00\x03\x03\x04\x12\xa0\x00\x00').native
 
     def test_explicit_application_tag(self):
         data = b'\x6a\x81\x03\x02\x01\x00'
