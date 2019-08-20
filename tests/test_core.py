@@ -865,6 +865,12 @@ class CoreTests(unittest.TestCase):
         a = core.BitString.load(data)
         self.assertEqual((0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1), a.native)
 
+        # Example from X.690 §8.6.4.2
+        prim = core.BitString.load(b'\x03\x07\x04\x0A\x3B\x5F\x29\x1C\xD0')
+        indef = core.BitString.load(b'\x23\x80\x03\x03\x00\x0a\x3b\x03\x05\x04\x5f\x29\x1c\xd0\x00\x00')
+        self.assertEqual(prim.native, indef.native)
+        self.assertEqual(indef.native, tuple(map(int, tuple('{0:044b}'.format(0x0A3B5F291CD)))))
+
     def test_indefinite_length_integer_bit_string(self):
         data = b'#\x80\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
         a = core.IntegerBitString.load(data)
