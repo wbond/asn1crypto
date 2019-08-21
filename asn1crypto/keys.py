@@ -439,6 +439,7 @@ class NamedCurve(ObjectIdentifier):
         """
 
         cls._map[oid] = name
+        cls._reverse_map[name] = oid
         cls._key_sizes[oid] = key_size
 
 
