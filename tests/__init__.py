@@ -6,6 +6,44 @@ import os
 import unittest
 
 
+__version__ = '0.25.0.dev1'
+__version_info__ = (0, 25, 0, 'dev1')
+
+
+def _import_from(mod, path, mod_dir=None):
+    """
+    Imports a module from a specific path
+
+    :param mod:
+        A unicode string of the module name
+
+    :param path:
+        A unicode string to the directory containing the module
+
+    :param mod_dir:
+        If the sub directory of "path" is different than the "mod" name,
+        pass the sub directory as a unicode string
+
+    :return:
+        None if not loaded, otherwise the module
+    """
+
+    if mod_dir is None:
+        mod_dir = mod
+
+    if not os.path.exists(path):
+        return None
+
+    if not os.path.exists(os.path.join(path, mod_dir)):
+        return None
+
+    try:
+        mod_info = imp.find_module(mod_dir, [path])
+        return imp.load_module(mod, *mod_info)
+    except ImportError:
+        return None
+
+
 def make_suite():
     """
     Constructs a unittest.TestSuite() of all tests for the package. For use
@@ -31,11 +69,24 @@ def test_classes():
         A list of unittest.TestCase classes
     """
 
-    # Make sure the module is loaded from this source folder
-    module_name = 'asn1crypto'
-    src_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-    module_info = imp.find_module(module_name, [src_dir])
-    imp.load_module(module_name, *module_info)
+    # If we are in a source folder and these tests aren't installed as a
+    # package, we want to load asn1crypto from this source folder
+    tests_dir = os.path.dirname(os.path.abspath(__file__))
+
+    asn1crypto = None
+    if os.path.basename(tests_dir) == 'tests':
+        asn1crypto = _import_from(
+            'asn1crypto',
+            os.path.join(tests_dir, '..')
+        )
+    if asn1crypto is None:
+        import asn1crypto
+
+    if asn1crypto.__version__ != __version__:
+        raise AssertionError(
+            ('asn1crypto_tests version %s can not be run with ' % __version__) +
+            ('asn1crypto version %s' % asn1crypto.__version__)
+        )
 
     from .test_algos import AlgoTests
     from .test_cms import CMSTests

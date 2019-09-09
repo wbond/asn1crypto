@@ -13,6 +13,7 @@ A fast, pure Python library for parsing and serializing ASN.1 structures.
  - [Continuous Integration](#continuous-integration)
  - [Testing](#testing)
  - [Development](#development)
+ - [CI Tasks](#ci-tasks)
 
 [![Travis CI](https://api.travis-ci.org/wbond/asn1crypto.svg?branch=master)](https://travis-ci.org/wbond/asn1crypto)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/wbond/asn1crypto?branch=master&svg=true)](https://ci.appveyor.com/project/wbond/asn1crypto)
@@ -161,7 +162,15 @@ links to the source for the various pre-defined type classes.
 
 ## Testing
 
-Tests are written using `unittest` and require no third-party packages:
+Tests are written using `unittest` and require no third-party packages.
+
+Depending on what type of source is available for the package, the following
+commands can be used to run the test suite.
+
+### Git Repository
+
+When working within a Git working copy, or an archive of the Git repository,
+the full test suite is run via:
 
 ```bash
 python run.py tests
@@ -171,6 +180,25 @@ To run only some tests, pass a regular expression as a parameter to `tests`.
 
 ```bash
 python run.py tests ocsp
+```
+
+### PyPi Source Distribution
+
+When working within an extracted source distribution (aka `.tar.gz`) from
+PyPi, the full test suite is run via:
+
+```bash
+python setup.py test
+```
+
+### Package
+
+When the package has been installed via pip (or another method), the package
+`asn1crypto_tests` may be installed and invoked to run the full test suite:
+
+```bash
+pip install asn1crypto_tests
+python -m asn1crypto_tests
 ```
 
 ## Development
@@ -199,6 +227,12 @@ Coverage is measured by running:
 python run.py coverage
 ```
 
+To change the version number of the package, run:
+
+```bash
+python run.py version {pep440_version}
+```
+
 To install the necessary packages for releasing a new version on PyPI, run:
 
 ```bash
@@ -207,7 +241,7 @@ pip install --user -r requires/release
 
 Releases are created by:
 
- - Making a git tag in [semver](http://semver.org/) format
+ - Making a git tag in [PEP 440](https://www.python.org/dev/peps/pep-0440/#examples-of-compliant-version-schemes) format
  - Running the command:
 
    ```bash

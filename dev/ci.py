@@ -3,9 +3,9 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import sys
 import os
-import imp
 
-from . import build_root
+from . import build_root, requires_oscrypto
+from ._import import _preload
 
 
 deps_dir = os.path.join(build_root, 'modularcrypto-deps')
@@ -34,24 +34,7 @@ def run():
         A bool - if the linter and tests ran successfully
     """
 
-    print('Python ' + sys.version.replace('\n', ''))
-
-    oscrypto_tests_module_info = imp.find_module('tests', [os.path.join(build_root, 'oscrypto')])
-    oscrypto_tests = imp.load_module('oscrypto.tests', *oscrypto_tests_module_info)
-    asn1crypto, oscrypto = oscrypto_tests.local_oscrypto()
-    print(
-        '\nasn1crypto: %s, %s' % (
-            asn1crypto.__version__,
-            os.path.dirname(asn1crypto.__file__)
-        )
-    )
-    print(
-        'oscrypto: %s backend, %s, %s' % (
-            oscrypto.backend(),
-            oscrypto.__version__,
-            os.path.dirname(oscrypto.__file__)
-        )
-    )
+    _preload(requires_oscrypto, True)
 
     if run_lint:
         print('')
