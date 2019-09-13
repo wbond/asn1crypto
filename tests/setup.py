@@ -12,6 +12,8 @@ from setuptools.command.egg_info import egg_info
 PACKAGE_NAME = 'asn1crypto'
 PACKAGE_VERSION = '0.25.0.dev1'
 TEST_PACKAGE_NAME = '%s_tests' % PACKAGE_NAME
+TESTS_ROOT = os.path.dirname(os.path.abspath(__file__))
+PACKAGE_ROOT = os.path.abspath(os.path.join(TESTS_ROOT, '..'))
 
 
 # setuptools 38.6.0 and newer know about long_description_content_type, but
@@ -26,11 +28,16 @@ if svi >= (38, 6):
     )
 
 
+# Older versions of distutils would take a glob pattern and return dirs
+# and then would complain that it couldn't copy a dir like a file, so we
+# have to build an explicit list of file names
+data_files = []
+fixtures_dir = os.path.join(TESTS_ROOT, 'fixtures')
+for root, dirs, files in os.walk(fixtures_dir):
+    for filename in files:
+        data_files.append(os.path.join(root, filename)[len(TESTS_ROOT) + 1:])
 package_data = {
-    TEST_PACKAGE_NAME: [
-        'fixtures/*',
-        'fixtures/*/*',
-    ]
+    TEST_PACKAGE_NAME: data_files
 }
 # This allows us to send the LICENSE when creating a sdist. Wheels
 # automatically include the license, and don't need the docs. For these
@@ -42,22 +49,18 @@ if sys.argv[1:] == ['sdist'] or sorted(sys.argv[1:]) == ['-q', 'sdist']:
     ])
 
 
-tests_root = os.path.dirname(os.path.abspath(__file__))
-package_root = os.path.abspath(os.path.join(tests_root, '..'))
-
-
 # Ensures a copy of the LICENSE is included with the egg-info for
 # install and bdist_egg commands
 class EggInfoCommand(egg_info):
     def run(self):
         egg_info_path = os.path.join(
-            tests_root,
+            TESTS_ROOT,
             '%s.egg-info' % TEST_PACKAGE_NAME
         )
         if not os.path.exists(egg_info_path):
             os.mkdir(egg_info_path)
         shutil.copy2(
-            os.path.join(package_root, 'LICENSE'),
+            os.path.join(PACKAGE_ROOT, 'LICENSE'),
             os.path.join(egg_info_path, 'LICENSE')
         )
         egg_info.run(self)
@@ -79,10 +82,10 @@ class CleanCommand(Command):
         if self.all:
             sub_folders.append('dist')
         for sub_folder in sub_folders:
-            full_path = os.path.join(tests_root, sub_folder)
+            full_path = os.path.join(TESTS_ROOT, sub_folder)
             if os.path.exists(full_path):
                 shutil.rmtree(full_path)
-        for root, dirs, files in os.walk(tests_root):
+        for root, dirs, files in os.walk(TESTS_ROOT):
             for filename in files:
                 if filename[-4:] == '.pyc':
                     os.unlink(os.path.join(root, filename))
@@ -92,7 +95,7 @@ class CleanCommand(Command):
 
 
 readme = ''
-with codecs.open(os.path.join(tests_root, 'readme.md'), 'r', 'utf-8') as f:
+with codecs.open(os.path.join(TESTS_ROOT, 'readme.md'), 'r', 'utf-8') as f:
     readme = f.read()
 
 
