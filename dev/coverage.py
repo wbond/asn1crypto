@@ -112,7 +112,8 @@ def _env_info():
     :return:
         A two-element tuple of unicode strings. The first is the name of the
         environment, the second the root of the repo. The environment name
-        will be one of: "ci-travis", "ci-circle", "ci-appveyor", "local"
+        will be one of: "ci-travis", "ci-circle", "ci-appveyor",
+        "ci-github-actions", "local"
     """
 
     if os.getenv('CI') == 'true' and os.getenv('TRAVIS') == 'true':
@@ -123,6 +124,9 @@ def _env_info():
 
     if os.getenv('CI') == 'true' and os.getenv('CIRCLECI') == 'true':
         return ('ci-circle', os.getcwdu() if sys.version_info < (3,) else os.getcwd())
+
+    if os.getenv('GITHUB_ACTIONS') == 'true':
+        return ('ci-github-actions', os.getenv('GITHUB_WORKSPACE'))
 
     return ('local', package_root)
 
@@ -189,6 +193,30 @@ def _codecov_submit():
             'slug': os.getenv('CIRCLE_PROJECT_USERNAME') + "/" + os.getenv('CIRCLE_PROJECT_REPONAME'),
             'commit': os.getenv('CIRCLE_SHA1'),
             'build_url': os.getenv('CIRCLE_BUILD_URL'),
+        }
+
+    elif env_name == 'ci-github-actions':
+        branch = ''
+        tag = ''
+        ref = os.getenv('GITHUB_REF', '')
+        if ref.startswith('refs/tags/'):
+            tag = ref[10:]
+        elif ref.startswith('refs/heads/'):
+            branch = ref[11:]
+
+        impl = _plat.python_implementation()
+        major, minor = _plat.python_version_tuple()[0:2]
+        build_name = '%s %s %s.%s' % (_platform_name(), impl, major, minor)
+
+        query = {
+            'service': 'custom',
+            'token': json_data['token'],
+            'branch': branch,
+            'tag': tag,
+            'slug': os.getenv('GITHUB_REPOSITORY'),
+            'commit': os.getenv('GITHUB_SHA'),
+            'build_url': 'https://github.com/wbond/oscrypto/commit/%s/checks' % os.getenv('GITHUB_SHA'),
+            'name': 'GitHub Actions %s on %s' % (build_name, os.getenv('RUNNER_OS'))
         }
 
     else:
@@ -623,8 +651,9 @@ def _execute(params, cwd, retry=None):
     if code != 0:
         if retry:
             stderr_str = stderr.decode('utf-8')
-            if isinstance(retry, Pattern) and retry.search(stderr_str) is not None:
-                return _execute(params, cwd, retry)
+            if isinstance(retry, Pattern):
+                if retry.search(stderr_str) is not None:
+                    return _execute(params, cwd, retry)
             elif retry in stderr_str:
                 return _execute(params, cwd, retry)
         e = OSError('subprocess exit code for "%s" was %d: %s' % (' '.join(params), code, stderr))
