@@ -143,6 +143,9 @@ class PEMTests(unittest.TestCase):
         encoded_bytes = pem.armor(type_name, byte_string, headers=headers)
         with open(os.path.join(fixtures_dir, expected_bytes_filename), 'rb') as f:
             expected_bytes = f.read()
+            # In case a user on Windows has CRLF translation on in Git.
+            # Ran into this with the GitHub Actions Windows environments.
+            expected_bytes = expected_bytes.replace(b'\r\n', b'\n')
             self.assertEqual(expected_bytes, encoded_bytes)
 
     def test_armor_wrong_type(self):
