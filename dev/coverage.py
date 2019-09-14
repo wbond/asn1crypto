@@ -11,6 +11,7 @@ import unittest
 import re
 import sys
 import tempfile
+import time
 import platform as _plat
 import subprocess
 from fnmatch import fnmatch
@@ -552,8 +553,8 @@ def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
             stdout, stderr = _execute(
                 [powershell_exe, '-Command', code],
                 os.getcwd(),
-                re.compile(r'Unable to connect to|TLS'),
-                3
+                re.compile(r'Unable to connect to|TLS|Internal Server Error'),
+                6
             )
             if stdout[-2:] == b'\r\n' and b'\r\n\r\n' in stdout:
                 # An extra trailing crlf is added at the end by powershell
@@ -584,7 +585,7 @@ def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
                 args,
                 os.getcwd(),
                 re.compile(r'Failed to connect to|TLS|SSLRead|outstanding|cleanly'),
-                3
+                6
             )
     finally:
         if tempf_path and os.path.exists(tempf_path):
@@ -658,8 +659,10 @@ def _execute(params, cwd, retry=None, retries=0):
             stderr_str = stderr.decode('utf-8')
             if isinstance(retry, Pattern):
                 if retry.search(stderr_str) is not None:
+                    time.sleep(5)
                     return _execute(params, cwd, retry, retries - 1)
             elif retry in stderr_str:
+                time.sleep(5)
                 return _execute(params, cwd, retry, retries - 1)
         e = OSError('subprocess exit code for "%s" was %d: %s' % (' '.join(params), code, stderr))
         e.stdout = stdout
