@@ -544,6 +544,11 @@ class X509Tests(unittest.TestCase):
                 'ecdsa',
                 'sha256'
             ),
+            (
+                'keys/test-rsapss.crt',
+                'rsassa_pss',
+                'sha256'
+            ),
         )
 
     @data('signature_algo_info')
