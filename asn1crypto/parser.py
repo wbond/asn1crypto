@@ -270,11 +270,13 @@ def _dump_header(class_, method, tag, contents):
     id_num |= method << 5
 
     if tag >= 31:
-        header += chr_cls(id_num | 31)
+        cont_bit = 0
         while tag > 0:
-            continuation_bit = 0x80 if tag > 0x7F else 0
-            header += chr_cls(continuation_bit | (tag & 0x7F))
+            header = chr_cls(cont_bit | (tag & 0x7f)) + header
+            if not cont_bit:
+                cont_bit = 0x80
             tag = tag >> 7
+        header = chr_cls(id_num | 31) + header
     else:
         header += chr_cls(id_num | tag)
 

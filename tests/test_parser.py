@@ -60,3 +60,31 @@ class ParserTests(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             parser.emit(0, 0, 2, '\x00')
+
+    def test_parser_large_tag(self):
+        # One extra byte
+        result = parser.parse(b'\x7f\x49\x00')
+        self.assertEqual(1, result[0])
+        self.assertEqual(1, result[1])
+        self.assertEqual(73, result[2])
+        self.assertEqual(b'\x7f\x49\x00', result[3])
+        self.assertEqual(b'', result[4])
+        self.assertEqual(b'', result[5])
+
+        # Two extra bytes
+        result = parser.parse(b'\x7f\x81\x49\x00')
+        self.assertEqual(1, result[0])
+        self.assertEqual(1, result[1])
+        self.assertEqual(201, result[2])
+        self.assertEqual(b'\x7f\x81\x49\x00', result[3])
+        self.assertEqual(b'', result[4])
+        self.assertEqual(b'', result[5])
+
+        # Three extra bytes
+        result = parser.parse(b'\x7f\x81\x80\x00\x00')
+        self.assertEqual(1, result[0])
+        self.assertEqual(1, result[1])
+        self.assertEqual(16384, result[2])
+        self.assertEqual(b'\x7f\x81\x80\x00\x00', result[3])
+        self.assertEqual(b'', result[4])
+        self.assertEqual(b'', result[5])

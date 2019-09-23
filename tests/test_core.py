@@ -268,6 +268,41 @@ class SpcPeImageData(core.Sequence):
 @data_decorator
 class CoreTests(unittest.TestCase):
 
+    def test_large_tag_encode(self):
+        # https://misc.daniel-marschall.de/asn.1/oid_facts.html
+        v = core.Primitive(tag=31, contents=b'')
+        self.assertEqual(b'\x1f\x1f\x00', v.dump())
+
+        v = core.Primitive(tag=36, contents=b'')
+        self.assertEqual(b'\x1f\x24\x00', v.dump())
+
+        # One extra byte
+        v = core.Primitive(
+            class_="application",
+            method="constructed",
+            tag=73,
+            contents=b''
+        )
+        self.assertEqual(b'\x7f\x49\x00', v.dump())
+
+        # Two extra bytes
+        v = core.Primitive(
+            class_="application",
+            method="constructed",
+            tag=201,
+            contents=b''
+        )
+        self.assertEqual(b'\x7f\x81\x49\x00', v.dump())
+
+        # Three extra bytes
+        v = core.Primitive(
+            class_="application",
+            method="constructed",
+            tag=16384,
+            contents=b''
+        )
+        self.assertEqual(b'\x7f\x81\x80\x00\x00', v.dump())
+
     def test_manual_construction(self):
         v = core.Asn1Value(
             class_="application",
