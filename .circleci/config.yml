@@ -13,6 +13,7 @@ jobs:
       # macOS 10.14.4
       xcode: 10.3.0
     steps:
+      - checkout
       - run: brew install pypy
       - run: pypy run.py deps
       - run: pypy run.py ci
