@@ -14,10 +14,31 @@ jobs:
         python:
           - '2.7'
           - '3.7'
+        arch:
+          - 'x86'
+          - 'x64'
+        exclude:
+          - os: ubuntu-18.04
+            arch: x86
+          - os: macOS-10.14
+            arch: x86
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python }}
-      - run: python run.py deps
-      - run: python run.py ci
+          architecture: ${{ matrix.arch }}
+      - name: Install dependencies
+        run: python run.py deps
+      - name: Run test suite
+        run: python run.py ci
+      - name: Run test suite (OpenSSL/macOS)
+        run: python run.py ci
+        if: runner.os == 'macOS'
+        env:
+          OSCRYPTO_USE_OPENSSL: /usr/lib/libcrypto.dylib,/usr/lib/libssl.dylib
+      - name: Run test suite (Windows legacy API)
+        run: python run.py ci
+        if: runner.os == 'Windows'
+        env:
+          OSCRYPTO_USE_WINLEGACY: 'true'
