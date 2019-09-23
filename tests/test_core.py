@@ -268,6 +268,15 @@ class SpcPeImageData(core.Sequence):
 @data_decorator
 class CoreTests(unittest.TestCase):
 
+    def test_manual_construction(self):
+        v = core.Asn1Value(
+            class_="application",
+            method="constructed",
+            tag=1,
+            contents=b''
+        )
+        self.assertEqual(b'\x61\x00', v.dump())
+
     def test_sequence_spec(self):
         seq = Seq()
         seq['id'] = '1.2.3'

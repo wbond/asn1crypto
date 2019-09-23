@@ -231,7 +231,7 @@ class Asn1Value(object):
         return value
 
     def __init__(self, explicit=None, implicit=None, no_explicit=False, tag_type=None, class_=None, tag=None,
-                 optional=None, default=None, contents=None):
+                 optional=None, default=None, contents=None, method=None):
         """
         The optional parameter is not used, but rather included so we don't
         have to delete it from the parameter dictionary when passing as keyword
@@ -275,6 +275,12 @@ class Asn1Value(object):
 
         :param contents:
             A byte string of the encoded contents of the value
+
+        :param method:
+            The method for the value - no default value since this is
+            normally set on a class. Valid values include:
+             - "primitive" or 0
+             - "constructed" or 1
 
         :raises:
             ValueError - when implicit, explicit, tag_type, class_ or tag are invalid values
@@ -385,7 +391,7 @@ class Asn1Value(object):
                 self.implicit = True
             else:
                 if class_ is not None:
-                    if class_ not in CLASS_NUM_TO_NAME_MAP:
+                    if class_ not in CLASS_NAME_TO_NUM_MAP:
                         raise ValueError(unwrap(
                             '''
                             class_ must be one of "universal", "application",
@@ -395,8 +401,26 @@ class Asn1Value(object):
                         ))
                     self.class_ = CLASS_NAME_TO_NUM_MAP[class_]
 
+                if self.class_ is None:
+                    self.class_ = 0
+
                 if tag is not None:
                     self.tag = tag
+
+            if method is not None:
+                if method not in set(["primitive", 0, "constructed", 1]):
+                    raise ValueError(unwrap(
+                        '''
+                        method must be one of "primitive" or "constructed",
+                        not %s
+                        ''',
+                        repr(method)
+                    ))
+                if method == "primitive":
+                    method = 0
+                elif method == "constructed":
+                    method = 1
+                self.method = method
 
             if no_explicit:
                 self.explicit = None
