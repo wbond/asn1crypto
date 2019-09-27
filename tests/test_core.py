@@ -961,6 +961,9 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(TypeError):
             a.set('badtype')
 
+        with self.assertRaises(ValueError):
+            core.IntegerBitString(-1)
+
     def test_indefinite_length_integer_bit_string(self):
         data = b'#\x80\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
         a = core.IntegerBitString.load(data)
@@ -1035,6 +1038,16 @@ class CoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             # parsable octet bit string with unused bits
             core.ParsableOctetBitString.load(b'\x23\x80\x03\x03\x04\x02\x00\x03\x03\x04\x12\xa0\x00\x00').native
+
+    def test_integer_octet_string(self):
+        v = core.IntegerOctetString(10)
+        self.assertEqual(10, v.native)
+
+        with self.assertRaises(TypeError):
+            core.IntegerOctetString('0')
+
+        with self.assertRaises(ValueError):
+            core.IntegerOctetString(-1)
 
     def test_explicit_application_tag(self):
         data = b'\x6a\x81\x03\x02\x01\x00'

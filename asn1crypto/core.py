@@ -2480,10 +2480,19 @@ class IntegerBitString(_IntegerBitString, Constructable, Castable, Primitive):
         if not isinstance(value, int_types):
             raise TypeError(unwrap(
                 '''
-                %s value must be an integer, not %s
+                %s value must be a positive integer, not %s
                 ''',
                 type_name(self),
                 type_name(value)
+            ))
+
+        if value < 0:
+            raise ValueError(unwrap(
+                '''
+                %s value must be a positive integer, not %d
+                ''',
+                type_name(self),
+                value
             ))
 
         self._native = value
@@ -2620,10 +2629,19 @@ class IntegerOctetString(Constructable, Castable, Primitive):
         if not isinstance(value, int_types):
             raise TypeError(unwrap(
                 '''
-                %s value must be an integer, not %s
+                %s value must be a positive integer, not %s
                 ''',
                 type_name(self),
                 type_name(value)
+            ))
+
+        if value < 0:
+            raise ValueError(unwrap(
+                '''
+                %s value must be a positive integer, not %d
+                ''',
+                type_name(self),
+                value
             ))
 
         self._native = value
