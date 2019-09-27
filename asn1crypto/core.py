@@ -725,10 +725,6 @@ class Constructable(object):
     # length when parsed - affects parsing and dumping
     _indefinite = False
 
-    # Class attribute that indicates the offset into self.contents
-    # that contains the chunks of data to merge
-    _chunks_offset = 0
-
     def _merge_chunks(self):
         """
         :return:
@@ -738,7 +734,7 @@ class Constructable(object):
         if not self._indefinite:
             return self._as_chunk()
 
-        pointer = self._chunks_offset
+        pointer = 0
         contents_len = len(self.contents)
         output = None
 
@@ -765,9 +761,7 @@ class Constructable(object):
             byte strings, unicode strings or tuples.
         """
 
-        if self._chunks_offset == 0:
-            return self.contents
-        return self.contents[self._chunks_offset:]
+        return self.contents
 
     def _copy(self, other, copy_func):
         """
@@ -1956,7 +1950,115 @@ class Integer(Primitive, ValueMap):
         return self._native
 
 
-class BitString(Constructable, Castable, Primitive, ValueMap, object):
+class _IntegerBitString(object):
+    """
+    A mixin for IntegerBitString and BitString to parse the contents as an integer.
+    """
+
+    # Tuple of 1s and 0s; set through native
+    _unused_bits = ()
+
+    def _as_chunk(self):
+        """
+        Parse the contents of a primitive BitString encoding as an integer value.
+        Allows reconstructing indefinite length values.
+
+        :raises:
+            ValueError - when an invalid value is passed
+
+        :return:
+            A list with one tuple (value, bits, unused_bits) where value is an integer
+            with the value of the BitString, bits is the bit count of value and
+            unused_bits is a tuple of 1s and 0s.
+        """
+
+        if self._indefinite:
+            # return an empty chunk, for cases like \x23\x80\x00\x00
+            return []
+
+        unused_bits_len = ord(self.contents[0]) if _PY2 else self.contents[0]
+        value = int_from_bytes(self.contents[1:])
+        bits = (len(self.contents) - 1) * 8
+
+        if not unused_bits_len:
+            return [(value, bits, ())]
+
+        if len(self.contents) == 1:
+            # Disallowed by X.690 §8.6.2.3
+            raise ValueError('Empty bit string has {0} unused bits'.format(unused_bits_len))
+
+        if unused_bits_len > 7:
+            # Disallowed by X.690 §8.6.2.2
+            raise ValueError('Bit string has {0} unused bits'.format(unused_bits_len))
+
+        unused_bits = _int_to_bit_tuple(value & ((1 << unused_bits_len) - 1), unused_bits_len)
+        value >>= unused_bits_len
+        bits -= unused_bits_len
+
+        return [(value, bits, unused_bits)]
+
+    def _chunks_to_int(self):
+        """
+        Combines the chunks into a single value.
+
+        :raises:
+            ValueError - when an invalid value is passed
+
+        :return:
+            A tuple (value, bits, unused_bits) where value is an integer with the
+            value of the BitString, bits is the bit count of value and unused_bits
+            is a tuple of 1s and 0s.
+        """
+
+        if not self._indefinite:
+            # Fast path
+            return self._as_chunk()[0]
+
+        value = 0
+        total_bits = 0
+        unused_bits = ()
+
+        # X.690 §8.6.3 allows empty indefinite encodings
+        for chunk, bits, unused_bits in self._merge_chunks():
+            if total_bits & 7:
+                # Disallowed by X.690 §8.6.4
+                raise ValueError('Only last chunk in a bit string may have unused bits')
+            total_bits += bits
+            value = (value << bits) | chunk
+
+        return value, total_bits, unused_bits
+
+    def _copy(self, other, copy_func):
+        """
+        Copies the contents of another _IntegerBitString object to itself
+
+        :param object:
+            Another instance of the same class
+
+        :param copy_func:
+            An reference of copy.copy() or copy.deepcopy() to use when copying
+            lists, dicts and objects
+        """
+
+        super(_IntegerBitString, self)._copy(other, copy_func)
+        self._unused_bits = other._unused_bits
+
+    @property
+    def unused_bits(self):
+        """
+        The unused bits of the bit string encoding.
+
+        :return:
+            A tuple of 1s and 0s
+        """
+
+        # call native to set _unused_bits
+        self.native
+
+        return self._unused_bits
+
+
+class BitString(_IntegerBitString, Constructable, Castable, Primitive, ValueMap):
     """
     Represents a bit string from ASN.1 as a Python tuple of 1s and 0s
     """
@@ -1964,10 +2066,6 @@ class BitString(Constructable, Castable, Primitive, ValueMap, object):
     tag = 3
 
     _size = None
-
-    # Used with _as_chunk() from Constructable
-    _chunk = None
-    _chunks_offset = 1
 
     def _setup(self):
         """
@@ -2032,8 +2130,6 @@ class BitString(Constructable, Castable, Primitive, ValueMap, object):
                 type_name(value)
             ))
 
-        self._chunk = None
-
         if self._map is not None:
             if len(value) > self._size:
                 raise ValueError(unwrap(
@@ -2073,6 +2169,7 @@ class BitString(Constructable, Castable, Primitive, ValueMap, object):
             value_bytes = (b'\x00' * (size_in_bytes - len(value_bytes))) + value_bytes
 
         self.contents = extra_bits_byte + value_bytes
+        self._unused_bits = (0,) * extra_bits
         self._header = None
         if self._indefinite:
             self._indefinite = False
@@ -2184,36 +2281,6 @@ class BitString(Constructable, Castable, Primitive, ValueMap, object):
 
         self.set(self._native)
 
-    def _as_chunk(self):
-        """
-        Allows reconstructing indefinite length values
-
-        :return:
-            A tuple of integers
-        """
-
-        extra_bits = int_from_bytes(self.contents[0:1])
-        byte_len = len(self.contents[1:])
-        bit_string = '' if byte_len == 0 else '{0:b}'.format(int_from_bytes(self.contents[1:]))
-        bit_len = len(bit_string)
-
-        # Left-pad the bit string to a byte multiple to ensure we didn't
-        # lose any zero bits on the left
-        mod_bit_len = bit_len % 8
-        if mod_bit_len != 0:
-            bit_string = ('0' * (8 - mod_bit_len)) + bit_string
-            bit_len = len(bit_string)
-
-        if bit_len // 8 < byte_len:
-            missing_bytes = byte_len - (bit_len // 8)
-            bit_string = ('0' * (8 * missing_bytes)) + bit_string
-
-        # Trim off the extra bits on the right used to fill the last byte
-        if extra_bits > 0:
-            bit_string = bit_string[0:0 - extra_bits]
-
-        return tuple(map(int, tuple(bit_string)))
-
     @property
     def native(self):
         """
@@ -2232,7 +2299,9 @@ class BitString(Constructable, Castable, Primitive, ValueMap, object):
                 self.set(set())
 
         if self._native is None:
-            bits = self._merge_chunks()
+            int_value, bit_count, self._unused_bits = self._chunks_to_int()
+            bits = _int_to_bit_tuple(int_value, bit_count)
+
             if self._map:
                 self._native = set()
                 for index, bit in enumerate(bits):
@@ -2251,14 +2320,11 @@ class OctetBitString(Constructable, Castable, Primitive):
 
     tag = 3
 
-    # Whenever dealing with octet-based bit strings, we really want the
-    # bytes, so we just ignore the unused bits portion since it isn't
-    # applicable to the current use case
-    # unused_bits = struct.unpack('>B', self.contents[0:1])[0]
-    _chunks_offset = 1
-
     # Instance attribute of (possibly-merged) byte string
     _bytes = None
+
+    # Tuple of 1s and 0s; set through native
+    _unused_bits = ()
 
     def set(self, value):
         """
@@ -2283,6 +2349,7 @@ class OctetBitString(Constructable, Castable, Primitive):
         self._bytes = value
         # Set the unused bits to 0
         self.contents = b'\x00' + value
+        self._unused_bits = ()
         self._header = None
         if self._indefinite:
             self._indefinite = False
@@ -2299,7 +2366,18 @@ class OctetBitString(Constructable, Castable, Primitive):
         if self.contents is None:
             return b''
         if self._bytes is None:
-            self._bytes = self._merge_chunks()
+            if not self._indefinite:
+                self._bytes, self._unused_bits = self._as_chunk()[0]
+            else:
+                chunks = self._merge_chunks()
+                self._unused_bits = ()
+                for chunk in chunks:
+                    if self._unused_bits:
+                        # Disallowed by X.690 §8.6.4
+                        raise ValueError('Only last chunk in a bit string may have unused bits')
+                    self._unused_bits = chunk[1]
+                self._bytes = b''.join(chunk[0] for chunk in chunks)
+
         return self._bytes
 
     def _copy(self, other, copy_func):
@@ -2316,6 +2394,41 @@ class OctetBitString(Constructable, Castable, Primitive):
 
         super(OctetBitString, self)._copy(other, copy_func)
         self._bytes = other._bytes
+        self._unused_bits = other._unused_bits
+
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
+        :raises:
+            ValueError - when an invalid value is passed
+
+        :return:
+            List with one tuple, consisting of a byte string and an integer (unused bits)
+        """
+
+        unused_bits_len = ord(self.contents[0]) if _PY2 else self.contents[0]
+        if not unused_bits_len:
+            return [(self.contents[1:], ())]
+
+        if len(self.contents) == 1:
+            # Disallowed by X.690 §8.6.2.3
+            raise ValueError('Empty bit string has {0} unused bits'.format(unused_bits_len))
+
+        if unused_bits_len > 7:
+            # Disallowed by X.690 §8.6.2.2
+            raise ValueError('Bit string has {0} unused bits'.format(unused_bits_len))
+
+        mask = (1 << unused_bits_len) - 1
+        last_byte = ord(self.contents[-1]) if _PY2 else self.contents[-1]
+
+        # zero out the unused bits in the last byte.
+        zeroed_byte = last_byte & ~mask
+        value = self.contents[1:-1] + (chr(zeroed_byte) if _PY2 else bytes((zeroed_byte,)))
+
+        unused_bits = _int_to_bit_tuple(last_byte & mask, unused_bits_len)
+
+        return [(value, unused_bits)]
 
     @property
     def native(self):
@@ -2331,15 +2444,27 @@ class OctetBitString(Constructable, Castable, Primitive):
 
         return self.__bytes__()
 
+    @property
+    def unused_bits(self):
+        """
+        The unused bits of the bit string encoding.
 
-class IntegerBitString(Constructable, Castable, Primitive):
+        :return:
+            A tuple of 1s and 0s
+        """
+
+        # call native to set _unused_bits
+        self.native
+
+        return self._unused_bits
+
+
+class IntegerBitString(_IntegerBitString, Constructable, Castable, Primitive):
     """
     Represents a bit string in ASN.1 as a Python integer
     """
 
     tag = 3
-
-    _chunks_offset = 1
 
     def set(self, value):
         """
@@ -2364,33 +2489,13 @@ class IntegerBitString(Constructable, Castable, Primitive):
         self._native = value
         # Set the unused bits to 0
         self.contents = b'\x00' + int_to_bytes(value, signed=True)
+        self._unused_bits = ()
         self._header = None
         if self._indefinite:
             self._indefinite = False
             self.method = 0
         if self._trailer != b'':
             self._trailer = b''
-
-    def _as_chunk(self):
-        """
-        Allows reconstructing indefinite length values
-
-        :return:
-            A unicode string of bits - 1s and 0s
-        """
-
-        extra_bits = int_from_bytes(self.contents[0:1])
-        bit_string = '{0:b}'.format(int_from_bytes(self.contents[1:]))
-
-        # Ensure we have leading zeros since these chunks may be concatenated together
-        mod_bit_len = len(bit_string) % 8
-        if mod_bit_len != 0:
-            bit_string = ('0' * (8 - mod_bit_len)) + bit_string
-
-        if extra_bits > 0:
-            return bit_string[0:0 - extra_bits]
-
-        return bit_string
 
     @property
     def native(self):
@@ -2405,14 +2510,8 @@ class IntegerBitString(Constructable, Castable, Primitive):
             return None
 
         if self._native is None:
-            extra_bits = int_from_bytes(self.contents[0:1])
-            # Fast path
-            if not self._indefinite and extra_bits == 0:
-                self._native = int_from_bytes(self.contents[1:])
-            else:
-                if self._indefinite and extra_bits > 0:
-                    raise ValueError('Constructed bit string has extra bits on indefinite container')
-                self._native = int(self._merge_chunks(), 2)
+            self._native, __, self._unused_bits = self._chunks_to_int()
+
         return self._native
 
 
@@ -2734,12 +2833,6 @@ class ParsableOctetBitString(ParsableOctetString):
 
     tag = 3
 
-    # Whenever dealing with octet-based bit strings, we really want the
-    # bytes, so we just ignore the unused bits portion since it isn't
-    # applicable to the current use case
-    # unused_bits = struct.unpack('>B', self.contents[0:1])[0]
-    _chunks_offset = 1
-
     def set(self, value):
         """
         Sets the value of the object
@@ -2769,6 +2862,23 @@ class ParsableOctetBitString(ParsableOctetString):
             self.method = 0
         if self._trailer != b'':
             self._trailer = b''
+
+    def _as_chunk(self):
+        """
+        Allows reconstructing indefinite length values
+
+        :raises:
+            ValueError - when an invalid value is passed
+
+        :return:
+            A byte string
+        """
+
+        unused_bits_len = ord(self.contents[0]) if _PY2 else self.contents[0]
+        if unused_bits_len:
+            raise ValueError('ParsableOctetBitString should have no unused bits')
+
+        return self.contents[1:]
 
 
 class Null(Primitive):
@@ -5140,6 +5250,30 @@ def _build_id_tuple(params, spec):
     required_tag = params.get('tag', required_tag)
 
     return (required_class, required_tag)
+
+
+def _int_to_bit_tuple(value, bits):
+    """
+    Format value as a tuple of 1s and 0s.
+
+    :param value:
+        A non-negative integer to format
+
+    :param bits:
+        Number of bits in the output
+
+    :return:
+        A tuple of 1s and 0s with bits members.
+    """
+
+    if not value and not bits:
+        return ()
+
+    result = tuple(map(int, format(value, '0{0}b'.format(bits))))
+    if len(result) != bits:
+        raise ValueError('Result too large: {0} > {1}'.format(len(result), bits))
+
+    return result
 
 
 _UNIVERSAL_SPECS = {

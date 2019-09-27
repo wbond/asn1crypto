@@ -201,12 +201,6 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
             # just scanned looking for \x00\x00, nested indefinite length values
             # would not work.
             contents_end = pointer
-            # Unfortunately we need to understand the contents of the data to
-            # properly scan forward, which bleeds some representation info into
-            # the parser. This condition handles the unused bits byte in
-            # constructed bit strings.
-            if tag == 3:
-                contents_end += 1
             while contents_end < data_len:
                 sub_header_end, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True)
                 if contents_end == sub_header_end and encoded_data[contents_end - 2:contents_end] == b'\x00\x00':

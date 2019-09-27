@@ -459,6 +459,21 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(native, parsed.native)
         self.assertEqual(der, parsed.dump(force=True))
 
+    def test_int_to_bit_tuple(self):
+        self.assertEqual((), core._int_to_bit_tuple(0, 0))
+        self.assertEqual((0,), core._int_to_bit_tuple(0, 1))
+        self.assertEqual((1,), core._int_to_bit_tuple(1, 1))
+        self.assertEqual((0, 0), core._int_to_bit_tuple(0, 2))
+        self.assertEqual((0, 1), core._int_to_bit_tuple(1, 2))
+        self.assertEqual((0, 0, 1), core._int_to_bit_tuple(1, 3))
+        self.assertEqual((0, 1, 0), core._int_to_bit_tuple(2, 3))
+        self.assertEqual((1, 0, 1), core._int_to_bit_tuple(5, 3))
+
+        with self.assertRaises(ValueError):
+            core._int_to_bit_tuple(9, 3)
+        with self.assertRaises(ValueError):
+            core._int_to_bit_tuple(-9, 5)
+
     @staticmethod
     def bit_string_info():
         return (
@@ -478,6 +493,22 @@ class CoreTests(unittest.TestCase):
         bs = core.BitString.load(b'\x03\x01\x00')
         self.assertEqual(tuple(), bs.native)
         self.assertEqual(b'\x03\x01\x00', bs.dump(True))
+
+    @staticmethod
+    def bit_string_error_values():
+        return (
+            # unused bits in empty bit string
+            (b'\x03\x01\x05',),
+            # too many unused bits
+            (b'\x03\x03\x0e\x0c\x00',),
+            # chunk with unused bits is not last chunk
+            (b'\x23\x80\x03\x02\x01\xfe\x03\x02\x00\x55\x00\x00',),
+        )
+
+    @data('bit_string_error_values')
+    def bit_string_errors(self, enc_bytes):
+        with self.assertRaises(ValueError):
+            core.BitString.load(enc_bytes).native
 
     def test_cast(self):
         a = core.OctetBitString(b'\x00\x01\x02\x03')
@@ -892,25 +923,106 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(a._unicode, a.copy()._unicode)
 
     def test_indefinite_length_bit_string(self):
-        data = b'#\x80\x00\x03\x02\x00\x01\x03\x02\x02\x04\x00\x00'
+        data = b'#\x80\x03\x02\x00\x01\x03\x02\x02\x04\x00\x00'
         a = core.BitString.load(data)
         self.assertEqual((0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1), a.native)
+        self.assertEqual((0, 0), a.unused_bits)
+
+        # Example from X.690 §8.6.4.2
+        prim = core.BitString.load(b'\x03\x07\x04\x0A\x3B\x5F\x29\x1C\xD0')
+        self.assertEqual((0, 0, 0, 0), prim.unused_bits)
+        indef = core.BitString.load(b'\x23\x80\x03\x03\x00\x0a\x3b\x03\x05\x04\x5f\x29\x1c\xd0\x00\x00')
+        self.assertEqual(prim.native, indef.native)
+        self.assertEqual(core._int_to_bit_tuple(0x0A3B5F291CD, 44), indef.native)
+        self.assertEqual((0, 0, 0, 0), indef.unused_bits)
+
+        unused = core.BitString.load(b'\x23\x80\x03\x03\x00\x0a\x3b\x03\x05\x04\x5f\x29\x1c\xdd\x00\x00')
+        self.assertEqual(indef.native, unused.native)
+        self.assertEqual((1, 1, 0, 1), unused.unused_bits)
+
+        unused.set(indef.native)
+        self.assertEqual(indef.native, unused.native)
+        self.assertEqual((0, 0, 0, 0), unused.unused_bits)
+
+    def test_integer_bit_string(self):
+        a = core.IntegerBitString.load(b'\x03\x02\x04\xcb')
+        self.assertEqual(12, a.native)
+        self.assertEqual((1, 0, 1, 1), a.unused_bits)
+
+        b = a.copy()
+        self.assertEqual(12, b.native)
+        self.assertEqual((1, 0, 1, 1), b.unused_bits)
+
+        a.set(56)
+        self.assertEqual((), a.unused_bits)
+        self.assertEqual(56, a.native)
+        self.assertEqual(b'\x03\x02\x00\x38', a.dump())
+
+        with self.assertRaises(TypeError):
+            a.set('badtype')
 
     def test_indefinite_length_integer_bit_string(self):
-        data = b'#\x80\x00\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
+        data = b'#\x80\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
         a = core.IntegerBitString.load(data)
         self.assertEqual(260, a.native)
+        self.assertEqual((), a.unused_bits)
+
+        a = core.IntegerBitString.load(b'\x23\x80\x00\x00')
+        self.assertEqual(0, a.native)
+        self.assertEqual((), a.unused_bits)
+
+        a = core.IntegerBitString.load(b'\x23\x80\x03\x01\x00\x03\x03\x03\x03\x03\x00\x00')
+        self.assertEqual(96, a.native)
+        self.assertEqual((0, 1, 1), a.unused_bits)
+
+        a.set(56)
+        self.assertEqual((), a.unused_bits)
+        self.assertEqual(56, a.native)
+        self.assertEqual(b'\x03\x02\x00\x38', a.dump())
+
+    @data('bit_string_error_values')
+    def integer_bit_string_errors(self, enc_bytes):
+        with self.assertRaises(ValueError):
+            core.IntegerBitString.load(enc_bytes).native
+
+    def test_octet_bit_string(self):
+        a = core.OctetBitString.load(b'\x03\x02\x04\xcb')
+        self.assertEqual(b'\xc0', a.native)
+        self.assertEqual((1, 0, 1, 1), a.unused_bits)
+
+        a.set(b'\x38')
+        self.assertEqual((), a.unused_bits)
+        self.assertEqual(b'\x38', a.native)
+        self.assertEqual(b'\x03\x02\x00\x38', a.dump())
+
+        with self.assertRaises(TypeError):
+            a.set('badtype')
 
     def test_indefinite_length_octet_bit_string(self):
-        data = b'#\x80\x00\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
+        data = b'#\x80\x03\x02\x00\x01\x03\x02\x00\x04\x00\x00'
         a = core.OctetBitString.load(data)
         self.assertEqual(b'\x01\x04', a.native)
         self.assertEqual(b'\x01\x04', a.__bytes__())
         # Test copying moves internal state
         self.assertEqual(a._bytes, a.copy()._bytes)
 
+        # octet bit string with unused bits
+        a = core.OctetBitString.load(b'\x23\x80\x03\x05\x05\x74\x65\x73\x74\x00\x00')
+        self.assertEqual(b'\x74\x65\x73\x60', a.native)
+        self.assertEqual((1, 0, 1, 0, 0), a.unused_bits)
+
+        a.set(b'\x38')
+        self.assertEqual((), a.unused_bits)
+        self.assertEqual(b'\x38', a.native)
+        self.assertEqual(b'\x03\x02\x00\x38', a.dump())
+
+    @data('bit_string_error_values')
+    def octet_bit_string_errors(self, enc_bytes):
+        with self.assertRaises(ValueError):
+            core.OctetBitString.load(enc_bytes).native
+
     def test_indefinite_length_parsable_octet_bit_string(self):
-        data = b'#\x80\x00\x03\x03\x00\x0C\x02\x03\x03\x00\x61\x62\x00\x00'
+        data = b'#\x80\x03\x03\x00\x0C\x02\x03\x03\x00\x61\x62\x00\x00'
         a = core.ParsableOctetBitString.load(data)
         self.assertEqual(b'\x0C\x02\x61\x62', a.parsed.dump())
         self.assertEqual(b'\x0C\x02\x61\x62', a.__bytes__())
@@ -919,6 +1031,10 @@ class CoreTests(unittest.TestCase):
         # Test copying moves internal state
         self.assertEqual(a._bytes, a.copy()._bytes)
         self.assertEqual(a._parsed, a.copy()._parsed)
+
+        with self.assertRaises(ValueError):
+            # parsable octet bit string with unused bits
+            core.ParsableOctetBitString.load(b'\x23\x80\x03\x03\x04\x02\x00\x03\x03\x04\x12\xa0\x00\x00').native
 
     def test_explicit_application_tag(self):
         data = b'\x6a\x81\x03\x02\x01\x00'
