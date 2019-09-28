@@ -763,6 +763,20 @@ class Constructable(object):
 
         return self.contents
 
+    def _setable_native(self):
+        """
+        Returns a native value that can be round-tripped into .set(), to
+        result in a DER encoding. This differs from .native in that .native
+        is designed for the end use, and may account for the fact that the
+        merged value is further parsed as ASN.1, such as in the case of
+        ParsableOctetString() and ParsableOctetBitString().
+
+        :return:
+            A python value that is valid to pass to .set()
+        """
+
+        return self.native
+
     def _copy(self, other, copy_func):
         """
         Copies the contents of another Constructable object to itself
@@ -776,8 +790,10 @@ class Constructable(object):
         """
 
         super(Constructable, self)._copy(other, copy_func)
-        self.method = other.method
-        self._indefinite = other._indefinite
+        # We really don't want to dump BER encodings, so if we see an
+        # indefinite encoding, let's re-encode it
+        if other._indefinite:
+            self.set(other._setable_native())
 
 
 class Void(Asn1Value):
@@ -2776,6 +2792,16 @@ class ParsableOctetString(Constructable, Castable, Primitive):
         if self._bytes is None:
             self._bytes = self._merge_chunks()
         return self._bytes
+
+    def _setable_native(self):
+        """
+        Returns a byte string that can be passed into .set()
+
+        :return:
+            A python value that is valid to pass to .set()
+        """
+
+        return self.__bytes__()
 
     def _copy(self, other, copy_func):
         """
