@@ -5189,6 +5189,9 @@ def _basic_debug(prefix, self):
     elif has_header:
         print('%s    %s %s tag %s' % (prefix, method_name, class_name, self.tag))
 
+    if self._trailer:
+        print('%s  Trailer: 0x%s' % (prefix, binascii.hexlify(self._trailer or b'').decode('utf-8')))
+
     print('%s  Data: 0x%s' % (prefix, binascii.hexlify(self.contents or b'').decode('utf-8')))
 
 
