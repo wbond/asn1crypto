@@ -628,6 +628,10 @@ class Asn1Value(object):
 
         contents = self.contents
 
+        # If the length is indefinite, force the re-encoding
+        if self._header is not None and self._header[-1:] == b'\x80':
+            force = True
+
         if self._header is None or force:
             if isinstance(self, Constructable) and self._indefinite:
                 self.method = 0
@@ -641,7 +645,7 @@ class Asn1Value(object):
             self._header = header
             self._trailer = b''
 
-        return self._header + contents
+        return self._header + contents + self._trailer
 
 
 class ValueMap():
@@ -1330,6 +1334,10 @@ class Choice(Asn1Value):
             A byte string of the DER-encoded value
         """
 
+        # If the length is indefinite, force the re-encoding
+        if self._header is not None and self._header[-1:] == b'\x80':
+            force = True
+
         self._contents = self.chosen.dump(force=force)
         if self._header is None or force:
             self._header = b''
@@ -1702,6 +1710,10 @@ class Primitive(Asn1Value):
         :return:
             A byte string of the DER-encoded value
         """
+
+        # If the length is indefinite, force the re-encoding
+        if self._header is not None and self._header[-1:] == b'\x80':
+            force = True
 
         if force:
             native = self.native
@@ -2861,6 +2873,10 @@ class ParsableOctetString(Constructable, Castable, Primitive):
         :return:
             A byte string of the DER-encoded value
         """
+
+        # If the length is indefinite, force the re-encoding
+        if self._indefinite:
+            force = True
 
         if force:
             if self._parsed is not None:
@@ -4071,6 +4087,10 @@ class Sequence(Asn1Value):
             A byte string of the DER-encoded value
         """
 
+        # If the length is indefinite, force the re-encoding
+        if self._header is not None and self._header[-1:] == b'\x80':
+            force = True
+
         if force:
             self._set_contents(force=force)
 
@@ -4534,6 +4554,10 @@ class SequenceOf(Asn1Value):
         :return:
             A byte string of the DER-encoded value
         """
+
+        # If the length is indefinite, force the re-encoding
+        if self._header is not None and self._header[-1:] == b'\x80':
+            force = True
 
         if force:
             self._set_contents(force=force)

@@ -265,6 +265,18 @@ class SpcPeImageData(core.Sequence):
     ]
 
 
+class UTF8Sequence(core.Sequence):
+    _fields = [
+        ("string", core.UTF8String)
+    ]
+
+
+class NestedUTF8Sequence(core.Sequence):
+    _fields = [
+        ("seq", UTF8Sequence)
+    ]
+
+
 @data_decorator
 class CoreTests(unittest.TestCase):
 
@@ -823,6 +835,28 @@ class CoreTests(unittest.TestCase):
         choice2_copy = choice2.copy()
         choice2.chosen['name'] = 'bar'
         self.assertNotEqual(choice2.chosen['name'], choice2_copy.chosen['name'])
+
+    def test_dump_ber_indefinite(self):
+        # A simple primitive type that is indefinite-length-encoded will be
+        # automatically re-encoded to DER encoding
+        data = b'\x2C\x80\x0C\x03foo\x00\x00'
+        v = core.UTF8String.load(data)
+        self.assertEqual(True, v._indefinite)
+        self.assertEqual('foo', v.native)
+        self.assertEqual(b'\x0C\x03foo', v.dump())
+
+        # In this case the indefinite length items are nested, and the
+        # top-level item is fixed-length, so it won't get automatically
+        # re-encoded
+        data = b'\x30\x0d\x30\x80\x2C\x80\x0C\x03foo\x00\x00\x00\x00'
+        v = NestedUTF8Sequence.load(data)
+        self.assertEqual(data, v.dump())
+
+        # Here both the top-level and the nested encoding will get fixed since
+        # the top-level being indefinitely triggers a full re-encoding
+        data = b'\x30\x80\x30\x09\x2C\x80\x0C\x03foo\x00\x00\x00\x00'
+        v = NestedUTF8Sequence.load(data)
+        self.assertEqual(b'\x30\x07\x30\x05\x0C\x03foo', v.dump())
 
     def test_copy_indefinite(self):
         v = core.BitString.load(b'\x23\x80\x03\x02\x00\x04\x00\x00')
