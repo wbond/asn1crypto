@@ -330,7 +330,7 @@ class StatusGood(Null):
             None or 'good'
         """
 
-        if value is not None and value != 'good':
+        if value is not None and value != 'good' and not isinstance(value, Null):
             raise ValueError(unwrap(
                 '''
                 value must be one of None, "good", not %s
@@ -355,7 +355,7 @@ class StatusUnknown(Null):
             None or 'unknown'
         """
 
-        if value is not None and value != 'unknown':
+        if value is not None and value != 'unknown' and not isinstance(value, Null):
             raise ValueError(unwrap(
                 '''
                 value must be one of None, "unknown", not %s
