@@ -3415,3 +3415,7 @@ class X509Tests(unittest.TestCase):
 
         self.assertEqual(cert.not_valid_after, datetime(2118, 1, 28, 12, 27, 39, tzinfo=util.timezone.utc))
         self.assertEqual(cert.not_valid_before, datetime(2018, 2, 21, 12, 27, 39, tzinfo=util.timezone.utc))
+
+    def test_invalid_email_encoding(self):
+        cert = self._load_cert("invalid_email_tag.pem")
+        self.assertEqual('info@keyweb.de', cert.subject.native['email_address'])

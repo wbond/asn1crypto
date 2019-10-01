@@ -5537,15 +5537,20 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                     else:
                         value.method = method
                         value._indefinite = True
-                if tag != value.tag and tag != value._bad_tag:
-                    raise ValueError(unwrap(
-                        '''
-                        Error parsing %s - tag should have been %s, but %s was found
-                        ''',
-                        type_name(value),
-                        value.tag,
-                        tag
-                    ))
+                if tag != value.tag:
+                    if isinstance(value._bad_tag, tuple):
+                        is_bad_tag = tag in value._bad_tag
+                    else:
+                        is_bad_tag = tag == value._bad_tag
+                    if not is_bad_tag:
+                        raise ValueError(unwrap(
+                            '''
+                            Error parsing %s - tag should have been %s, but %s was found
+                            ''',
+                            type_name(value),
+                            value.tag,
+                            tag
+                        ))
 
     # For explicitly tagged, un-speced parsings, we use a generic container
     # since we will be parsing the contents and discarding the outer object

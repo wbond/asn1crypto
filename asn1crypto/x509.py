@@ -71,7 +71,7 @@ from .util import int_to_bytes, int_from_bytes, inet_ntop, inet_pton
 class DNSName(IA5String):
 
     _encoding = 'idna'
-    _bad_tag = 19
+    _bad_tag = (12, 19)
 
     def __ne__(self, other):
         return not self == other
@@ -185,8 +185,8 @@ class EmailAddress(IA5String):
     # If the value has gone through the .set() method, thus normalizing it
     _normalized = False
 
-    # In the wild we've seen this encoded as a PrintableString
-    _bad_tag = 19
+    # In the wild we've seen this encoded as a UTF8String and PrintableString
+    _bad_tag = (12, 19)
 
     @property
     def contents(self):
