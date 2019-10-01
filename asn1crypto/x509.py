@@ -389,6 +389,7 @@ class IPAddress(OctetString):
         if self._native is None:
             byte_string = self.__bytes__()
             byte_len = len(byte_string)
+            value = None
             cidr_int = None
             if byte_len in set([32, 16]):
                 value = inet_ntop(socket.AF_INET6, byte_string[0:16])
