@@ -153,3 +153,31 @@ class OCSPTests(unittest.TestCase):
             'v3',
             cert['tbs_certificate']['version'].native
         )
+
+    def test_cert_status_native(self):
+        status = ocsp.CertStatus.load(b'\x80\x00')
+        self.assertEqual('good', status.native)
+
+        status = ocsp.CertStatus(('good', ocsp.StatusGood()))
+        self.assertEqual('good', status.native)
+
+        with self.assertRaises(ValueError):
+            ocsp.StatusGood('unknown')
+
+        status = ocsp.CertStatus.load(
+            b'\xa1\x16\x18\x0f\x32\x30\x31\x38\x31\x30\x30\x33'
+            b'\x31\x34\x35\x33\x34\x37\x5a\xa0\x03\x0a\x01\x01'
+        )
+        self.assertIsInstance(
+            status.native,
+            util.OrderedDict
+        )
+
+        status = ocsp.CertStatus.load(b'\x82\x00')
+        self.assertEqual('unknown', status.native)
+
+        status = ocsp.CertStatus(('unknown', ocsp.StatusUnknown()))
+        self.assertEqual('unknown', status.native)
+
+        with self.assertRaises(ValueError):
+            ocsp.StatusUnknown('good')
