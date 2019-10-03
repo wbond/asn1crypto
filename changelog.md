@@ -1,5 +1,85 @@
 # changelog
 
+## 1.0.0
+
+ - Backwards Compatibility Breaks
+    - `cms.KeyEncryptionAlgorithmId().native` now returns the value
+      `"rsaes_pkcs1v15"` for OID `1.2.840.113549.1.1.1` instead of `"rsa"` 
+    - Removed functionality to calculate public key values from private key
+      values. Alternatives have been added to oscrypto.
+       - `keys.PrivateKeyInfo().unwrap()` is now
+         `oscrypto.asymmetric.PrivateKey().unwrap()`
+       - `keys.PrivateKeyInfo().public_key` is now
+         `oscrypto.asymmetric.PrivateKey().public_key.unwrap()`
+       - `keys.PrivateKeyInfo().public_key_info` is now
+         `oscrypto.asymmetric.PrivateKey().public_key.asn1`
+       - `keys.PrivateKeyInfo().fingerprint` is now
+         `oscrypto.asymmetric.PrivateKey().fingerprint`
+       - `keys.PublicKeyInfo().unwrap()` is now
+         `oscrypto.asymmetric.PublicKey().unwrap()`
+       - `keys.PublicKeyInfo().fingerprint` is now
+         `oscrypto.asymmetric.PublicKey().fingerprint`
+ - Enhancements
+    - Significantly improved parsing of `core.UTCTime()` and
+      `core.GeneralizedTime()` values that include timezones and fractional
+      seconds
+    - `util.timezone` has a more complete implementation
+    - `core.Choice()` may now be constructed by a 2-element tuple or a 1-key
+      dict
+    - Added `x509.Certificate().not_valid_before` and
+      `x509.Certificate().not_valid_after`
+    - Added `core.BitString().unused_bits`
+    - Added `keys.NamedCurve.register()` for non-mainstream curve OIDs
+    - No longer try to load optional performance dependency, `libcrypto`,
+      on Mac or Linux
+    - `ocsp.CertStatus().native` will now return meaningful unicode string
+      values when the status choice is `"good"` or `"unknown"`. Previously
+      both returned `None` due to the way the structure was designed.
+    - Add support for explicit RSA SSA PSS (`1.2.840.113549.1.1.10`) to
+      `keys.PublicKeyInfo()` and `keys.PrivateKeyInfo()`
+    - Added structures for nested SHA-256 Windows PE signatures to
+      `cms.CMSAttribute()`
+    - Added RC4 (`1.2.840.113549.3.4`) to `algos.EncryptionAlgorithmId()`
+    - Added secp256k1 (`1.3.132.0.10`) to `keys.NamedCurve()`
+    - Added SHA-3 and SHAKE OIDs to `algos.DigestAlgorithmId()` and
+      `algos.HmacAlgorithmId()`
+    - Added RSA ES OAEP (`1.2.840.113549.1.1.7`) to
+      `cms.KeyEncryptionAlgorithmId()`
+    - Add IKE Intermediate (`1.3.6.1.5.5.8.2.2`) to `x509.KeyPurposeId()`
+    - `x509.EmailAddress()` and `x509.DNSName()` now handle invalidly-encoded
+      values using tags for `core.PrintableString()` and `core.UTF8String()`
+    - Add parameter structue from RFC 5084 for AES-CCM to
+      `algos.EncryptionAlgorithm()`
+    - Improved robustness of parsing broken `core.Sequence()` and
+      `core.SequenceOf()` values
+ - Bug Fixes
+    - Fixed encoding of tag values over 30
+    - `core.IntegerBitString()` and `core.IntegerOctetString()` now restrict
+      values to non-negative integers since negative values are not
+      implemented
+    - When copying or dumping a BER-encoded indefinite-length value,
+      automatically force re-encoding to DER. *To ensure all nested values are
+      always DER-encoded, `.dump(True)` must be called.*
+    - Fix `UnboundLocalError` when calling `x509.IPAddress().native` on an
+      encoded value that has a length of zero
+    - Fixed passing `class_` via unicode string name to `core.Asn1Value()`
+    - Fixed a bug where EC private keys with leading null bytes would be
+      encoded in `keys.ECPrivateKey()` more narrowly than RFC 5915 requires
+    - Fixed some edge-case bugs in `util.int_to_bytes()`
+    - `x509.URI()` now only normalizes values when comparing
+    - Fixed BER-decoding of indefinite length `core.BitString()`
+    - Fixed DER-encoding of empty `core.BitString()`
+    - Fixed a missing return value for `core.Choice().parse()`
+    - Fixed `core.Choice().contents` working when the chosen alternative is a
+      `core.Choice()` also
+    - Fixed parsing and encoding of nested `core.Choice()` objects
+    - Fixed a bug causing `core.ObjectIdentifier().native` to sometimes not
+      map the OID
+ - Packaging
+    - `wheel`, `sdist` and `bdist_egg` releases now all include LICENSE,
+      `sdist` includes docs
+    - Added `asn1crypto_tests` package to PyPi
+
 ## 0.24.0
 
  - `x509.Certificate().self_signed` will no longer return `"yes"` under any

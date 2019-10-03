@@ -10,7 +10,7 @@ from setuptools.command.egg_info import egg_info
 
 
 PACKAGE_NAME = 'asn1crypto'
-PACKAGE_VERSION = '0.25.0.dev1'
+PACKAGE_VERSION = '1.0.0'
 TEST_PACKAGE_NAME = '%s_tests' % PACKAGE_NAME
 TESTS_ROOT = os.path.dirname(os.path.abspath(__file__))
 PACKAGE_ROOT = os.path.abspath(os.path.join(TESTS_ROOT, '..'))
@@ -117,7 +117,7 @@ setup(
     license='MIT',
 
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
 
         'Intended Audience :: Developers',
 
@@ -134,6 +134,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
 

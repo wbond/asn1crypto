@@ -112,12 +112,12 @@ faster to an order of magnitude or more.
 
 ## Current Release
 
-0.24.0 - [changelog](changelog.md)
+1.0.0 - [changelog](changelog.md)
 
 ## Dependencies
 
-Python 2.6, 2.7, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7 or pypy. *No third-party packages
-required.*
+Python 2.6, 2.7, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8 or pypy. *No third-party
+packages required.*
 
 ## Installation
 
