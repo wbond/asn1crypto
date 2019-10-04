@@ -21,7 +21,7 @@ import math
 
 from ._errors import unwrap, APIException
 from ._types import type_name, byte_cls
-from .algos import _ForceNullParameters, DigestAlgorithm, EncryptionAlgorithm, RSAESOAEPParams
+from .algos import _ForceNullParameters, DigestAlgorithm, EncryptionAlgorithm, RSAESOAEPParams, RSASSAPSSParams
 from .core import (
     Any,
     Asn1Value,
@@ -40,7 +40,6 @@ from .core import (
     SetOf,
 )
 from .util import int_from_bytes, int_to_bytes
-from asn1crypto.algos import RSASSAPSSParams
 
 
 class OtherPrimeInfo(Sequence):
