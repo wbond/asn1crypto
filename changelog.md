@@ -1,5 +1,9 @@
 # changelog
 
+## 1.0.1
+
+ - Fix an absolute import in `keys` to a relative import
+
 ## 1.0.0
 
  - Backwards Compatibility Breaks
