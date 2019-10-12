@@ -1,5 +1,10 @@
 # changelog
 
+## 1.1.0
+
+ - Added User ID (`0.9.2342.19200300.100.1.1`) to `x509.NameType()`
+ - Added various EC named curves to `keys.NamedCurve()`
+
 ## 1.0.1
 
  - Fix an absolute import in `keys` to a relative import

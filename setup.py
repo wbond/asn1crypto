@@ -10,7 +10,7 @@ from setuptools.command.egg_info import egg_info
 
 
 PACKAGE_NAME = 'asn1crypto'
-PACKAGE_VERSION = '1.0.1'
+PACKAGE_VERSION = '1.1.0'
 PACKAGE_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
