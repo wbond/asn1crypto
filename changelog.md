@@ -1,5 +1,12 @@
 # changelog
 
+## 1.2.0
+
+ - Added `asn1crypto.load_order()`, which returns a `list` of unicode strings
+   of the names of the fully-qualified module names for all of submodules of
+   the package. The module names are listed in their dependency load order.
+   This is primarily intended for the sake of implementing hot reloading.
+
 ## 1.1.0
 
  - Added User ID (`0.9.2342.19200300.100.1.1`) to `x509.NameType()`
