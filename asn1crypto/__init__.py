@@ -21,27 +21,27 @@ def load_order():
     """
 
     return [
-        'asn1crypto._errors',  # none
-        'asn1crypto._int',  # none
-        'asn1crypto._ordereddict',  # none
-        'asn1crypto._teletex_codec',  # none
-        'asn1crypto._types',  # none
-        'asn1crypto._inet',  # _errors, _types
-        'asn1crypto._iri',  # _errors, _types
-        'asn1crypto.version',  # none
-        'asn1crypto.pem',  # _errors, _types
-        'asn1crypto.util',  # _errors, _inet, _iri, _ordereddict, _types
-        'asn1crypto.parser',  # _types, util
-        'asn1crypto.core',  # _errors, _ordereddict, _teletex_codec, _types, parser, util
-        'asn1crypto.algos',  # _errors, _int, core, util
-        'asn1crypto.keys',  # _errors, _types, algos, core, util
-        'asn1crypto.x509',  # _errors, _iri, _ordereddict, _types, algos, core, keys, util
-        'asn1crypto.crl',  # algos, core, x509
-        'asn1crypto.csr',  # algos, core, keys, x509
-        'asn1crypto.ocsp',  # _errors, algos, core, crl, keys, x509
-        'asn1crypto.cms',  # algos, core, crl, keys, ocsp, x509
-        'asn1crypto.pdf',  # cms, core, crl, ocsp, x509
-        'asn1crypto.pkcs12',  # algos, cms, core, keys, x509
-        'asn1crypto.tsp',  # algos, cms, core, crl, x509
-        'asn1crypto',  # version
+        'asn1crypto._errors',
+        'asn1crypto._int',
+        'asn1crypto._ordereddict',
+        'asn1crypto._teletex_codec',
+        'asn1crypto._types',
+        'asn1crypto._inet',
+        'asn1crypto._iri',
+        'asn1crypto.version',
+        'asn1crypto.pem',
+        'asn1crypto.util',
+        'asn1crypto.parser',
+        'asn1crypto.core',
+        'asn1crypto.algos',
+        'asn1crypto.keys',
+        'asn1crypto.x509',
+        'asn1crypto.crl',
+        'asn1crypto.csr',
+        'asn1crypto.ocsp',
+        'asn1crypto.cms',
+        'asn1crypto.pdf',
+        'asn1crypto.pkcs12',
+        'asn1crypto.tsp',
+        'asn1crypto',
     ]
