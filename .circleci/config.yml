@@ -3,7 +3,7 @@ jobs:
   py26:
     macos:
       # macOS 10.12, last version with Python 2.6
-      xcode: 9.2.0
+      xcode: 9.0.1
     steps:
       - checkout
       - run: /usr/bin/python2.6 run.py deps
