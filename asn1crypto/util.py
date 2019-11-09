@@ -122,7 +122,7 @@ if sys.version_info <= (3,):
         DST is not supported.
         """
 
-        def __init__(self, offset, name=None):
+        def __init__(self, offset=timedelta(0), name=None):
             """
             :param offset:
                 A timedelta with this timezone's offset from UTC
