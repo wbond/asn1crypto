@@ -100,6 +100,7 @@ class CMSAttributeType(ObjectIdentifier):
         '1.2.840.113549.1.9.4': 'message_digest',
         '1.2.840.113549.1.9.5': 'signing_time',
         '1.2.840.113549.1.9.6': 'counter_signature',
+        '1.2.840.113549.1.9.16.2.11': 'encrypt_key_pref',
         # https://tools.ietf.org/html/rfc3161#page-20
         '1.2.840.113549.1.9.16.2.14': 'signature_time_stamp_token',
         # https://tools.ietf.org/html/rfc6211#page-5
@@ -923,6 +924,25 @@ class CompressedData(Sequence):
             self._decompressed = zlib.decompress(self['encap_content_info']['content'].native)
         return self._decompressed
 
+class RecipientKeyIdentifier(asn1crypto.core.Sequence):
+    _fields = [
+        ('subjectKeyIdentifier', asn1crypto.cms.OctetString),
+        ('date', asn1crypto.cms.GeneralizedTime, {'optional': True}),
+        ('other', asn1crypto.cms.OtherKeyAttribute, {'optional': True}),
+    ]
+
+
+class SMIMEEncryptionKeyPreference(asn1crypto.core.Choice):
+    _alternatives = [
+        ('issuer_and_serial_number', asn1crypto.cms.IssuerAndSerialNumber, {'implicit':0}),
+        ('recipientKeyId', RecipientKeyIdentifier, {'implicit': 1}),
+        ('subjectAltKeyIdentifier', asn1crypto.cms.PublicKeyInfo, {'implicit': 2}),
+    ]
+
+class SMIMEEncryptionKeyPreferences(asn1crypto.core.SetOf):
+    _child_spec = SMIMEEncryptionKeyPreference
+
+
 
 ContentInfo._oid_specs = {
     'data': OctetString,
@@ -958,4 +978,5 @@ CMSAttribute._oid_specs = {
     'cms_algorithm_protection': SetOfCMSAlgorithmProtection,
     'microsoft_nested_signature': SetOfContentInfo,
     'microsoft_time_stamp_token': SetOfContentInfo,
+    'encrypt_key_pref': SMIMEEncryptionKeyPreferences,
 }
