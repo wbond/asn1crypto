@@ -924,22 +924,22 @@ class CompressedData(Sequence):
             self._decompressed = zlib.decompress(self['encap_content_info']['content'].native)
         return self._decompressed
 
-class RecipientKeyIdentifier(asn1crypto.core.Sequence):
+class RecipientKeyIdentifier(Sequence):
     _fields = [
-        ('subjectKeyIdentifier', asn1crypto.cms.OctetString),
-        ('date', asn1crypto.cms.GeneralizedTime, {'optional': True}),
-        ('other', asn1crypto.cms.OtherKeyAttribute, {'optional': True}),
+        ('subjectKeyIdentifier', OctetString),
+        ('date', GeneralizedTime, {'optional': True}),
+        ('other', OtherKeyAttribute, {'optional': True}),
     ]
 
 
-class SMIMEEncryptionKeyPreference(asn1crypto.core.Choice):
+class SMIMEEncryptionKeyPreference(Choice):
     _alternatives = [
-        ('issuer_and_serial_number', asn1crypto.cms.IssuerAndSerialNumber, {'implicit':0}),
+        ('issuer_and_serial_number', IssuerAndSerialNumber, {'implicit':0}),
         ('recipientKeyId', RecipientKeyIdentifier, {'implicit': 1}),
-        ('subjectAltKeyIdentifier', asn1crypto.cms.PublicKeyInfo, {'implicit': 2}),
+        ('subjectAltKeyIdentifier', PublicKeyInfo, {'implicit': 2}),
     ]
 
-class SMIMEEncryptionKeyPreferences(asn1crypto.core.SetOf):
+class SMIMEEncryptionKeyPreferences(SetOf):
     _child_spec = SMIMEEncryptionKeyPreference
 
 
