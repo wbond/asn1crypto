@@ -936,7 +936,7 @@ class RecipientKeyIdentifier(Sequence):
 
 class SMIMEEncryptionKeyPreference(Choice):
     _alternatives = [
-        ('issuer_and_serial_number', IssuerAndSerialNumber, {'implicit':0}),
+        ('issuer_and_serial_number', IssuerAndSerialNumber, {'implicit': 0}),
         ('recipientKeyId', RecipientKeyIdentifier, {'implicit': 1}),
         ('subjectAltKeyIdentifier', PublicKeyInfo, {'implicit': 2}),
     ]
