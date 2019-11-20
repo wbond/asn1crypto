@@ -100,6 +100,7 @@ class CMSAttributeType(ObjectIdentifier):
         '1.2.840.113549.1.9.4': 'message_digest',
         '1.2.840.113549.1.9.5': 'signing_time',
         '1.2.840.113549.1.9.6': 'counter_signature',
+        # https://tools.ietf.org/html/rfc2633#page-26
         '1.2.840.113549.1.9.16.2.11': 'encrypt_key_pref',
         # https://tools.ietf.org/html/rfc3161#page-20
         '1.2.840.113549.1.9.16.2.14': 'signature_time_stamp_token',
