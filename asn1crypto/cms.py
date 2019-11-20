@@ -925,6 +925,7 @@ class CompressedData(Sequence):
             self._decompressed = zlib.decompress(self['encap_content_info']['content'].native)
         return self._decompressed
 
+
 class RecipientKeyIdentifier(Sequence):
     _fields = [
         ('subjectKeyIdentifier', OctetString),
@@ -940,9 +941,9 @@ class SMIMEEncryptionKeyPreference(Choice):
         ('subjectAltKeyIdentifier', PublicKeyInfo, {'implicit': 2}),
     ]
 
+
 class SMIMEEncryptionKeyPreferences(SetOf):
     _child_spec = SMIMEEncryptionKeyPreference
-
 
 
 ContentInfo._oid_specs = {
