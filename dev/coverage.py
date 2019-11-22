@@ -54,7 +54,7 @@ def run(ci=False):
     cov.start()
 
     from .tests import run as run_tests
-    result = run_tests()
+    result = run_tests(ci=ci)
     print()
 
     if ci:
