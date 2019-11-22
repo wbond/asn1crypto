@@ -9,7 +9,7 @@ jobs:
       matrix:
         os:
           - ubuntu-18.04
-          - macOS-10.14
+          - macOS-latest
           - windows-2019
         python:
           - '2.7'
@@ -20,7 +20,7 @@ jobs:
         exclude:
           - os: ubuntu-18.04
             arch: x86
-          - os: macOS-10.14
+          - os: macOS-latest
             arch: x86
     steps:
       - uses: actions/checkout@master
