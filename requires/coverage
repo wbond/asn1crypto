@@ -1,1 +1,1 @@
-coverage >= 4.3.4 ; python_version != '3.2'
+coverage == 4.5.4 ; python_version != '3.2'
