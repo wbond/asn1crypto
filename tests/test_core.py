@@ -1182,7 +1182,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(b'\x6a\x03\x02\x01\x00', ati.dump(force=True))
 
     def test_required_field(self):
-        with self.assertRaisesRegexp(ValueError, '"id" is missing from structure'):
+        with self.assertRaisesRegex(ValueError, '"id" is missing from structure'):
             Seq({'value': core.Integer(5)}).dump()
 
     def test_explicit_application_tag_nested(self):

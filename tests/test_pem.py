@@ -149,13 +149,13 @@ class PEMTests(unittest.TestCase):
             self.assertEqual(expected_bytes, encoded_bytes)
 
     def test_armor_wrong_type(self):
-        with self.assertRaisesRegexp(TypeError, 'type_name must be a unicode string'):
+        with self.assertRaisesRegex(TypeError, 'type_name must be a unicode string'):
             pem.armor(b'CERTIFICATE', b'')
 
     def test_armor_wrong_type2(self):
-        with self.assertRaisesRegexp(TypeError, 'der_bytes must be a byte string'):
+        with self.assertRaisesRegex(TypeError, 'der_bytes must be a byte string'):
             pem.armor('CERTIFICATE', '')
 
     def test_detect_wrong_type(self):
-        with self.assertRaisesRegexp(TypeError, 'byte_string must be a byte string'):
+        with self.assertRaisesRegex(TypeError, 'byte_string must be a byte string'):
             pem.detect('CERTIFICATE')
