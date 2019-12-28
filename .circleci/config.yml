@@ -14,7 +14,14 @@ jobs:
       xcode: 10.3.0
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - homebrew
       - run: brew install pypy
+      - save_cache:
+          key: homebrew
+          paths:
+            - /usr/local/Homebrew
       - run: pypy run.py deps
       - run: pypy run.py ci
 workflows:
