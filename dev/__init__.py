@@ -15,6 +15,8 @@ other_packages = [
     "ocspbuilder"
 ]
 
+task_keyword_args = []
+
 requires_oscrypto = False
 has_tests_package = True
 

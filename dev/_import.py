@@ -13,7 +13,7 @@ else:
     getcwd = os.getcwd
 
 
-def _import_from(mod, path, mod_dir=None):
+def _import_from(mod, path, mod_dir=None, allow_error=False):
     """
     Imports a module from a specific path
 
@@ -27,23 +27,29 @@ def _import_from(mod, path, mod_dir=None):
         If the sub directory of "path" is different than the "mod" name,
         pass the sub directory as a unicode string
 
+    :param allow_error:
+        If an ImportError should be raised when the module can't be imported
+
     :return:
         None if not loaded, otherwise the module
     """
 
     if mod_dir is None:
-        mod_dir = mod
+        mod_dir = mod.replace('.', os.sep)
 
     if not os.path.exists(path):
         return None
 
-    if not os.path.exists(os.path.join(path, mod_dir)):
+    if not os.path.exists(os.path.join(path, mod_dir)) \
+            and not os.path.exists(os.path.join(path, mod_dir + '.py')):
         return None
 
     try:
         mod_info = imp.find_module(mod_dir, [path])
         return imp.load_module(mod, *mod_info)
     except ImportError:
+        if allow_error:
+            raise
         return None
 
 
