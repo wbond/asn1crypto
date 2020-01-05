@@ -64,7 +64,7 @@ class NestSeqAny(core.Sequence):
 
     _oid_pair = ('id', 'value')
     _oid_specs = {
-        '3.4.5': Seq,
+        '2.3.4.5': Seq,
     }
 
 
@@ -76,7 +76,7 @@ class NestSeqExplicit(core.Sequence):
 
     _oid_pair = ('id', 'value')
     _oid_specs = {
-        '3.4.5': Seq,
+        '2.3.4.5': Seq,
     }
 
 
@@ -1314,14 +1314,14 @@ class CoreTests(unittest.TestCase):
     def test_wrong_asn1value3(self):
         with self.assertRaises(TypeError):
             NestSeqAny({
-                'id': '3.4.5',
+                'id': '2.3.4.5',
                 'value': core.Integer(1)
             })
 
     def test_wrong_asn1value4(self):
         with self.assertRaises(TypeError):
             NestSeqExplicit({
-                'id': '3.4.5',
+                'id': '2.3.4.5',
                 'value': core.Integer(1)
             })
 
@@ -1334,3 +1334,32 @@ class CoreTests(unittest.TestCase):
         b.set_encoded_width(4)
         self.assertEqual(1, b.native)
         self.assertEqual(b'\x04\x04\x00\x00\x00\x01', b.dump())
+
+    @staticmethod
+    def object_identifier_info():
+        return (
+            ("0.0", b"\x06\x01\x00"),
+            ("0.39", b"\x06\x01\x27"),
+            ("1.0", b"\x06\x01\x28"),
+            ("1.39", b"\x06\x01\x4f"),
+            ("2.0", b"\x06\x01\x50"),
+            ("2.39", b"\x06\x01\x77"),
+            ("2.100.3", b"\x06\x03\x81\x34\x03"),
+            ("2.16.840.1.113730.1.1", b"\x06\x09\x60\x86\x48\x01\x86\xf8\x42\x01\x01"),
+        )
+
+    @data('object_identifier_info')
+    def object_identifier(self, native, der_bytes):
+        oid = core.ObjectIdentifier(native)
+        self.assertEqual(der_bytes, oid.dump())
+        self.assertEqual(native, core.ObjectIdentifier.load(der_bytes).native)
+
+    def test_broken_object_identifier(self):
+        with self.assertRaisesRegex(ValueError, "First arc is restricted"):
+            core.ObjectIdentifier("3.4.5")
+
+        with self.assertRaisesRegex(ValueError, "Second arc is restricted"):
+            core.ObjectIdentifier("1.100.1000")
+
+        with self.assertRaisesRegex(ValueError, "Second arc is restricted"):
+            core.ObjectIdentifier("0.40")
