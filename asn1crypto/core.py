@@ -230,6 +230,32 @@ class Asn1Value(object):
         value, _ = _parse_build(encoded_data, spec=spec, spec_params=kwargs, strict=strict)
         return value
 
+    @classmethod
+    def load_p(cls, encoded_data, strict=False, **kwargs):
+        """
+        Loads a BER/DER-encoded byte string using the current class as the spec
+
+        :param encoded_data:
+            A byte string of BER or DER-encoded data
+
+        :param strict:
+            A boolean indicating if trailing data should be forbidden - if so, a
+            ValueError will be raised when trailing data exists
+
+        :return:
+            An instance of the current class and byte length in tuple
+        """
+
+        if not isinstance(encoded_data, byte_cls):
+            raise TypeError('encoded_data must be a byte string, not %s' % type_name(encoded_data))
+
+        spec = None
+        if cls.tag is not None:
+            spec = cls
+
+        value, length = _parse_build(encoded_data, spec=spec, spec_params=kwargs, strict=strict)
+        return value, length
+
     def __init__(self, explicit=None, implicit=None, no_explicit=False, tag_type=None, class_=None, tag=None,
                  optional=None, default=None, contents=None, method=None):
         """
