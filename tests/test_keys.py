@@ -1,8 +1,9 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import unittest
 import os
+import sys
+import unittest
 
 from asn1crypto import keys, core, util
 
@@ -10,6 +11,11 @@ from .unittest_data import data_decorator, data
 from ._unittest_compat import patch
 
 patch()
+
+if sys.version_info < (3,):
+    num_cls = long  # noqa
+else:
+    num_cls = int
 
 tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
@@ -481,7 +487,9 @@ class KeysTests(unittest.TestCase):
         with open(os.path.join(fixtures_dir, public_key_file), 'rb') as f:
             public_key = keys.PublicKeyInfo.load(f.read())
 
+        self.assertIsInstance(private_key.bit_size, num_cls)
         self.assertEqual(bit_size, private_key.bit_size)
+        self.assertIsInstance(public_key.bit_size, num_cls)
         self.assertEqual(bit_size, public_key.bit_size)
 
     @staticmethod
