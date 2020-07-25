@@ -1355,11 +1355,11 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(native, core.ObjectIdentifier.load(der_bytes).native)
 
     def test_broken_object_identifier(self):
-        with self.assertRaisesRegex(ValueError, "First arc is restricted"):
+        with self.assertRaisesRegex(ValueError, "First arc must be "):
             core.ObjectIdentifier("3.4.5")
 
-        with self.assertRaisesRegex(ValueError, "Second arc is restricted"):
+        with self.assertRaisesRegex(ValueError, "Second arc must be "):
             core.ObjectIdentifier("1.100.1000")
 
-        with self.assertRaisesRegex(ValueError, "Second arc is restricted"):
+        with self.assertRaisesRegex(ValueError, "Second arc must be "):
             core.ObjectIdentifier("0.40")

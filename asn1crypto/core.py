@@ -3105,9 +3105,20 @@ class ObjectIdentifier(Primitive, ValueMap):
                 continue
             elif index == 1:
                 if first > 2:
-                    raise ValueError("First arc is restricted to 0,1,2")
+                    raise ValueError(unwrap(
+                        '''
+                        First arc must be one of 0, 1 or 2, not %s
+                        ''',
+                        repr(first)
+                    ))
                 elif first < 2 and part >= 40:
-                    raise ValueError("Second arc is restricted to 0..39 if first arc is 0 or 1")
+                    raise ValueError(unwrap(
+                        '''
+                        Second arc must be less than 40 if first arc is 0 or
+                        1, not %s
+                        ''',
+                        repr(part)
+                    ))
                 part = (first * 40) + part
 
             encoded_part = chr_cls(0x7F & part)
