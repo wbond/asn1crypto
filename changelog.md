@@ -1,5 +1,16 @@
 # changelog
 
+## 1.4.0
+
+ - `core.ObjectIdentifier` and all derived classes now obey X.660 §7.6 and
+   thus restrict the first arc to 0 to 2, and the second arc to less than
+   40 if the first arc is 0 or 1. This also fixes parsing of OIDs where the
+   first arc is 2 and the second arc is greater than 39.
+ - Fixed `keys.PublicKeyInfo.bit_size` to return an int rather than a float
+   on Python 3 when working with elliptic curve keys
+ - Fixed the `asn1crypto-tests` sdist on PyPi to work properly to generate a
+   .whl
+
 ## 1.3.0
 
  - Added `encrypt_key_pref` (`1.2.840.113549.1.9.16.2.11`) to
