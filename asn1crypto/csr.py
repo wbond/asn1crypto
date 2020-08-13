@@ -4,7 +4,7 @@
 ASN.1 type classes for certificate signing requests (CSR). Exports the
 following items:
 
- - CertificatationRequest()
+ - CertificationRequest()
 
 Other type classes are defined that help compose the types listed above.
 """
