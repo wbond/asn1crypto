@@ -39,6 +39,13 @@ matrix:
       dist: xenial
       language: python
       python: "pypy"
+      #power on 
+    - os: linux
+      arch: ppc64le
+      dist: bionic
+      language: python
+      python: "2.7"
+
 script:
   - python run.py deps
   - python run.py ci
