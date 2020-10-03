@@ -1,9 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import unittest
-import sys
 import os
+import platform
+import sys
+import unittest
 from datetime import date, datetime, time, timedelta
 
 from asn1crypto import util
@@ -132,7 +133,7 @@ class UtilTests(unittest.TestCase):
         self.assertEqual('0000-01-01', util.extended_date(0, 1, 1).strftime('%Y-%m-%d'))
         self.assertEqual('Sat Saturday Jan January', util.extended_date(0, 1, 1).strftime('%a %A %b %B'))
         self.assertEqual('Tue Tuesday Feb February 29', util.extended_date(0, 2, 29).strftime('%a %A %b %B %d'))
-        if sys.platform == 'win32' and sys.version_info < (3, 5):
+        if sys.platform == 'win32' and sys.version_info < (3, 5) and platform.python_implementation() != 'PyPy':
             self.assertEqual('01/01/00 00:00:00', util.extended_date(0, 1, 1).strftime('%c'))
         else:
             self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_date(0, 1, 1).strftime('%c'))
@@ -177,7 +178,7 @@ class UtilTests(unittest.TestCase):
         self.assertEqual('0000-01-01 00:00:00', util.extended_datetime(0, 1, 1).strftime('%Y-%m-%d %H:%M:%S'))
         self.assertEqual('Sat Saturday Jan January', util.extended_datetime(0, 1, 1).strftime('%a %A %b %B'))
         self.assertEqual('Tue Tuesday Feb February 29', util.extended_datetime(0, 2, 29).strftime('%a %A %b %B %d'))
-        if sys.platform == 'win32' and sys.version_info < (3, 5):
+        if sys.platform == 'win32' and sys.version_info < (3, 5) and platform.python_implementation() != 'PyPy':
             self.assertEqual('01/01/00 00:00:00', util.extended_datetime(0, 1, 1).strftime('%c'))
         else:
             self.assertEqual('Sat Jan  1 00:00:00 0000', util.extended_datetime(0, 1, 1).strftime('%c'))
