@@ -139,3 +139,114 @@ class CSRTests(unittest.TestCase):
             ],
             cri['attributes'].native
         )
+
+    def test_parse_csr3(self):
+        with open(os.path.join(fixtures_dir, 'test-windows-host.csr'), 'rb') as f:
+            certification_request = csr.CertificationRequest.load(f.read())
+
+        cri = certification_request['certification_request_info']
+
+        self.assertEqual(
+            'v1',
+            cri['version'].native
+        )
+
+        self.assertEqual(
+            util.OrderedDict([
+                ('common_name', 'windows.host.example.net'),
+            ]),
+            cri['subject'].native
+        )
+        self.assertEqual(
+            util.OrderedDict([
+                ('algorithm', 'rsa'),
+                ('parameters', None),
+            ]),
+            cri['subject_pk_info']['algorithm'].native
+        )
+        self.assertEqual(
+            0x00bd5b280774e2e64a2c022abd50de7817aaec50367e94b9c6459ca876daaf3bc3d7ffc41bf902422ac9af7d369eeb23245c5d8e2dda5434463f1d3e596c066a3cbe936bd89b4b7b9923ff6e654608cd3aa1fbc36543165752dde12c889c7aee4b5423e311e507bfd9fa60166290ae766005209120b651c3cdeceabba90b115341d656cb1fe94f372ba7c170bd15261685e92303205a7e5141928415f748d77ee4c6ecf8749b80c07d99f99f9aff629be62840e43e4696d6602df2a7a5e1bf11925021f2df2f4d27ef42e4decb0dc615c29eecaca628721a0c3c70c2700b7c658d6b7b7b6285593fd7d5ae086447bdc30429c7231db6b831d44e4c019887542f5f,  # noqa
+            cri['subject_pk_info']['public_key'].parsed['modulus'].native
+        )
+        self.assertEqual(
+            65537,
+            cri['subject_pk_info']['public_key'].parsed['public_exponent'].native
+        )
+        self.assertEqual(
+            [
+                util.OrderedDict([
+                    ('type', 'microsoft_os_version'),
+                    ('values', ['6.2.9200.2']),
+                ]),
+                util.OrderedDict([
+                    ('type', 'microsoft_request_client_info'),
+                    (
+                        'values',
+                        [
+                            util.OrderedDict([
+                                ('clientid', 5),
+                                ('machinename', 'windows.host.example.net'),
+                                ('username', 'locuser'),
+                                ('processname', 'MMC.EXE'),
+                            ])
+                        ])
+                    ]
+                ),
+                util.OrderedDict([
+                    ('type', 'microsoft_enrollment_csp_provider'),
+                    (
+                        'values',
+                        [
+                            util.OrderedDict([
+                                ('keyspec', 1),
+                                ('cspname', 'Microsoft RSA SChannel Cryptographic Provider'),
+                                ('signature', ()),
+                            ])
+                        ]
+                    ),
+                ]),
+                util.OrderedDict([
+                    ('type', 'extension_request'),
+                    (
+                        'values',
+                        [
+                            [
+                                util.OrderedDict([
+                                    ('extn_id', 'microsoft_enroll_certtype'),
+                                    ('critical', False),
+                                    (
+                                        'extn_value',
+                                        'Machine',
+                                    )
+                                ]),
+                                util.OrderedDict([
+                                    ('extn_id', 'extended_key_usage'),
+                                    ('critical', False),
+                                    (
+                                        'extn_value',
+                                        ['client_auth', 'server_auth'],
+                                    ),
+                                ]),
+                                util.OrderedDict([
+                                    ('extn_id', 'key_usage'),
+                                    ('critical', False),
+                                    (
+                                        'extn_value',
+                                        set(['digital_signature', 'key_encipherment']),
+                                    ),
+                                ]),
+                                util.OrderedDict([
+                                    ('extn_id', 'key_identifier'),
+                                    ('critical', False),
+                                    (
+                                        'extn_value',
+                                        bytearray.fromhex('2a 98 4b c1 ff 6e 16 ed 2d 69 35 0a 26 e7 1f 8c 05 4f b8 e6'),  # noqa
+                                    ),
+                                ]),
+                            ]
+                        ]
+                    ),
+                ]),
+            ],
+            cri['attributes'].native
+        )
