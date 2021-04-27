@@ -204,6 +204,26 @@ class KeysTests(unittest.TestCase):
             key['public_key'].native
         )
 
+    def test_parse_ed25519_private_key(self):
+        with open(os.path.join(fixtures_dir, 'keys/test-ed25519.key'), 'rb') as f:
+            key = keys.PrivateKeyInfo.load(f.read())
+
+        self.assertEqual(
+            b'\xab),,c\x03o\xed)r5\x95+p\xb0\xbbc Lu\xc1\xfd\xc8FH\xfe\xce\x83\xf0F\x0f\xd7',
+            key['private_key'].native
+        )
+
+    def test_parse_ed448_private_key(self):
+        with open(os.path.join(fixtures_dir, 'keys/test-ed448.key'), 'rb') as f:
+            key = keys.PrivateKeyInfo.load(f.read())
+
+        self.assertEqual(
+            b'yQ\xf0<\x99\x89\tU\xda}\x84\x027\xa8\xc0\xdb\x0fs\xafd\xdcQ\xa1'
+            b'\xa6(7g\x06\x07\x8d#\xb1&\x11\x15\xfb\xd3\xfd\x0b\x03\xc7\x80\xe1'
+            b'\xf2\x82\xb6\xedo\xb1Sk\x828#M\xb2\\',
+            key['private_key'].native
+        )
+
     def test_parse_rsa_public_key(self):
         with open(os.path.join(fixtures_dir, 'keys/test-public-rsa-der.key'), 'rb') as f:
             key = keys.RSAPublicKey.load(f.read())

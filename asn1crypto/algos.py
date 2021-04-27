@@ -260,6 +260,9 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         '1.2.840.113549.1.1.1': 'rsassa_pkcs1v15',
         '1.2.840.10040.4.1': 'dsa',
         '1.2.840.10045.4': 'ecdsa',
+        # RFC 8410 -- https://tools.ietf.org/html/rfc8410
+        '1.3.101.112': 'ed25519',
+        '1.3.101.113': 'ed448',
     }
 
     _reverse_map = {
@@ -286,6 +289,8 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         'sha3_256_ecdsa': '2.16.840.1.101.3.4.3.10',
         'sha3_384_ecdsa': '2.16.840.1.101.3.4.3.11',
         'sha3_512_ecdsa': '2.16.840.1.101.3.4.3.12',
+        'ed25519': '1.3.101.112',
+        'ed448': '1.3.101.113',
     }
 
 
@@ -304,8 +309,8 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
     def signature_algo(self):
         """
         :return:
-            A unicode string of "rsassa_pkcs1v15", "rsassa_pss", "dsa" or
-            "ecdsa"
+            A unicode string of "rsassa_pkcs1v15", "rsassa_pss", "dsa",
+            "ecdsa", "ed25519" or "ed448"
         """
 
         algorithm = self['algorithm'].native
@@ -334,6 +339,8 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
             'sha3_384_ecdsa': 'ecdsa',
             'sha3_512_ecdsa': 'ecdsa',
             'ecdsa': 'ecdsa',
+            'ed25519': 'ed25519',
+            'ed448': 'ed448',
         }
         if algorithm in algo_map:
             return algo_map[algorithm]
@@ -350,7 +357,7 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
         """
         :return:
             A unicode string of "md2", "md5", "sha1", "sha224", "sha256",
-            "sha384", "sha512", "sha512_224", "sha512_256"
+            "sha384", "sha512", "sha512_224", "sha512_256" or "shake256"
         """
 
         algorithm = self['algorithm'].native
@@ -371,6 +378,8 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
             'sha256_ecdsa': 'sha256',
             'sha384_ecdsa': 'sha384',
             'sha512_ecdsa': 'sha512',
+            'ed25519': 'sha512',
+            'ed448': 'shake256',
         }
         if algorithm in algo_map:
             return algo_map[algorithm]

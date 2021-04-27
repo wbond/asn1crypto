@@ -666,6 +666,11 @@ class PrivateKeyAlgorithmId(ObjectIdentifier):
         '1.2.840.10040.4.1': 'dsa',
         # https://tools.ietf.org/html/rfc3279#page-13
         '1.2.840.10045.2.1': 'ec',
+        # https://tools.ietf.org/html/rfc8410#section-9
+        '1.3.101.110': 'x25519',
+        '1.3.101.111': 'x448',
+        '1.3.101.112': 'ed25519',
+        '1.3.101.113': 'ed448',
     }
 
 
@@ -707,6 +712,12 @@ class PrivateKeyInfo(Sequence):
             'rsassa_pss': RSAPrivateKey,
             'dsa': Integer,
             'ec': ECPrivateKey,
+            # These should be treated as opaque octet strings according
+            # to RFC 8410
+            'x25519': OctetString,
+            'x448': OctetString,
+            'ed25519': OctetString,
+            'ed448': OctetString,
         }[algorithm]
 
     _spec_callbacks = {
@@ -1017,6 +1028,11 @@ class PublicKeyAlgorithmId(ObjectIdentifier):
         '1.2.840.10045.2.1': 'ec',
         # https://tools.ietf.org/html/rfc3279#page-10
         '1.2.840.10046.2.1': 'dh',
+        # https://tools.ietf.org/html/rfc8410#section-9
+        '1.3.101.110': 'x25519',
+        '1.3.101.111': 'x448',
+        '1.3.101.112': 'ed25519',
+        '1.3.101.113': 'ed448',
     }
 
 
@@ -1063,6 +1079,12 @@ class PublicKeyInfo(Sequence):
             # decompose the byte string into the constituent X and Y coords
             'ec': (ECPointBitString, None),
             'dh': Integer,
+            # These should be treated as opaque bit strings according
+            # to RFC 8410, and need not even be valid ASN.1
+            'x25519': (OctetBitString, None),
+            'x448': (OctetBitString, None),
+            'ed25519': (OctetBitString, None),
+            'ed448': (OctetBitString, None),
         }[algorithm]
 
     _spec_callbacks = {

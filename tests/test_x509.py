@@ -3492,6 +3492,67 @@ class X509Tests(unittest.TestCase):
             extensions.native
         )
 
+    def test_parse_ed25519_certificate(self):
+        cert = self._load_cert('keys/test-ed25519.crt')
+
+        tbs_certificate = cert['tbs_certificate']
+        signature = tbs_certificate['signature']
+        subject_public_key_info = tbs_certificate['subject_public_key_info']
+        subject_public_key_algorithm = subject_public_key_info['algorithm']
+
+        self.assertEqual(
+            'ed25519',
+            signature['algorithm'].native
+        )
+        self.assertEqual(
+            None,
+            signature['parameters'].native
+        )
+        self.assertEqual(
+            None,
+            subject_public_key_info['algorithm']['parameters'].native
+        )
+        self.assertEqual(
+            'ed25519',
+            subject_public_key_algorithm['algorithm'].native
+        )
+        self.assertEqual(
+            b'\x17ZZS\xb8\x8e=\xc7\xf9P\xf9\xe8\xcd=\x9a\x15\x06\xec=\xcf\xfa'
+            b'\xa3\xfb\x93M\xb3\x89V\xce*N\xed',
+            subject_public_key_info['public_key'].native
+        )
+
+    def test_parse_ed448_certificate(self):
+        cert = self._load_cert('keys/test-ed448.crt')
+
+        tbs_certificate = cert['tbs_certificate']
+        signature = tbs_certificate['signature']
+        subject_public_key_info = tbs_certificate['subject_public_key_info']
+        subject_public_key_algorithm = subject_public_key_info['algorithm']
+
+        self.assertEqual(
+            'ed448',
+            signature['algorithm'].native
+        )
+        self.assertEqual(
+            None,
+            signature['parameters'].native
+        )
+        self.assertEqual(
+            None,
+            subject_public_key_info['algorithm']['parameters'].native
+        )
+        self.assertEqual(
+            'ed448',
+            subject_public_key_algorithm['algorithm'].native
+        )
+        self.assertEqual(
+            b'\xdc\'\x19\xbb\xff\xec\xef\xae\xc4\'\x91\xa1\xe7}\xbaN\xe1\xbe'
+            b'\x94\x04CL\x17\xc4\xba\xca\x96\xb8"\xa1H>\xf4\xd6\xc6^\xe7\xd8'
+            b'\n\xf3}\xe5\xba6]\xbd\x8d\xe1\xfc\x99\xafr_K\xfej\x00',
+            subject_public_key_info['public_key'].native
+        )
+
     def test_repeated_subject_fields(self):
         cert = self._load_cert('self-signed-repeated-subject-fields.der')
         self.assertEqual(
