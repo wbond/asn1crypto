@@ -883,8 +883,7 @@ class EncryptionAlgorithm(_ForceNullParameters, Sequence):
             return cipher_lengths[encryption_algo]
 
         if encryption_algo == 'rc2':
-            rc2_params = self['parameters'].parsed['encryption_scheme']['parameters'].parsed
-            rc2_parameter_version = rc2_params['rc2_parameter_version'].native
+            rc2_parameter_version = self['parameters']['rc2_parameter_version'].native
 
             # See page 24 of
             # http://www.emc.com/collateral/white-papers/h11302-pkcs5v2-1-password-based-cryptography-standard-wp.pdf
@@ -1051,7 +1050,7 @@ class EncryptionAlgorithm(_ForceNullParameters, Sequence):
             return cipher_map[encryption_algo]
 
         if encryption_algo == 'rc5':
-            return self['parameters'].parsed['block_size_in_bits'].native / 8
+            return self['parameters']['block_size_in_bits'].native // 8
 
         if encryption_algo == 'pbes2':
             return self['parameters']['encryption_scheme'].encryption_block_size
@@ -1093,7 +1092,7 @@ class EncryptionAlgorithm(_ForceNullParameters, Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo in set(['rc2', 'rc5']):
-            return self['parameters'].parsed['iv'].native
+            return self['parameters']['iv'].native
 
         # For DES/Triple DES and AES the IV is the entirety of the parameters
         octet_string_iv_oids = set([
