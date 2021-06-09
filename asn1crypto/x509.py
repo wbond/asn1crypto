@@ -987,7 +987,7 @@ class Name(Choice):
 
         :param name_dict:
             A dict of name information, e.g. {"common_name": "Will Bond",
-            "country_name": "US", "organization": "Codex Non Sufficit LC"}
+            "country_name": "US", "organization_name": "Codex Non Sufficit LC"}
 
         :param use_printable:
             A bool - if PrintableString should be used for encoding instead of
