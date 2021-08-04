@@ -20,6 +20,7 @@ else:
 
 if sys.version_info[0:2] != (3, 2):
     from .coverage import run as run_coverage
+    from .coverage import coverage
     run_tests = None
 
 else:
@@ -44,7 +45,7 @@ def run():
         lint_result = True
 
     if run_coverage:
-        print('\nRunning tests (via coverage.py)')
+        print('\nRunning tests (via coverage.py %s)' % coverage.__version__)
         sys.stdout.flush()
         tests_result = run_coverage(ci=True)
     else:

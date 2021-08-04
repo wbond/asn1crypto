@@ -1,2 +1,4 @@
+setuptools == 39.2.0 ; python_version == '3.3'
 coverage == 4.4.1 ; python_version == '2.6'
-coverage == 4.5.4 ; python_version != '3.2' and python_version != '2.6'
+coverage == 4.5.4 ; python_version == '3.3' or python_version == '3.4'
+coverage == 5.5 ; python_version == '2.7' or python_version >= '3.5'

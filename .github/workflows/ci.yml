@@ -2,54 +2,141 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  build:
-    name: Python ${{ matrix.python }} on ${{ matrix.os }} ${{ matrix.arch }}
-    runs-on: ${{ matrix.os }}
+  build-windows:
+    name: Python ${{ matrix.python }} on windows-2019 ${{ matrix.arch }}
+    runs-on: windows-2019
     strategy:
       matrix:
-        os:
-          - ubuntu-18.04
-          - macOS-latest
-          - windows-2019
         python:
           - '2.7'
-          - '3.7'
+          - '3.9'
+          - 'pypy-3.7-v7.3.5'
         arch:
           - 'x86'
           - 'x64'
         exclude:
-          - os: ubuntu-18.04
-            arch: x86
-          - os: macOS-latest
+          - python: 'pypy-3.7-v7.3.5'
             arch: x86
     steps:
       - uses: actions/checkout@master
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
           architecture: ${{ matrix.arch }}
       - name: Install dependencies
         run: python run.py deps
       - name: Run test suite
-        run: python run.py ci
-        env:
-          OSCRYPTO_USE_CTYPES: 'true'
-      - name: Run test suite (Mac cffi)
-        run: python run.py ci
-        if: runner.os == 'macOS'
-      - name: Run test suite (Mac OpenSSL)
-        run: python run.py ci
-        if: runner.os == 'macOS'
-        env:
-          OSCRYPTO_USE_OPENSSL: /usr/lib/libcrypto.dylib,/usr/lib/libssl.dylib
-          OSCRYPTO_USE_CTYPES: 'true'
-      - name: Run test suite (Mac OpenSSL/cffi)
-        run: python run.py ci
-        if: runner.os == 'macOS'
-        env:
-          OSCRYPTO_USE_OPENSSL: /usr/lib/libcrypto.dylib,/usr/lib/libssl.dylib
+        run: python run.py ci-driver
       - name: Run test suite (Windows legacy API)
-        run: python run.py ci
-        if: runner.os == 'Windows'
-        env:
-          OSCRYPTO_USE_WINLEGACY: 'true'
+        run: python run.py ci-driver winlegacy
+
+  build-mac:
+    name: Python ${{ matrix.python }} on macos-10.15
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        python:
+          - '2.7'
+          - '3.9'
+          - 'pypy-3.7-v7.3.5'
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: x64
+      - name: Install dependencies
+        run: python run.py deps
+      - name: Run test suite
+        run: python run.py ci-driver
+      - name: Run test suite (Mac cffi)
+        run: python run.py ci-driver cffi
+      - name: Run test suite (Mac OpenSSL)
+        run: python run.py ci-driver openssl
+        if: ${{ matrix.python }} != 'pypy-3.7-v7.3.5'
+      - name: Run test suite (Mac OpenSSL/cffi)
+        run: python run.py ci-driver cffi openssl
+        if: ${{ matrix.python }} != 'pypy-3.7-v7.3.5'
+
+  build-mac-old:
+    name: Python ${{ matrix.python }} on macos-10.15
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        python:
+          - '2.6.9'
+          - '3.3.7'
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Check pyenv
+        id: check-pyenv
+        uses: actions/cache@v2
+        with:
+          path: ~/.pyenv
+          key: macos-10.15-${{ matrix.python }}-pyenv
+
+      - name: Install Python ${{ matrix.python }}
+        if: steps.check-pyenv.outputs.cache-hit != 'true'
+        run: python run.py pyenv-install ${{ matrix.python }}
+
+      - name: Use Python ${{ matrix.python }}
+        run: echo "$HOME/.pyenv/versions/${{ matrix.python }}/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: python run.py deps
+      - name: Run test suite
+        run: python run.py ci-driver
+      - name: Run test suite (Mac cffi)
+        run: python run.py ci-driver cffi
+      - name: Run test suite (Mac OpenSSL)
+        run: python run.py ci-driver openssl
+      - name: Run test suite (Mac OpenSSL/cffi)
+        run: python run.py ci-driver cffi openssl
+
+  build-ubuntu:
+    name: Python ${{ matrix.python }} on ubuntu-18.04 x64
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        python:
+          - '2.7'
+          - '3.6'
+          - '3.7'
+          - '3.8'
+          - '3.9'
+          - 'pypy-3.7-v7.3.5'
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: x64
+      - name: Install dependencies
+        run: python run.py deps
+      - name: Run test suite
+        run: python run.py ci-driver
+
+  build-ubuntu-old:
+    name: Python ${{ matrix.python }} on ubuntu-18.04 x64
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        python:
+          - '2.6'
+          - '3.2'
+          - '3.3'
+          - '3.4'
+          - '3.5'
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup deadsnakes/ppa
+        run: sudo apt-add-repository ppa:deadsnakes/ppa
+      - name: Update apt
+        run: sudo apt-get update
+      - name: Install Python ${{matrix.python}}
+        run: sudo apt-get install python${{matrix.python}}
+      - name: Install dependencies
+        run: python${{matrix.python}} run.py deps
+      - name: Run test suite
+        run: python${{matrix.python}} run.py ci-driver
