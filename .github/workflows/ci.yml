@@ -44,15 +44,14 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Check Python
-        id: check-python
+      - name: Cache Python
+        id: cache-python
         uses: actions/cache@v2
         with:
-          path: ${{ env.HOME }}/AppData/Local/Python${{ matrix.python }}-${{ matrix.arch }}
+          path: ~/AppData/Local/Python${{ matrix.python }}-${{ matrix.arch }}
           key: windows-2019-python-${{ matrix.python }}-${{ matrix.arch }}
 
       - name: Install Python ${{ matrix.python }}
-        if: steps.check-python.outputs.cache-hit != 'true'
         run: python run.py python-install ${{ matrix.python }} ${{ matrix.arch }}
 
       - name: Install dependencies

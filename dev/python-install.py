@@ -50,6 +50,9 @@ def run(version=None, arch=None):
     msi_path = os.path.join(home, msi_filename)
     install_path = os.path.join(os.environ.get('LOCALAPPDATA'), 'Python%s-%s' % (version, arch))
 
+    if os.path.exists(os.path.join(install_path, 'python.exe')):
+        return True
+
     try:
         with urlopen(url) as r, open(msi_path, 'wb') as f:
             shutil.copyfileobj(r, f)
