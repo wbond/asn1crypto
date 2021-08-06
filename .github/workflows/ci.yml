@@ -10,7 +10,7 @@ jobs:
         python:
           - '2.7'
           - '3.9'
-          - 'pypy-3.7-v7.3.5'
+          # - 'pypy-3.7-v7.3.5'
         arch:
           - 'x86'
           - 'x64'
@@ -38,7 +38,7 @@ jobs:
         python:
           - '2.7'
           - '3.9'
-          - 'pypy-3.7-v7.3.5'
+          # - 'pypy-3.7-v7.3.5'
     steps:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v2
