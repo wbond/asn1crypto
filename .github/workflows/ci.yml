@@ -102,8 +102,6 @@ jobs:
         python:
           - '2.7'
           - '3.6'
-          - '3.7'
-          - '3.8'
           - '3.9'
           - 'pypy-3.7-v7.3.5'
     steps:
@@ -126,8 +124,6 @@ jobs:
           - '2.6'
           - '3.2'
           - '3.3'
-          - '3.4'
-          - '3.5'
     steps:
       - uses: actions/checkout@master
       - name: Setup deadsnakes/ppa
