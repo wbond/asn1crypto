@@ -52,14 +52,14 @@ jobs:
           key: windows-2019-python-${{ matrix.python }}-${{ matrix.arch }}
 
       - name: Install Python ${{ matrix.python }}
-        run: python run.py python-install ${{ matrix.python }} ${{ matrix.arch }}
+        run: python run.py python-install ${{ matrix.python }} ${{ matrix.arch }} | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install dependencies
-        run: '& ${env:LOCALAPPDATA}\Python${{ matrix.python }}-${{ matrix.arch }}\python.exe run.py deps'
+        run: python run.py deps
       - name: Run test suite
-        run: '& ${env:LOCALAPPDATA}\Python${{ matrix.python }}-${{ matrix.arch }}\python.exe run.py ci-driver'
+        run: python run.py ci-driver
       - name: Run test suite (Windows legacy API)
-        run: '& ${env:LOCALAPPDATA}\Python${{ matrix.python }}-${{ matrix.arch }}\python.exe run.py ci-driver winlegacy'
+        run: python run.py ci-driver winlegacy
 
   build-mac:
     name: Python ${{ matrix.python }} on macos-10.15
@@ -108,11 +108,7 @@ jobs:
           key: macos-10.15-${{ matrix.python }}-pyenv
 
       - name: Install Python ${{ matrix.python }}
-        if: steps.check-pyenv.outputs.cache-hit != 'true'
-        run: python run.py pyenv-install ${{ matrix.python }}
-
-      - name: Use Python ${{ matrix.python }}
-        run: echo "$HOME/.pyenv/versions/${{ matrix.python }}/bin" >> $GITHUB_PATH
+        run: python run.py pyenv-install ${{ matrix.python }} >> $GITHUB_PATH
 
       - name: Install dependencies
         run: python run.py deps

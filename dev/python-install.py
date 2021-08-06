@@ -4,6 +4,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import os
 import shutil
 import subprocess
+import sys
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
@@ -28,6 +29,9 @@ def run(version=None, arch=None):
         A bool - if Python was installed successfully
     """
 
+    if sys.platform != 'win32':
+        raise ValueError('python-install is only designed for Windows')
+
     if version not in set(['2.6', '3.3']):
         raise ValueError('Invalid version: %r' % version)
 
@@ -51,6 +55,7 @@ def run(version=None, arch=None):
     install_path = os.path.join(os.environ.get('LOCALAPPDATA'), 'Python%s-%s' % (version, arch))
 
     if os.path.exists(os.path.join(install_path, 'python.exe')):
+        print(install_path)
         return True
 
     try:
@@ -68,4 +73,5 @@ def run(version=None, arch=None):
         if os.path.exists(msi_path):
             os.unlink(msi_path)
 
+    print(install_path)
     return True

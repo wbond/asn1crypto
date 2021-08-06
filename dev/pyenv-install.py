@@ -31,13 +31,40 @@ def run(version=None):
         A bool - if Python was installed successfully
     """
 
+    if sys.platform == 'win32':
+        raise ValueError('pyenv-install is not designed for Windows')
+
     if version not in set(['2.6.9', '3.3.7']):
         raise ValueError('Invalid version: %r' % version)
 
-    proc = subprocess.Popen(['brew', 'install', 'pyenv'])
+    python_path = os.path.expanduser('~/.pyenv/versions/%s/bin' % version)
+    if os.path.exists(os.path.join(python_path, 'python')):
+        print(python_path)
+        return True
+
+    stdout = ""
+    stderr = ""
+
+    proc = subprocess.Popen(
+        'command -v pyenv',
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
     proc.communicate()
     if proc.returncode != 0:
-        return False
+        proc = subprocess.Popen(
+            ['brew', 'install', 'pyenv'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        proc.communicate()
+        stdout += proc.stdout.decode('utf-8')
+        stderr += proc.stderr.decode('utf-8')
+        if proc.returncode != 0:
+            print(stdout)
+            print(stderr, file=sys.stderr)
+            return False
 
     pyenv_script = './%s' % version
     try:
@@ -93,14 +120,25 @@ def run(version=None):
             stdin_contents = stdin_contents.encode('ascii')
             args.append('--patch')
 
-        proc = subprocess.Popen(args, stdin=stdin, env=env)
+        proc = subprocess.Popen(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=stdin,
+            env=env
+        )
         proc.communicate(stdin_contents)
+        stdout += proc.stdout.decode('utf-8')
+        stderr += proc.stderr.decode('utf-8')
 
         if proc.returncode != 0:
+            print(stdout)
+            print(stderr, file=sys.stderr)
             return False
 
     finally:
         if os.path.exists(pyenv_script):
             os.unlink(pyenv_script)
 
+    print(python_path)
     return True
