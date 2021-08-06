@@ -123,6 +123,9 @@ class InitTests(unittest.TestCase):
             else:
                 modname = '%s.%s' % (module.__name__, modname)
 
+            if sys.version_info < (3,) and sys.platform == 'win32' and b'\r\n' in full_code:
+                full_code = full_code.replace(b'\r\n', b'\n')
+
             imports = set([])
             module_node = ast.parse(full_code, filename=full_path)
             walk_ast(module_node, modname, imports)

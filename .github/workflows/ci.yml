@@ -30,6 +30,38 @@ jobs:
       - name: Run test suite (Windows legacy API)
         run: python run.py ci-driver winlegacy
 
+  build-windows-old:
+    name: Python ${{ matrix.python }} on windows-2019 ${{ matrix.arch }}
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        python:
+          - '2.6'
+          - '3.3'
+        arch:
+          - 'x86'
+          - 'x64'
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Check Python
+        id: check-python
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.HOME }}/AppData/Local/Python${{ matrix.python }}-${{ matrix.arch }}
+          key: windows-2019-python-${{ matrix.python }}-${{ matrix.arch }}
+
+      - name: Install Python ${{ matrix.python }}
+        if: steps.check-python.outputs.cache-hit != 'true'
+        run: python run.py python-install ${{ matrix.python }} ${{ matrix.arch }}
+
+      - name: Install dependencies
+        run: '& ${env:LOCALAPPDATA}\Python${{ matrix.python }}-${{ matrix.arch }}\python.exe run.py deps'
+      - name: Run test suite
+        run: '& ${env:LOCALAPPDATA}\Python${{ matrix.python }}-${{ matrix.arch }}\python.exe run.py ci-driver'
+      - name: Run test suite (Windows legacy API)
+        run: '& ${env:LOCALAPPDATA}\Python${{ matrix.python }}-${{ matrix.arch }}\python.exe run.py ci-driver winlegacy'
+
   build-mac:
     name: Python ${{ matrix.python }} on macos-10.15
     runs-on: macos-10.15

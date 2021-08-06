@@ -25,10 +25,10 @@ def _write_env(env, key, value):
 
 def run(version=None):
     """
-    Runs CI, setting various env vars
+    Installs a version of Python on Mac using pyenv
 
     :return:
-        A bool - if the CI ran successfully
+        A bool - if Python was installed successfully
     """
 
     if version not in set(['2.6.9', '3.3.7']):
