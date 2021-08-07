@@ -155,10 +155,8 @@ links to the source for the various pre-defined type classes.
 
 Various combinations of platforms and versions of Python are tested via:
 
- - [AppVeyor](https://ci.appveyor.com/project/wbond/asn1crypto/history)
- - [CircleCI](https://circleci.com/gh/wbond/asn1crypto)
- - [GitHub Actions](https://github.com/wbond/asn1crypto/actions)
- - [Travis CI](https://travis-ci.org/wbond/asn1crypto/builds)
+ - [macOS, Linux, Windows](https://github.com/wbond/asn1crypto/actions/workflows/ci.yml) via GitHub Actions
+ - [arm64](https://circleci.com/gh/wbond/asn1crypto) via CircleCI
 
 ## Testing
 
