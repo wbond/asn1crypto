@@ -42,3 +42,24 @@ class AlgoTests(unittest.TestCase):
         self.assertEqual(scheme['parameters']['aes_nonce'].native, b'z\xb7\xbd\xb7\xe1\xc6\xc0\x11\xc1?\xf00')
         self.assertEqual(scheme['parameters']['aes_icvlen'].__class__, core.Integer)
         self.assertEqual(scheme['parameters']['aes_icvlen'].native, 8)
+
+    def test_rc2_parameters(self):
+        with open(os.path.join(fixtures_dir, 'rc2_algo.der'), 'rb') as f:
+            algo = algos.EncryptionAlgorithm.load(f.read())
+        self.assertEqual(algo.encryption_block_size, 8)
+        self.assertEqual(algo.encryption_iv, b'Q\xf1\xde\xc3\xc0l\xe8\xef')
+        self.assertEqual(algo.encryption_cipher, 'rc2')
+        self.assertEqual(algo.encryption_mode, 'cbc')
+        self.assertEqual(algo.key_length, 16)
+
+    def test_rc5_parameters(self):
+        with open(os.path.join(fixtures_dir, 'rc5_algo.der'), 'rb') as f:
+            algo = algos.EncryptionAlgorithm.load(f.read())
+        self.assertEqual(algo.encryption_block_size, 16)
+        self.assertEqual(algo.encryption_iv, b'abcd\0\1\2\3')
+        self.assertEqual(algo.encryption_cipher, 'rc5')
+        self.assertEqual(algo.encryption_mode, 'cbc')
+
+        params = algo["parameters"]
+        self.assertEqual(params["version"].native, 'v1-0')
+        self.assertEqual(params["rounds"].native, 42)
