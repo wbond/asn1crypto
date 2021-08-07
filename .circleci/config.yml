@@ -11,6 +11,6 @@ jobs:
       - run: python3 run.py ci-driver
 workflows:
   version: 2
-  test:
+  Arm64 - Python 2.7/3.9:
     jobs:
       - build-arm
