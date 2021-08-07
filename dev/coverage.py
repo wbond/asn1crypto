@@ -136,7 +136,7 @@ def _codecov_submit():
     env_name, root = _env_info()
 
     try:
-        with open(os.path.join(root, 'codecov.json'), 'rb') as f:
+        with open(os.path.join(root, 'dev/codecov.json'), 'rb') as f:
             json_data = json.loads(f.read().decode('utf-8'))
     except (OSError, ValueError, UnicodeDecodeError, KeyError):
         print('error reading codecov.json')
