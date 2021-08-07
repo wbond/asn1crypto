@@ -34,7 +34,7 @@ def run(version=None):
     if sys.platform == 'win32':
         raise ValueError('pyenv-install is not designed for Windows')
 
-    if version not in set(['2.6.9', '3.3.7']):
+    if version not in set(['2.6', '3.3']):
         raise ValueError('Invalid version: %r' % version)
 
     python_path = os.path.expanduser('~/.pyenv/versions/%s/bin' % version)
@@ -69,7 +69,7 @@ def run(version=None):
     pyenv_script = './%s' % version
     try:
         with open(pyenv_script, 'wb') as f:
-            if version == '2.6.9':
+            if version == '2.6':
                 contents = '#require_gcc\n' \
                     'install_package "openssl-1.0.2k" "https://www.openssl.org/source/old/1.0.2/openssl-1.0.2k.tar.gz' \
                     '#6b3977c61f2aedf0f96367dcfb5c6e578cf37e7b8d913b4ecb6643c3cb88d8c0" mac_openssl\n' \
@@ -78,7 +78,7 @@ def run(version=None):
                     ' --if has_broken_mac_readline\n' \
                     'install_package "Python-2.6.9" "https://www.python.org/ftp/python/2.6.9/Python-2.6.9.tgz' \
                     '#7277b1285d8a82f374ef6ebaac85b003266f7939b3f2a24a3af52f9523ac94db" standard verify_py26'
-            elif version == '3.3.7':
+            elif version == '3.3':
                 contents = '#require_gcc\n' \
                     'install_package "openssl-1.0.2k" "https://www.openssl.org/source/old/1.0.2/openssl-1.0.2k.tar.gz' \
                     '#6b3977c61f2aedf0f96367dcfb5c6e578cf37e7b8d913b4ecb6643c3cb88d8c0" mac_openssl\n' \
@@ -94,7 +94,7 @@ def run(version=None):
         stdin_contents = None
         env = os.environ.copy()
 
-        if version == '2.6.9':
+        if version == '2.6':
             _write_env(env, 'PYTHON_CONFIGURE_OPTS', '--enable-ipv6')
             stdin = subprocess.PIPE
             stdin_contents = '--- configure  2021-08-05 20:17:26.000000000 -0400\n' \

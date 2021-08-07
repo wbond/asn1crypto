@@ -95,8 +95,8 @@ jobs:
     strategy:
       matrix:
         python:
-          - '2.6.9'
-          - '3.3.7'
+          - '2.6'
+          - '3.3'
     steps:
       - uses: actions/checkout@master
 
