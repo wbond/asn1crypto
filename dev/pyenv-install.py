@@ -58,9 +58,9 @@ def run(version=None):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        proc.communicate()
-        stdout += proc.stdout.decode('utf-8')
-        stderr += proc.stderr.decode('utf-8')
+        so, se = proc.communicate()
+        stdout += so.decode('utf-8')
+        stderr += se.decode('utf-8')
         if proc.returncode != 0:
             print(stdout)
             print(stderr, file=sys.stderr)
@@ -127,9 +127,9 @@ def run(version=None):
             stdin=stdin,
             env=env
         )
-        proc.communicate(stdin_contents)
-        stdout += proc.stdout.decode('utf-8')
-        stderr += proc.stderr.decode('utf-8')
+        so, se = proc.communicate(stdin_contents)
+        stdout += so.decode('utf-8')
+        stderr += se.decode('utf-8')
 
         if proc.returncode != 0:
             print(stdout)
