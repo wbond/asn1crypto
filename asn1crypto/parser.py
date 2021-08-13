@@ -226,10 +226,9 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
             # just scanned looking for \x00\x00, nested indefinite length values
             # would not work.
             contents_end = pointer
-            while contents_end < data_len:
-                sub_header_end, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True, depth=depth+1)
-                if contents_end == sub_header_end and encoded_data[contents_end - 2:contents_end] == b'\x00\x00':
-                    break
+            while data_len < contents_end + 2 or encoded_data[contents_end:contents_end+2] != b'\x00\x00':
+                _, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True, depth=depth+1)
+            contents_end += 2
             trailer = b'\x00\x00'
 
     if contents_end > data_len:

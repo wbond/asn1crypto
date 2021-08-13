@@ -121,3 +121,20 @@ class ParserTests(unittest.TestCase):
     def test_parser_bounded_recursion(self):
         with self.assertRaises(ValueError):
             parser.parse(b'\x30\x80' * 1000)
+
+    def test_parser_indef_missing_eoc(self):
+        with self.assertRaises(ValueError):
+            parser.parse(b'\x30\x80')
+        with self.assertRaises(ValueError):
+            parser.parse(b'\x30\x80\x30\x80\x00\x00')
+
+    def test_parser_indef_long_zero_length(self):
+        # The parser should not confuse the long-form zero length for an EOC.
+        result = parser.parse(b'\x30\x80\x30\x82\x00\x00\x00\x00')
+        self.assertIsInstance(result, tuple)
+        self.assertEqual(0, result[0])
+        self.assertEqual(1, result[1])
+        self.assertEqual(16, result[2])
+        self.assertEqual(b'\x30\x80', result[3])
+        self.assertEqual(b'\x30\x82\x00\x00', result[4])
+        self.assertEqual(b'\x00\x00', result[5])
