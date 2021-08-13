@@ -136,6 +136,28 @@ def peek(contents):
     return consumed
 
 
+def _get_byte(encoded_data, data_len, pointer):
+    """
+    Reads a single byte from a byte string
+
+    :param encoded_data:
+        A byte string that contains BER-encoded data
+
+    :param data_len:
+        The integer length of the encoded data
+
+    :param pointer:
+        The index in the byte string to parse from
+
+    :return:
+        The integer byte that was read
+    """
+    if data_len < pointer + 1:
+        raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (1, data_len - pointer))
+
+    return ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
+
+
 def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
     """
     Parses a byte string into component parts
@@ -160,11 +182,8 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
          - 1: An integer indicating how many bytes were consumed
     """
 
-    if data_len < pointer + 2:
-        raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (2, data_len - pointer))
-
     start = pointer
-    first_octet = ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
+    first_octet = _get_byte(encoded_data, data_len, pointer)
     pointer += 1
 
     tag = first_octet & 31
@@ -172,28 +191,27 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
     if tag == 31:
         tag = 0
         while True:
-            num = ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
+            num = _get_byte(encoded_data, data_len, pointer)
             pointer += 1
             tag *= 128
             tag += num & 127
             if num >> 7 == 0:
                 break
 
-    length_octet = ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
+    length_octet = _get_byte(encoded_data, data_len, pointer)
     pointer += 1
+    trailer = b''
 
     if length_octet >> 7 == 0:
-        if lengths_only:
-            return (pointer, pointer + (length_octet & 127))
         contents_end = pointer + (length_octet & 127)
 
     else:
         length_octets = length_octet & 127
         if length_octets:
+            if data_len < pointer + length_octets:
+                raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (length_octets, data_len - pointer))
             pointer += length_octets
             contents_end = pointer + int_from_bytes(encoded_data[pointer - length_octets:pointer], signed=False)
-            if lengths_only:
-                return (pointer, contents_end)
 
         else:
             # To properly parse indefinite length values, we need to scan forward
@@ -205,32 +223,22 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
                 sub_header_end, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True)
                 if contents_end == sub_header_end and encoded_data[contents_end - 2:contents_end] == b'\x00\x00':
                     break
-            if lengths_only:
-                return (pointer, contents_end)
-            if contents_end > data_len:
-                raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (contents_end, data_len))
-            return (
-                (
-                    first_octet >> 6,
-                    (first_octet >> 5) & 1,
-                    tag,
-                    encoded_data[start:pointer],
-                    encoded_data[pointer:contents_end - 2],
-                    b'\x00\x00'
-                ),
-                contents_end
-            )
+            trailer = b'\x00\x00'
 
     if contents_end > data_len:
-        raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (contents_end, data_len))
+        raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (contents_end - pointer, data_len - pointer))
+
+    if lengths_only:
+        return (pointer, contents_end)
+
     return (
         (
             first_octet >> 6,
             (first_octet >> 5) & 1,
             tag,
             encoded_data[start:pointer],
-            encoded_data[pointer:contents_end],
-            b''
+            encoded_data[pointer:contents_end-len(trailer)],
+            trailer
         ),
         contents_end
     )

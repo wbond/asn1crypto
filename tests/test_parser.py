@@ -88,3 +88,32 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(b'\x7f\x81\x80\x00\x00', result[3])
         self.assertEqual(b'', result[4])
         self.assertEqual(b'', result[5])
+
+    def test_parser_insufficient_data(self):
+        # No tag
+        with self.assertRaises(ValueError):
+            parser.parse(b'')
+
+        # Long-form tag is truncated
+        with self.assertRaises(ValueError):
+            parser.parse(b'\xbf')
+        with self.assertRaises(ValueError):
+            parser.parse(b'\xbf\x81')
+
+        # No length
+        with self.assertRaises(ValueError):
+            parser.parse(b'\x04')
+        with self.assertRaises(ValueError):
+            parser.parse(b'\xbf\x1f')
+
+        # Long-form length is truncated
+        with self.assertRaises(ValueError):
+            parser.parse(b'\x04\x81')
+        with self.assertRaises(ValueError):
+            parser.parse(b'\x04\x82\x01')
+
+        # Contents are truncated
+        with self.assertRaises(ValueError):
+            parser.parse(b'\x04\x02\x00')
+        with self.assertRaises(ValueError):
+            parser.parse(b'\x04\x81\x80' + (b'\x00' * 127))
