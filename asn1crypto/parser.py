@@ -194,6 +194,7 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
     pointer += 1
 
     tag = first_octet & 31
+    constructed = (first_octet >> 5) & 1
     # Base 128 length using 8th bit as continuation indicator
     if tag == 31:
         tag = 0
@@ -225,6 +226,8 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
             # parsing headers until we find a value with a length of zero. If we
             # just scanned looking for \x00\x00, nested indefinite length values
             # would not work.
+            if not constructed:
+                raise ValueError('Indefinite-length element must be constructed')
             contents_end = pointer
             while data_len < contents_end + 2 or encoded_data[contents_end:contents_end+2] != b'\x00\x00':
                 _, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True, depth=depth+1)
@@ -240,7 +243,7 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
     return (
         (
             first_octet >> 6,
-            (first_octet >> 5) & 1,
+            constructed,
             tag,
             encoded_data[start:pointer],
             encoded_data[pointer:contents_end-len(trailer)],

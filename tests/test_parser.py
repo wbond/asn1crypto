@@ -138,3 +138,7 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(b'\x30\x80', result[3])
         self.assertEqual(b'\x30\x82\x00\x00', result[4])
         self.assertEqual(b'\x00\x00', result[5])
+
+    def test_parser_indef_primitive(self):
+        with self.assertRaises(ValueError):
+            parser.parse(b'\x04\x80\x00\x00')
