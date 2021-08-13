@@ -142,3 +142,12 @@ class ParserTests(unittest.TestCase):
     def test_parser_indef_primitive(self):
         with self.assertRaises(ValueError):
             parser.parse(b'\x04\x80\x00\x00')
+
+    def test_parse_nonminimal_tag(self):
+        with self.assertRaises(ValueError):
+            # Should be b'\x04\x00'
+            parser.parse(b'\x1f\x04\x00')
+
+        with self.assertRaises(ValueError):
+            # Should be b'\xbf\x1f\x00'
+            parser.parse(b'\xbf\x80\x1f\x00')

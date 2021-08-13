@@ -201,10 +201,14 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
         while True:
             num = _get_byte(encoded_data, data_len, pointer)
             pointer += 1
+            if num == 0x80 and tag == 0:
+                raise ValueError('Non-minimal tag encoding')
             tag *= 128
             tag += num & 127
             if num >> 7 == 0:
                 break
+        if tag < 31:
+            raise ValueError('Non-minimal tag encoding')
 
     length_octet = _get_byte(encoded_data, data_len, pointer)
     pointer += 1
