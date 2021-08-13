@@ -20,6 +20,7 @@ from .util import int_from_bytes, int_to_bytes
 
 _PY2 = sys.version_info <= (3,)
 _INSUFFICIENT_DATA_MESSAGE = 'Insufficient data - %s bytes requested but only %s available'
+_MAX_DEPTH = 10
 
 
 def emit(class_, method, tag, contents):
@@ -158,7 +159,7 @@ def _get_byte(encoded_data, data_len, pointer):
     return ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
 
 
-def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
+def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
     """
     Parses a byte string into component parts
 
@@ -176,11 +177,17 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
         number of bytes in the header and the integer number of bytes in the
         contents. Internal use only.
 
+    :param depth:
+        The recursion depth when evaluating indefinite-length encoding.
+
     :return:
         A 2-element tuple:
          - 0: A tuple of (class_, method, tag, header, content, trailer)
          - 1: An integer indicating how many bytes were consumed
     """
+
+    if depth > _MAX_DEPTH:
+        raise ValueError('Indefinite-length recursion limit exceeded')
 
     start = pointer
     first_octet = _get_byte(encoded_data, data_len, pointer)
@@ -220,7 +227,7 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False):
             # would not work.
             contents_end = pointer
             while contents_end < data_len:
-                sub_header_end, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True)
+                sub_header_end, contents_end = _parse(encoded_data, data_len, contents_end, lengths_only=True, depth=depth+1)
                 if contents_end == sub_header_end and encoded_data[contents_end - 2:contents_end] == b'\x00\x00':
                     break
             trailer = b'\x00\x00'

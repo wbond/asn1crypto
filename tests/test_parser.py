@@ -117,3 +117,7 @@ class ParserTests(unittest.TestCase):
             parser.parse(b'\x04\x02\x00')
         with self.assertRaises(ValueError):
             parser.parse(b'\x04\x81\x80' + (b'\x00' * 127))
+
+    def test_parser_bounded_recursion(self):
+        with self.assertRaises(ValueError):
+            parser.parse(b'\x30\x80' * 1000)
