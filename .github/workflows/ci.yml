@@ -169,15 +169,15 @@ jobs:
     runs-on: [self-hosted, linux, ARM]
     steps:
       - name: Install dependencies
-        run: python run.py deps
+        run: python3 run.py deps
       - name: Run test suite
-        run: python run.py ci-driver
+        run: python3 run.py ci-driver
 
   build-arm64:
     name: Python 3.8 on arm64
     runs-on: [self-hosted, linux, ARM64]
     steps:
       - name: Install dependencies
-        run: python run.py deps
+        run: python3 run.py deps
       - name: Run test suite
-        run: python run.py ci-driver
+        run: python3 run.py ci-driver
