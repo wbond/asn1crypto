@@ -168,6 +168,7 @@ jobs:
     name: Python 3.8 on arm
     runs-on: [self-hosted, linux, ARM]
     steps:
+      - uses: actions/checkout@master
       - name: Install dependencies
         run: python3 run.py deps
       - name: Run test suite
@@ -177,6 +178,7 @@ jobs:
     name: Python 3.8 on arm64
     runs-on: [self-hosted, linux, ARM64]
     steps:
+      - uses: actions/checkout@master
       - name: Install dependencies
         run: python3 run.py deps
       - name: Run test suite
