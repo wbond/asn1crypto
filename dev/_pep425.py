@@ -166,12 +166,13 @@ def _pep425tags():
         if sys.platform == 'win32':
             if 'amd64' in sys.version.lower():
                 arches = ['win_amd64']
-            arches = [sys.platform]
+            else:
+                arches = [sys.platform]
         elif hasattr(os, 'uname'):
             (plat, _, _, _, machine) = os.uname()
             plat = plat.lower().replace('/', '')
             machine.replace(' ', '_').replace('/', '_')
-            if plat == 'linux' and sys.maxsize == 2147483647:
+            if plat == 'linux' and sys.maxsize == 2147483647 and 'arm' not in machine:
                 machine = 'i686'
             arch = '%s_%s' % (plat, machine)
             if _pep425_supports_manylinux():
