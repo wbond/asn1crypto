@@ -165,21 +165,29 @@ jobs:
         run: python${{matrix.python}} run.py ci-driver
 
   build-arm:
-    name: Python 3.8 on arm
+    name: Python 2.7/3.8 on arm
     runs-on: [self-hosted, linux, ARM]
     steps:
       - uses: actions/checkout@master
-      - name: Install dependencies
+      - name: Install dependencies (2.7)
+        run: python2 run.py deps
+      - name: Run test suite (2.7)
+        run: python2 run.py ci-driver
+      - name: Install dependencies (3.8)
         run: python3 run.py deps
-      - name: Run test suite
+      - name: Run test suite (3.8)
         run: python3 run.py ci-driver
 
   build-arm64:
-    name: Python 3.8 on arm64
+    name: Python 2.7/3.8 on arm64
     runs-on: [self-hosted, linux, ARM64]
     steps:
       - uses: actions/checkout@master
-      - name: Install dependencies
+      - name: Install dependencies (2.7)
+        run: python2 run.py deps
+      - name: Run test suite (2.7)
+        run: python2 run.py ci-driver
+      - name: Install dependencies (3.8)
         run: python3 run.py deps
-      - name: Run test suite
+      - name: Run test suite (3.8)
         run: python3 run.py ci-driver
