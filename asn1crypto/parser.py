@@ -137,28 +137,6 @@ def peek(contents):
     return consumed
 
 
-def _get_byte(encoded_data, data_len, pointer):
-    """
-    Reads a single byte from a byte string
-
-    :param encoded_data:
-        A byte string that contains BER-encoded data
-
-    :param data_len:
-        The integer length of the encoded data
-
-    :param pointer:
-        The index in the byte string to parse from
-
-    :return:
-        The integer byte that was read
-    """
-    if data_len < pointer + 1:
-        raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (1, data_len - pointer))
-
-    return ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
-
-
 def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
     """
     Parses a byte string into component parts
@@ -190,7 +168,11 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
         raise ValueError('Indefinite-length recursion limit exceeded')
 
     start = pointer
-    first_octet = _get_byte(encoded_data, data_len, pointer)
+
+    if data_len < pointer + 1:
+        raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (1, data_len - pointer))
+    first_octet = ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
+
     pointer += 1
 
     tag = first_octet & 31
@@ -199,7 +181,9 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
     if tag == 31:
         tag = 0
         while True:
-            num = _get_byte(encoded_data, data_len, pointer)
+            if data_len < pointer + 1:
+                raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (1, data_len - pointer))
+            num = ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
             pointer += 1
             if num == 0x80 and tag == 0:
                 raise ValueError('Non-minimal tag encoding')
@@ -210,7 +194,9 @@ def _parse(encoded_data, data_len, pointer=0, lengths_only=False, depth=0):
         if tag < 31:
             raise ValueError('Non-minimal tag encoding')
 
-    length_octet = _get_byte(encoded_data, data_len, pointer)
+    if data_len < pointer + 1:
+        raise ValueError(_INSUFFICIENT_DATA_MESSAGE % (1, data_len - pointer))
+    length_octet = ord(encoded_data[pointer]) if _PY2 else encoded_data[pointer]
     pointer += 1
     trailer = b''
 
