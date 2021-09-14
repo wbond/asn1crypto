@@ -101,6 +101,7 @@ class CMSAttributeType(ObjectIdentifier):
         '1.2.840.113549.1.9.4': 'message_digest',
         '1.2.840.113549.1.9.5': 'signing_time',
         '1.2.840.113549.1.9.6': 'counter_signature',
+        # https://datatracker.ietf.org/doc/html/rfc2633#section-2.5.2
         '1.2.840.113549.1.9.15': 'smime_capabilities',
         # https://tools.ietf.org/html/rfc2633#page-26
         '1.2.840.113549.1.9.16.2.11': 'encrypt_key_pref',
