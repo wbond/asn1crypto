@@ -901,3 +901,13 @@ class CMSTests(unittest.TestCase):
             ]),
             content['certificates'][0].chosen['tbs_certificate']['subject'].native
         )
+
+    def test_create_role_syntax(self):
+        rs = cms.RoleSyntax({'role_name': {'rfc822_name': 'test@example.com'}})
+        self.assertEqual(
+            util.OrderedDict([
+                ('role_authority', None),
+                ('role_name', 'test@example.com')
+            ]),
+            rs.native
+        )

@@ -315,7 +315,7 @@ class SetOfSvceAuthInfo(SetOf):
 class RoleSyntax(Sequence):
     _fields = [
         ('role_authority', GeneralNames, {'implicit': 0, 'optional': True}),
-        ('role_name', GeneralName, {'implicit': 1}),
+        ('role_name', GeneralName, {'explicit': 1}),
     ]
 
 
@@ -337,7 +337,7 @@ class ClassList(BitString):
 class SecurityCategory(Sequence):
     _fields = [
         ('type', ObjectIdentifier, {'implicit': 0}),
-        ('value', Any, {'implicit': 1}),
+        ('value', Any, {'explicit': 1}),
     ]
 
 
