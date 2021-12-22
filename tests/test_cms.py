@@ -901,3 +901,15 @@ class CMSTests(unittest.TestCase):
             ]),
             content['certificates'][0].chosen['tbs_certificate']['subject'].native
         )
+
+    def test_parse_attribute_cert(self):
+        # regression test for tagging issue in AttCertIssuer
+
+        with open(os.path.join(fixtures_dir, 'example-attr-cert.der'), 'rb') as f:
+            ac_bytes = f.read()
+        ac_parsed = cms.AttributeCertificateV2.load(ac_bytes)
+        self.assertEqual(ac_bytes, ac_parsed.dump(force=True))
+
+        ac_info = ac_parsed['ac_info']
+        self.assertIsInstance(ac_info['issuer'].chosen, cms.V2Form)
+        self.assertEqual(1, len(ac_info['issuer'].chosen['issuer_name']))

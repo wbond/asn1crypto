@@ -273,7 +273,7 @@ class V2Form(Sequence):
 class AttCertIssuer(Choice):
     _alternatives = [
         ('v1_form', GeneralNames),
-        ('v2_form', V2Form, {'explicit': 0}),
+        ('v2_form', V2Form, {'implicit': 0}),
     ]
 
 
