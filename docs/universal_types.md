@@ -100,10 +100,10 @@ re-interpreted.
 ```python
 from asn1crypto.core import BitString, OctetBitString, IntegerBitString
 
-bit = BitString({
+bit = BitString((
     0, 0, 0, 0, 0, 0, 0, 1,
     0, 0, 0, 0, 0, 0, 1, 0,
-})
+))
 
 # Will print (0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0)
 print(bit.native)
