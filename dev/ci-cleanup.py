@@ -9,8 +9,8 @@ from . import build_root, other_packages
 
 def run():
     """
-    Installs required development dependencies. Uses git to checkout other
-    modularcrypto repos for more accurate coverage data.
+    Cleans up CI dependencies - used for persistent GitHub Actions
+    Runners since they don't clean themselves up.
     """
 
     print("Removing ci dependencies")
