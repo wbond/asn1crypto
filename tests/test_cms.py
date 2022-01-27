@@ -21,6 +21,30 @@ tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 
+class ClearanceTests(unittest.TestCase):
+
+    def test_clearance_decode_bad_tagging(self):
+        rfc_3281_wrong_tagging = b'\x30\x08\x80\x02\x88\x37\x81\x02\x02\x4c'
+        # This test documents the fact that we can't deal with the "wrong"
+        # version of Clearance in RFC 3281
+        self.assertRaises(
+            ValueError,
+            lambda: cms.Clearance.load(rfc_3281_wrong_tagging).native
+        )
+
+    def test_clearance_decode_correct_tagging(self):
+        correct_tagging = b'\x30\x08\x06\x02\x88\x37\x03\x02\x02\x4c'
+        clearance_obj = cms.Clearance.load(correct_tagging)
+        self.assertEqual(
+            util.OrderedDict([
+                ('policy_id', '2.999'),
+                ('class_list', set(['secret', 'top_secret', 'unclassified'])),
+                ('security_categories', None)
+            ]),
+            clearance_obj.native
+        )
+
+
 class CMSTests(unittest.TestCase):
 
     def test_create_content_info_data(self):

@@ -347,9 +347,9 @@ class SetOfSecurityCategory(SetOf):
 
 class Clearance(Sequence):
     _fields = [
-        ('policy_id', ObjectIdentifier, {'implicit': 0}),
-        ('class_list', ClassList, {'implicit': 1, 'default': 'unclassified'}),
-        ('security_categories', SetOfSecurityCategory, {'implicit': 2, 'optional': True}),
+        ('policy_id', ObjectIdentifier),
+        ('class_list', ClassList, {'default': set(['unclassified'])}),
+        ('security_categories', SetOfSecurityCategory, {'optional': True}),
     ]
 
 
