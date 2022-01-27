@@ -191,3 +191,6 @@ jobs:
         run: python3 run.py deps
       - name: Run test suite (3.8)
         run: python3 run.py ci-driver
+      - name: Cleanup deps
+        if: always()
+        run: python3 run.py ci-cleanup
