@@ -173,10 +173,16 @@ jobs:
         run: python2 run.py deps
       - name: Run test suite (2.7)
         run: python2 run.py ci-driver
+      - name: Cleanup deps (2.7)
+        if: always()
+        run: python2 run.py ci-cleanup
       - name: Install dependencies (3.8)
         run: python3 run.py deps
       - name: Run test suite (3.8)
         run: python3 run.py ci-driver
+      - name: Cleanup deps (3.8)
+        if: always()
+        run: python3 run.py ci-cleanup
 
   build-arm64:
     name: Python 2.7/3.8 on arm64
@@ -187,7 +193,13 @@ jobs:
         run: python2 run.py deps
       - name: Run test suite (2.7)
         run: python2 run.py ci-driver
+      - name: Cleanup deps (2.7)
+        if: always()
+        run: python2 run.py ci-cleanup
       - name: Install dependencies (3.8)
         run: python3 run.py deps
       - name: Run test suite (3.8)
         run: python3 run.py ci-driver
+      - name: Cleanup deps (3.8)
+        if: always()
+        run: python3 run.py ci-cleanup
