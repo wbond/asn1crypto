@@ -978,6 +978,18 @@ class CoreTests(unittest.TestCase):
         st = SetTest({'two': 2, 'one': 1})
         self.assertEqual(b'1\x06\x81\x01\x01\x82\x01\x02', st.dump())
 
+    def test_force_dump_unknown_sequence(self):
+        seq = Seq({
+            'id': '1.2.3',
+            'value': 1
+        })
+        der = seq.dump(force=True)
+        # Ensure we don't erase the contents of a sequence we don't know
+        # the fields for when force re-encoding
+        unknown_seq = core.Sequence.load(der)
+        unknown_der = unknown_seq.dump(force=True)
+        self.assertEqual(der, unknown_der)
+
     def test_dump_set_of(self):
         st = SetOfTest([3, 2, 1])
         self.assertEqual(b'1\x09\x02\x01\x01\x02\x01\x02\x02\x01\x03', st.dump())
