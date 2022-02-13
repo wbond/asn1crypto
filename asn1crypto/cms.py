@@ -28,7 +28,6 @@ except (ImportError):
 
 from .algos import (
     _ForceNullParameters,
-    AlgorithmIdentifier,
     DigestAlgorithm,
     EncryptionAlgorithm,
     HmacAlgorithm,
@@ -949,12 +948,19 @@ class SMIMEEncryptionKeyPreferences(SetOf):
     _child_spec = SMIMEEncryptionKeyPreference
 
 
-class SMIMECapability(SequenceOf):
-    _child_spec = AlgorithmIdentifier
+class SMIMECapabilityIdentifier(Sequence):
+    _fields = [
+        ('capability_id', ObjectIdentifier),
+        ('parameters', Any, {'optional': True}),
+    ]
 
 
-class SMIMECapabilites(SetOf):
-    _child_spec = SMIMECapability
+class SMIMECapabilites(SequenceOf):
+    _child_spec = SMIMECapabilityIdentifier
+
+
+class SetOfSMIMECapabilites(SetOf):
+    _child_spec = SMIMECapabilites
 
 
 ContentInfo._oid_specs = {
@@ -992,5 +998,5 @@ CMSAttribute._oid_specs = {
     'microsoft_nested_signature': SetOfContentInfo,
     'microsoft_time_stamp_token': SetOfContentInfo,
     'encrypt_key_pref': SMIMEEncryptionKeyPreferences,
-    'smime_capabilities': SMIMECapabilites,
+    'smime_capabilities': SetOfSMIMECapabilites,
 }
