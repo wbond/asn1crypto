@@ -114,7 +114,7 @@ faster to an order of magnitude or more.
 
 ## Dependencies
 
-Python 2.6, 2.7, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9 or pypy. *No third-party
+Python 2.6, 2.7, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10 or pypy. *No third-party
 packages required.*
 
 ## Installation
