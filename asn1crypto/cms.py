@@ -100,6 +100,8 @@ class CMSAttributeType(ObjectIdentifier):
         '1.2.840.113549.1.9.4': 'message_digest',
         '1.2.840.113549.1.9.5': 'signing_time',
         '1.2.840.113549.1.9.6': 'counter_signature',
+        # https://datatracker.ietf.org/doc/html/rfc2633#section-2.5.2
+        '1.2.840.113549.1.9.15': 'smime_capabilities',
         # https://tools.ietf.org/html/rfc2633#page-26
         '1.2.840.113549.1.9.16.2.11': 'encrypt_key_pref',
         # https://tools.ietf.org/html/rfc3161#page-20
@@ -946,6 +948,21 @@ class SMIMEEncryptionKeyPreferences(SetOf):
     _child_spec = SMIMEEncryptionKeyPreference
 
 
+class SMIMECapabilityIdentifier(Sequence):
+    _fields = [
+        ('capability_id', ObjectIdentifier),
+        ('parameters', Any, {'optional': True}),
+    ]
+
+
+class SMIMECapabilites(SequenceOf):
+    _child_spec = SMIMECapabilityIdentifier
+
+
+class SetOfSMIMECapabilites(SetOf):
+    _child_spec = SMIMECapabilites
+
+
 ContentInfo._oid_specs = {
     'data': OctetString,
     'signed_data': SignedData,
@@ -981,4 +998,5 @@ CMSAttribute._oid_specs = {
     'microsoft_nested_signature': SetOfContentInfo,
     'microsoft_time_stamp_token': SetOfContentInfo,
     'encrypt_key_pref': SMIMEEncryptionKeyPreferences,
+    'smime_capabilities': SetOfSMIMECapabilites,
 }

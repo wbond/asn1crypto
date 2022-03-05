@@ -911,6 +911,60 @@ class CMSTests(unittest.TestCase):
             signer['signature'].native
         )
 
+    def test_parse_content_info_smime_capabilities(self):
+        with open(os.path.join(fixtures_dir, 'smime-signature-generated-by-thunderbird.p7s'), 'rb') as f:
+            info = cms.ContentInfo.load(f.read())
+
+        signed_attrs = info['content']['signer_infos'][0]['signed_attrs']
+
+        self.assertEqual(
+            'smime_capabilities',
+            signed_attrs[3]['type'].native
+        )
+        smime_capabilities = signed_attrs[3]
+
+        self.assertEqual(
+            1,
+            len(smime_capabilities['values'])
+        )
+        self.assertEqual(
+            7,
+            len(smime_capabilities['values'][0])
+        )
+        self.assertEqual(
+            [capability.native for capability in smime_capabilities['values'][0]],
+            [
+                util.OrderedDict([
+                    ('capability_id', '2.16.840.1.101.3.4.1.42'),
+                    ('parameters', None),
+                ]),
+                util.OrderedDict([
+                    ('capability_id', '2.16.840.1.101.3.4.1.2'),
+                    ('parameters', None),
+                ]),
+                util.OrderedDict([
+                    ('capability_id', '1.2.840.113549.3.7'),
+                    ('parameters', None),
+                ]),
+                util.OrderedDict([
+                    ('capability_id', '1.2.840.113549.3.2'),
+                    ('parameters', 128),
+                ]),
+                util.OrderedDict([
+                    ('capability_id', '1.2.840.113549.3.2'),
+                    ('parameters', 64),
+                ]),
+                util.OrderedDict([
+                    ('capability_id', '1.3.14.3.2.7'),
+                    ('parameters', None),
+                ]),
+                util.OrderedDict([
+                    ('capability_id', '1.2.840.113549.3.2'),
+                    ('parameters', 40),
+                ]),
+            ]
+        )
+
     def test_bad_teletex_inside_pkcs7(self):
         with open(os.path.join(fixtures_dir, 'mozilla-generated-by-openssl.pkcs7.der'), 'rb') as f:
             content = cms.ContentInfo.load(f.read())['content']
