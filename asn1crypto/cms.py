@@ -30,6 +30,7 @@ from .algos import (
     _ForceNullParameters,
     DigestAlgorithm,
     EncryptionAlgorithm,
+    EncryptionAlgorithmId,
     HmacAlgorithm,
     KdfAlgorithm,
     RSAESOAEPParams,
@@ -950,7 +951,7 @@ class SMIMEEncryptionKeyPreferences(SetOf):
 
 class SMIMECapabilityIdentifier(Sequence):
     _fields = [
-        ('capability_id', ObjectIdentifier),
+        ('capability_id', EncryptionAlgorithmId),
         ('parameters', Any, {'optional': True}),
     ]
 

@@ -935,31 +935,31 @@ class CMSTests(unittest.TestCase):
             [capability.native for capability in smime_capabilities['values'][0]],
             [
                 util.OrderedDict([
-                    ('capability_id', '2.16.840.1.101.3.4.1.42'),
+                    ('capability_id', 'aes256_cbc'),
                     ('parameters', None),
                 ]),
                 util.OrderedDict([
-                    ('capability_id', '2.16.840.1.101.3.4.1.2'),
+                    ('capability_id', 'aes128_cbc'),
                     ('parameters', None),
                 ]),
                 util.OrderedDict([
-                    ('capability_id', '1.2.840.113549.3.7'),
+                    ('capability_id', 'tripledes_3key'),
                     ('parameters', None),
                 ]),
                 util.OrderedDict([
-                    ('capability_id', '1.2.840.113549.3.2'),
+                    ('capability_id', 'rc2'),
                     ('parameters', 128),
                 ]),
                 util.OrderedDict([
-                    ('capability_id', '1.2.840.113549.3.2'),
+                    ('capability_id', 'rc2'),
                     ('parameters', 64),
                 ]),
                 util.OrderedDict([
-                    ('capability_id', '1.3.14.3.2.7'),
+                    ('capability_id', 'des'),
                     ('parameters', None),
                 ]),
                 util.OrderedDict([
-                    ('capability_id', '1.2.840.113549.3.2'),
+                    ('capability_id', 'rc2'),
                     ('parameters', 40),
                 ]),
             ]
