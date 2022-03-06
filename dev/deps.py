@@ -638,7 +638,17 @@ def _parse_requires(path):
             package = package.strip()
             cond = cond.strip()
             cond = cond.replace('sys_platform', repr(sys_platform))
-            cond = cond.replace('python_version', repr(python_version))
+            cond = re.sub(
+                r'[\'"]'
+                r'(\d+(?:\.\d+)*)'
+                r'([-._]?(?:alpha|a|beta|b|preview|pre|c|rc)\.?\d*)?'
+                r'(-\d+|(?:[-._]?(?:rev|r|post)\.?\d*))?'
+                r'([-._]?dev\.?\d*)?'
+                r'[\'"]',
+                r'_tuple_from_ver(\g<0>)',
+                cond
+            )
+            cond = cond.replace('python_version', '_tuple_from_ver(%r)' % python_version)
             if not eval(cond):
                 continue
         else:
