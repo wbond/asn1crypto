@@ -6,8 +6,8 @@ import os
 import unittest
 
 
-__version__ = '1.4.0'
-__version_info__ = (1, 4, 0)
+__version__ = '1.5.0'
+__version_info__ = (1, 5, 0)
 
 
 def _import_from(mod, path, mod_dir=None):

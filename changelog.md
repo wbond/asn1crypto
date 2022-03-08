@@ -1,5 +1,33 @@
 # changelog
 
+## 1.5.0
+
+ - Fix `tsp.TimeStampAndCRL` to be a `core.Sequence` instead of a
+   `core.SequenceOf` *via @joernheissler*
+ - Added OIDs for Edwards curves from RFC 8410 - via @MatthiasValvekens
+ - Fixed convenience attributes on `algos.EncryptionAlgorithm` when the
+   algorithm is RC2 *via @joernheissler*
+ - Added Microsoft OIDs `microsoft_enrollment_csp_provider`
+   (`1.3.6.1.4.1.311.13.2.2`), `microsoft_os_version`
+   (`1.3.6.1.4.1.311.13.2.3`) and `microsoft_request_client_info`
+   (`1.3.6.1.4.1.311.21.20`)
+   to `csr.CSRAttributeType` along with supporting extension structures
+   *via @qha*
+ - Added Microsoft OID `microsoft_enroll_certtype` (`1.3.6.1.4.1.311.20.2`)
+   to `x509.ExtensionId` *via @qha*
+ - Fixed a few bugs with parsing indefinite-length encodings *via @davidben*
+ - Added various bounds checks to parsing engine *via @davidben*
+ - Fixed a bug with tags not always being minimally encoded *via @davidben*
+ - Fixed `cms.RoleSyntax`, `cms.SecurityCategory` and `cms.AttCertIssuer` to
+   have explicit instead of implicit tagging *via @MatthiasValvekens*
+ - Fixed tagging of, and default value for fields in `cms.Clearance` *via
+   @MatthiasValvekens*
+ - Fixed calling `.dump(force=True)` when the value has undefined/unknown
+   `core.Sequence` fields. Previously the value would be truncated, now
+   the existing encoding is preserved.
+ - Added sMIME capabilities (`1.2.840.113549.1.9.15`) support from RFC 2633
+   to `cms.CMSAttribute` *via Hellzed*
+
 ## 1.4.0
 
  - `core.ObjectIdentifier` and all derived classes now obey X.660 §7.6 and
