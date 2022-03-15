@@ -752,7 +752,7 @@ class PrivateKeyInfo(Sequence):
                 type_name(private_key)
             ))
 
-        if algorithm == 'rsa':
+        if algorithm == 'rsa' or algorithm == 'rsassa_pss':
             if not isinstance(private_key, RSAPrivateKey):
                 private_key = RSAPrivateKey.load(private_key)
             params = Null()
@@ -1120,7 +1120,7 @@ class PublicKeyInfo(Sequence):
                 type_name(public_key)
             ))
 
-        if algorithm != 'rsa':
+        if algorithm != 'rsa' and algorithm != 'rsassa_pss':
             raise ValueError(unwrap(
                 '''
                 algorithm must "rsa", not %s
