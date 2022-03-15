@@ -893,7 +893,7 @@ class PrivateKeyInfo(Sequence):
     def algorithm(self):
         """
         :return:
-            A unicode string of "rsa", "dsa" or "ec"
+            A unicode string of "rsa", "rsassa_pss", "dsa" or "ec"
         """
 
         if self._algorithm is None:
@@ -908,7 +908,7 @@ class PrivateKeyInfo(Sequence):
         """
 
         if self._bit_size is None:
-            if self.algorithm == 'rsa':
+            if self.algorithm == 'rsa' or self.algorithm == 'rsassa_pss':
                 prime = self['private_key'].parsed['modulus'].native
             elif self.algorithm == 'dsa':
                 prime = self['private_key_algorithm']['parameters']['p'].native
@@ -1222,7 +1222,7 @@ class PublicKeyInfo(Sequence):
     def algorithm(self):
         """
         :return:
-            A unicode string of "rsa", "dsa" or "ec"
+            A unicode string of "rsa", "rsassa_pss", "dsa" or "ec"
         """
 
         if self._algorithm is None:
@@ -1240,7 +1240,7 @@ class PublicKeyInfo(Sequence):
             if self.algorithm == 'ec':
                 self._bit_size = int(((len(self['public_key'].native) - 1) / 2) * 8)
             else:
-                if self.algorithm == 'rsa':
+                if self.algorithm == 'rsa' or self.algorithm == 'rsassa_pss':
                     prime = self['public_key'].parsed['modulus'].native
                 elif self.algorithm == 'dsa':
                     prime = self['algorithm']['parameters']['p'].native
