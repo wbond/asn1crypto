@@ -1,5 +1,15 @@
 # changelog
 
+## 1.5.1
+
+ - Handle RSASSA-PSS in `keys.PrivateKeyInfo.bit_size` and
+   `keys.PublicKeyInfo.bit_size`
+ - Handle RSASSA-PSS in `keys.PrivateKeyInfo.wrap` and
+   `keys.PublicKeyInfo.wrap`
+ - Updated docs for `keys.PrivateKeyInfo.algorithm` and
+   `keys.PublicKeyInfo.algorithm` to reflect that they can return
+   `"rsassa_pss"`
+
 ## 1.5.0
 
  - Fix `tsp.TimeStampAndCRL` to be a `core.Sequence` instead of a
