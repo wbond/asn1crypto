@@ -12,6 +12,8 @@ from ._import import _preload
 deps_dir = os.path.join(build_root, 'modularcrypto-deps')
 if os.path.exists(deps_dir):
     site.addsitedir(deps_dir)
+    # In case any of the deps are installed system-wide
+    sys.path.insert(0, deps_dir)
 
 if sys.version_info[0:2] not in [(2, 6), (3, 2)]:
     from .lint import run as run_lint

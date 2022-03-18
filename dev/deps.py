@@ -323,7 +323,7 @@ def _extract_package(deps_dir, pkg_path, pkg_dir):
                 zf.close()
         return
 
-    # Source archives may contain a bunch of other things, including mutliple
+    # Source archives may contain a bunch of other things, including multiple
     # packages, so we must use setup.py/setuptool to install/extract it
 
     ar = None
@@ -541,7 +541,7 @@ def _stage_requirements(deps_dir, path):
     Python do not support that
 
     :param deps_dir:
-        A unicode path to a temporary diretory to use for downloads
+        A unicode path to a temporary directory to use for downloads
 
     :param path:
         A unicode filesystem path to a requirements file

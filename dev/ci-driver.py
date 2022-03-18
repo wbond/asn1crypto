@@ -54,6 +54,12 @@ def run(**_):
         else:
             _write_env(env, 'OSCRYPTO_USE_OPENSSL', '/usr/lib/libcrypto.35.dylib,/usr/lib/libssl.35.dylib')
         newline = True
+    if 'openssl3' in options and sys.platform == 'darwin':
+        _write_env(
+            env,
+            'OSCRYPTO_USE_OPENSSL',
+            '/usr/local/opt/openssl@3/lib/libcrypto.dylib,/usr/local/opt/openssl@3/lib/libssl.dylib'
+        )
     if 'winlegacy' in options:
         _write_env(env, 'OSCRYPTO_USE_WINLEGACY', 'true')
         newline = True

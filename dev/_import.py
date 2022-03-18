@@ -107,10 +107,15 @@ def _preload(require_oscrypto, print_info):
             )
         )
         if require_oscrypto:
+            backend = oscrypto.backend()
+            if backend == 'openssl':
+                from oscrypto._openssl._libcrypto import libcrypto_version
+                backend = '%s (%s)' % (backend, libcrypto_version)
+
             print(
-                'oscrypto: %s backend, %s, %s' % (
-                    oscrypto.backend(),
+                'oscrypto: %s, %s backend, %s' % (
                     oscrypto.__version__,
+                    backend,
                     os.path.dirname(oscrypto.__file__)
                 )
             )
