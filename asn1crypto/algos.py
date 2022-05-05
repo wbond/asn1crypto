@@ -411,9 +411,21 @@ class Pbkdf2Params(Sequence):
     ]
 
 
+class ScryptParams(Sequence):
+    # https://tools.ietf.org/html/rfc7914#section-7
+    _fields = [
+        ('salt', OctetString),
+        ('cost_parameter', Integer),
+        ('block_size', Integer),
+        ('parallelization_parameter', Integer),
+        ('key_length', Integer, {'optional': True}),
+    ]
+
+
 class KdfAlgorithmId(ObjectIdentifier):
     _map = {
-        '1.2.840.113549.1.5.12': 'pbkdf2'
+        '1.2.840.113549.1.5.12': 'pbkdf2',
+        '1.3.6.1.4.1.11591.4.11': 'scrypt',
     }
 
 
@@ -424,7 +436,8 @@ class KdfAlgorithm(Sequence):
     ]
     _oid_pair = ('algorithm', 'parameters')
     _oid_specs = {
-        'pbkdf2': Pbkdf2Params
+        'pbkdf2': Pbkdf2Params,
+        'scrypt': ScryptParams,
     }
 
 
@@ -747,6 +760,8 @@ class EncryptionAlgorithm(_ForceNullParameters, Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
+            if self.kdf == 'scrypt':
+                return None
             return self['parameters']['key_derivation_func']['parameters']['prf']['algorithm'].native
 
         if encryption_algo.find('.') == -1:
@@ -827,6 +842,8 @@ class EncryptionAlgorithm(_ForceNullParameters, Sequence):
         encryption_algo = self['algorithm'].native
 
         if encryption_algo == 'pbes2':
+            if self.kdf == 'scrypt':
+                return None
             return self['parameters']['key_derivation_func']['parameters']['iteration_count'].native
 
         if encryption_algo.find('.') == -1:

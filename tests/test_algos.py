@@ -43,6 +43,21 @@ class AlgoTests(unittest.TestCase):
         self.assertEqual(scheme['parameters']['aes_icvlen'].__class__, core.Integer)
         self.assertEqual(scheme['parameters']['aes_icvlen'].native, 8)
 
+    def test_scrypt_parameters(self):
+        with open(os.path.join(fixtures_dir, 'scrypt_algo.der'), 'rb') as f:
+            # PBES2 AlgorithmIdentifier
+            algo = algos.EncryptionAlgorithm.load(f.read())
+        kdf = algo['parameters']['key_derivation_func']
+        self.assertEqual(kdf['parameters'].__class__, algos.ScryptParams)
+        self.assertEqual(kdf['parameters']['salt'].__class__, core.OctetString)
+        self.assertEqual(kdf['parameters']['salt'].native, b'c\x0c\x04\xb6\xe2^\xe0v')
+        self.assertEqual(kdf['parameters']['cost_parameter'].__class__, core.Integer)
+        self.assertEqual(kdf['parameters']['cost_parameter'].native, 16384)
+        self.assertEqual(kdf['parameters']['block_size'].__class__, core.Integer)
+        self.assertEqual(kdf['parameters']['block_size'].native, 8)
+        self.assertEqual(kdf['parameters']['parallelization_parameter'].__class__, core.Integer)
+        self.assertEqual(kdf['parameters']['parallelization_parameter'].native, 1)
+
     def test_rc2_parameters(self):
         with open(os.path.join(fixtures_dir, 'rc2_algo.der'), 'rb') as f:
             algo = algos.EncryptionAlgorithm.load(f.read())
