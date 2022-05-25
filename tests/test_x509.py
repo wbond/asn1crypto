@@ -549,6 +549,11 @@ class X509Tests(unittest.TestCase):
                 'rsassa_pss',
                 'sha256'
             ),
+            (
+                'keys/test-ed448.crt',
+                'ed448',
+                'raw'
+            )
         )
 
     @data('signature_algo_info')
@@ -3545,6 +3550,10 @@ class X509Tests(unittest.TestCase):
         self.assertEqual(
             'ed448',
             subject_public_key_algorithm['algorithm'].native
+        )
+        self.assertEqual(
+            'raw',
+            cert.hash_algo
         )
         self.assertEqual(
             b'\xdc\'\x19\xbb\xff\xec\xef\xae\xc4\'\x91\xa1\xe7}\xbaN\xe1\xbe'

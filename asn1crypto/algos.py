@@ -378,8 +378,8 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
             'sha256_ecdsa': 'sha256',
             'sha384_ecdsa': 'sha384',
             'sha512_ecdsa': 'sha512',
-            'ed25519': 'sha512',
-            'ed448': 'shake256',
+            'ed25519': 'raw',
+            'ed448': 'raw',
         }
         if algorithm in algo_map:
             return algo_map[algorithm]
