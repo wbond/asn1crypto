@@ -20,6 +20,20 @@ A fast, pure Python library for parsing and serializing ASN.1 structures.
 [![CircleCI](https://circleci.com/gh/wbond/asn1crypto.svg?style=shield)](https://circleci.com/gh/wbond/asn1crypto)
 [![PyPI](https://img.shields.io/pypi/v/asn1crypto.svg)](https://pypi.org/project/asn1crypto/)
 
+## Sponsorship
+
+A quick thank you to all of the sponsors who donate to support the asn1crypto project:
+
+### Corporate
+
+ - [Auxpex Labs](https://www.auspex-labs.com)
+ - [GitHub](https://github.com)
+
+### Personal
+
+ - Nothing4You
+ - sthagen
+
 ## Features
 
 In addition to an ASN.1 BER/DER decoder and DER serializer, the project includes
