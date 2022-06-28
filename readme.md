@@ -2,6 +2,7 @@
 
 A fast, pure Python library for parsing and serializing ASN.1 structures.
 
+ - [Sponsorship](#sponsorship)
  - [Features](#features)
  - [Why Another Python ASN.1 Library?](#why-another-python-asn1-library)
  - [Related Crypto Libraries](#related-crypto-libraries)
