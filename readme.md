@@ -2,6 +2,7 @@
 
 A fast, pure Python library for parsing and serializing ASN.1 structures.
 
+ - [Sponsorship](#sponsorship)
  - [Features](#features)
  - [Why Another Python ASN.1 Library?](#why-another-python-asn1-library)
  - [Related Crypto Libraries](#related-crypto-libraries)
@@ -19,6 +20,20 @@ A fast, pure Python library for parsing and serializing ASN.1 structures.
 [![GitHub Actions CI](https://github.com/wbond/asn1crypto/workflows/CI/badge.svg)](https://github.com/wbond/asn1crypto/actions?workflow=CI)
 [![CircleCI](https://circleci.com/gh/wbond/asn1crypto.svg?style=shield)](https://circleci.com/gh/wbond/asn1crypto)
 [![PyPI](https://img.shields.io/pypi/v/asn1crypto.svg)](https://pypi.org/project/asn1crypto/)
+
+## Sponsorship
+
+A quick thank you to all of the sponsors who donate to support the asn1crypto project:
+
+### Corporate
+
+ - [Auxpex Labs](https://www.auspex-labs.com)
+ - [GitHub](https://github.com)
+
+### Personal
+
+ - Nothing4You
+ - sthagen
 
 ## Features
 
