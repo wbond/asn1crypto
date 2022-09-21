@@ -78,3 +78,29 @@ class AlgoTests(unittest.TestCase):
         params = algo["parameters"]
         self.assertEqual(params["version"].native, 'v1-0')
         self.assertEqual(params["rounds"].native, 42)
+
+    def test_sha3_algos_round_trip(self):
+        params = [
+            ('sha3_224', 'dsa'),
+            ('sha3_256', 'dsa'),
+            ('sha3_384', 'dsa'),
+            ('sha3_512', 'dsa'),
+            ('sha3_224', 'ecdsa'),
+            ('sha3_256', 'ecdsa'),
+            ('sha3_384', 'ecdsa'),
+            ('sha3_512', 'ecdsa'),
+            ('sha3_224', 'rsa'),
+            ('sha3_256', 'rsa'),
+            ('sha3_384', 'rsa'),
+            ('sha3_512', 'rsa'),
+        ]
+        for digest_alg, sig_alg in params:
+            alg_name = "%s_%s" % (digest_alg, sig_alg)
+            with self.subTest(alg_name, digest_alg=digest_alg, sig_alg=sig_alg):
+                original = algos.SignedDigestAlgorithm({'algorithm': alg_name})
+                parsed = algos.SignedDigestAlgorithm.load(original.dump())
+                self.assertEqual(parsed.hash_algo, digest_alg)
+                self.assertEqual(
+                    parsed.signature_algo,
+                    'rsassa_pkcs1v15' if sig_alg == 'rsa' else sig_alg
+                )
