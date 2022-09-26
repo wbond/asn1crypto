@@ -166,6 +166,15 @@ def load(encoded_data, strict=False):
     return Asn1Value.load(encoded_data, strict=strict)
 
 
+def unpickle_helper(asn1crypto_cls, der_bytes):
+    """
+    Helper function to integrate with pickle.
+
+    Note that this must be an importable top-level function.
+    """
+    return asn1crypto_cls.load(der_bytes)
+
+
 class Asn1Value(object):
     """
     The basis of all ASN.1 values
@@ -480,6 +489,12 @@ class Asn1Value(object):
         """
 
         return self.__repr__()
+
+    def __reduce__(self):
+        """
+        Permits pickling Asn1Value objects using their DER representation.
+        """
+        return unpickle_helper, (self.__class__, self.dump())
 
     def _new_instance(self):
         """

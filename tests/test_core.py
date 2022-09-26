@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import pickle
 import unittest
 import os
 from datetime import datetime, timedelta
@@ -1375,3 +1376,11 @@ class CoreTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "Second arc must be "):
             core.ObjectIdentifier("0.40")
+
+    def test_pickle_integration(self):
+        orig = Seq({'id': '2.3.4', 'value': b"\xde\xad\xbe\xef"})
+        pickled_bytes = pickle.dumps(orig)
+        # ensure that our custom pickling implementation was used
+        self.assertIn(b"unpickle_helper", pickled_bytes)
+        unpickled = pickle.loads(pickled_bytes)
+        self.assertEqual(orig.native, unpickled.native)
