@@ -6,6 +6,8 @@ import sys
 import os
 
 from asn1crypto import algos, core
+
+from .unittest_data import data_decorator, data
 from ._unittest_compat import patch
 
 patch()
@@ -22,6 +24,7 @@ tests_root = os.path.dirname(__file__)
 fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 
+@data_decorator
 class AlgoTests(unittest.TestCase):
 
     def test_signed_digest_parameters(self):
@@ -79,28 +82,30 @@ class AlgoTests(unittest.TestCase):
         self.assertEqual(params["version"].native, 'v1-0')
         self.assertEqual(params["rounds"].native, 42)
 
-    def test_sha3_algos_round_trip(self):
-        params = [
-            ('sha3_224', 'dsa'),
-            ('sha3_256', 'dsa'),
-            ('sha3_384', 'dsa'),
-            ('sha3_512', 'dsa'),
-            ('sha3_224', 'ecdsa'),
-            ('sha3_256', 'ecdsa'),
-            ('sha3_384', 'ecdsa'),
-            ('sha3_512', 'ecdsa'),
-            ('sha3_224', 'rsa'),
-            ('sha3_256', 'rsa'),
-            ('sha3_384', 'rsa'),
-            ('sha3_512', 'rsa'),
+    @staticmethod
+    def sha3_algo_pairs():
+        return [
+            ('sha3_224_dsa', 'sha3_224', 'dsa'),
+            ('sha3_256_dsa', 'sha3_256', 'dsa'),
+            ('sha3_384_dsa', 'sha3_384', 'dsa'),
+            ('sha3_512_dsa', 'sha3_512', 'dsa'),
+            ('sha3_224_ecdsa', 'sha3_224', 'ecdsa'),
+            ('sha3_256_ecdsa', 'sha3_256', 'ecdsa'),
+            ('sha3_384_ecdsa', 'sha3_384', 'ecdsa'),
+            ('sha3_512_ecdsa', 'sha3_512', 'ecdsa'),
+            ('sha3_224_rsa', 'sha3_224', 'rsa'),
+            ('sha3_256_rsa', 'sha3_256', 'rsa'),
+            ('sha3_384_rsa', 'sha3_384', 'rsa'),
+            ('sha3_512_rsa', 'sha3_512', 'rsa'),
         ]
-        for digest_alg, sig_alg in params:
-            alg_name = "%s_%s" % (digest_alg, sig_alg)
-            with self.subTest(alg_name, digest_alg=digest_alg, sig_alg=sig_alg):
-                original = algos.SignedDigestAlgorithm({'algorithm': alg_name})
-                parsed = algos.SignedDigestAlgorithm.load(original.dump())
-                self.assertEqual(parsed.hash_algo, digest_alg)
-                self.assertEqual(
-                    parsed.signature_algo,
-                    'rsassa_pkcs1v15' if sig_alg == 'rsa' else sig_alg
-                )
+
+    @data('sha3_algo_pairs', True)
+    def test_sha3_algos_round_trip(self, digest_alg, sig_alg):
+        alg_name = "%s_%s" % (digest_alg, sig_alg)
+        original = algos.SignedDigestAlgorithm({'algorithm': alg_name})
+        parsed = algos.SignedDigestAlgorithm.load(original.dump())
+        self.assertEqual(parsed.hash_algo, digest_alg)
+        self.assertEqual(
+            parsed.signature_algo,
+            'rsassa_pkcs1v15' if sig_alg == 'rsa' else sig_alg
+        )
