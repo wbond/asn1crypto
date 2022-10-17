@@ -100,7 +100,7 @@ class AlgoTests(unittest.TestCase):
         ]
 
     @data('sha3_algo_pairs', True)
-    def test_sha3_algos_round_trip(self, digest_alg, sig_alg):
+    def sha3_algos_round_trip(self, digest_alg, sig_alg):
         alg_name = "%s_%s" % (digest_alg, sig_alg)
         original = algos.SignedDigestAlgorithm({'algorithm': alg_name})
         parsed = algos.SignedDigestAlgorithm.load(original.dump())
