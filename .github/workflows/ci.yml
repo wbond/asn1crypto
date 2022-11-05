@@ -9,7 +9,7 @@ jobs:
       matrix:
         python:
           - '2.7'
-          - '3.9'
+          - '3.11'
           # - 'pypy-3.7-v7.3.5'
         arch:
           - 'x86'
@@ -68,7 +68,7 @@ jobs:
       matrix:
         python:
           - '2.7'
-          - '3.9'
+          - '3.11'
           # - 'pypy-3.7-v7.3.5'
     steps:
       - uses: actions/checkout@master
@@ -131,6 +131,7 @@ jobs:
           - '3.6'
           - '3.9'
           - '3.10'
+          - '3.11'
           - 'pypy-3.7-v7.3.5'
     steps:
       - uses: actions/checkout@master
