@@ -34,6 +34,7 @@ jobs:
     name: Python ${{ matrix.python }} on windows-2019 ${{ matrix.arch }}
     runs-on: windows-2019
     strategy:
+      fail-fast: false
       matrix:
         python:
           - '2.6'
