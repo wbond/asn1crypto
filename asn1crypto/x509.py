@@ -1793,6 +1793,68 @@ class AccessDescription(Sequence):
     ]
 
 
+class IPAddressRange(Sequence):
+    _fields = [
+        ("min", BitString),
+        ("max", BitString)
+    ]
+
+class IPAddressOrRange(Choice):
+    _alternatives = [
+        ("addressPrefix", BitString),
+        ("addressRange", IPAddressRange)
+    ]
+
+
+
+class IPAddressOrRanges(SequenceOf):
+    _child_spec = IPAddressOrRange
+
+class IPAddressChoice(Choice):
+    _alternatives = [
+        ("inherit", Null),
+        ("addressesOrRanges", IPAddressOrRanges)
+    ]
+
+
+class IPAddressFamily(Sequence):
+    _fields = [
+        ('addressFamily', OctetString),
+        ('ipAddressChoice', IPAddressChoice)
+    ]
+
+class IPAddrBlocks(SequenceOf):
+    _child_spec = IPAddressFamily
+
+
+class ASRange(Sequence):
+    _fields = [
+        ("min", Integer),
+        ("max", Integer)
+    ]
+
+class ASIdOrRange(Choice):
+    _alternatives = [
+        ("id", Integer),
+        ("range", ASRange)
+    ]
+
+class ASIdOrRanges(SequenceOf):
+    _child_spec = ASIdOrRange
+
+class ASIdentifierChoice(Choice):
+    _alternatives = [
+        ("inherit", Null),
+        ("asIdsOrRanges", ASIdOrRanges)
+    ]
+
+class ASIdentifiers(Sequence):
+    _fields = [
+        ('asnum', ASIdentifierChoice, {'optional':True, 'explicit': 0}),
+        ('rdi',  ASIdentifierChoice, {'optional':True, 'explicit': 1})
+    ]
+
+
 class AuthorityInfoAccessSyntax(SequenceOf):
     _child_spec = AccessDescription
 
@@ -2081,6 +2143,9 @@ class ExtensionId(ObjectIdentifier):
         '1.3.6.1.4.1.11129.2.4.2': 'signed_certificate_timestamp_list',
         # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-wcce/3aec3e50-511a-42f9-a5d5-240af503e470
         '1.3.6.1.4.1.311.20.2': 'microsoft_enroll_certtype',
+        # https://tools.ietf.org/html/rfc3779
+        '1.3.6.1.5.5.7.1.7': 'ipAddrBlocks',
+        '1.3.6.1.5.5.7.1.8': 'autonomousSysIds',
     }
 
 
@@ -2119,6 +2184,8 @@ class Extension(Sequence):
         # Not UTF8String as Microsofts docs claim, see:
         # https://www.alvestrand.no/objectid/1.3.6.1.4.1.311.20.2.html
         'microsoft_enroll_certtype': BMPString,
+        'ipAddrBlocks': IPAddrBlocks,
+        "autonomousSysIds": ASIdentifiers,
     }
 
 
@@ -2165,6 +2232,8 @@ class Certificate(Sequence):
     _freshest_crl_value = None
     _inhibit_any_policy_value = None
     _extended_key_usage_value = None
+    _ip_addr_blocks_value = None
+    _autonomous_sys_ids_value = None
     _authority_information_access_value = None
     _subject_information_access_value = None
     _private_key_usage_period_value = None
@@ -2456,6 +2525,32 @@ class Certificate(Sequence):
         if not self._processed_extensions:
             self._set_extensions()
         return self._authority_information_access_value
+
+    @property
+    def ip_addr_blocks_value(self):
+        """
+        This extension is used to provide information about IP resources
+
+        :return:
+            None or a IPAddrBlocks object
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._ip_addr_blocks_value
+
+    @property
+    def autonomous_sys_ids_value(self):
+        """
+        This extension is used to provide information about IP resources
+
+        :return:
+            None or a IPAddrBlocks object
+        """
+
+        if not self._processed_extensions:
+            self._set_extensions()
+        return self._autonomous_sys_ids_value
 
     @property
     def subject_information_access_value(self):
