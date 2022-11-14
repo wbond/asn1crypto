@@ -1799,6 +1799,7 @@ class IPAddressRange(Sequence):
         ("max", BitString)
     ]
 
+
 class IPAddressOrRange(Choice):
     _alternatives = [
         ("addressPrefix", BitString),
@@ -1806,9 +1807,9 @@ class IPAddressOrRange(Choice):
     ]
 
 
-
 class IPAddressOrRanges(SequenceOf):
     _child_spec = IPAddressOrRange
+
 
 class IPAddressChoice(Choice):
     _alternatives = [
@@ -1822,6 +1823,7 @@ class IPAddressFamily(Sequence):
         ('addressFamily', OctetString),
         ('ipAddressChoice', IPAddressChoice)
     ]
+
 
 class IPAddrBlocks(SequenceOf):
     _child_spec = IPAddressFamily
@@ -1839,8 +1841,10 @@ class ASIdOrRange(Choice):
         ("range", ASRange)
     ]
 
+
 class ASIdOrRanges(SequenceOf):
     _child_spec = ASIdOrRange
+
 
 class ASIdentifierChoice(Choice):
     _alternatives = [
@@ -1848,10 +1852,11 @@ class ASIdentifierChoice(Choice):
         ("asIdsOrRanges", ASIdOrRanges)
     ]
 
+
 class ASIdentifiers(Sequence):
     _fields = [
-        ('asnum', ASIdentifierChoice, {'optional':True, 'explicit': 0}),
-        ('rdi',  ASIdentifierChoice, {'optional':True, 'explicit': 1})
+        ('asnum', ASIdentifierChoice, {'optional': True, 'explicit': 0}),
+        ('rdi',  ASIdentifierChoice, {'optional': True, 'explicit': 1})
     ]
 
 
