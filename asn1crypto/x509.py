@@ -1835,6 +1835,7 @@ class ASRange(Sequence):
         ("max", Integer)
     ]
 
+
 class ASIdOrRange(Choice):
     _alternatives = [
         ("id", Integer),
