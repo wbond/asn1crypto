@@ -628,6 +628,14 @@ class OCSPResponse(Sequence):
 
         self._critical_extensions = set()
 
+        if value is not None and value != 'good' and not isinstance(value, Null):
+            raise ValueError(unwrap(
+                '''
+                value must be one of None, "good", not %s
+                ''',
+                repr(value)
+            ))
+
         for extension in self['response_bytes']['response'].parsed['tbs_response_data']['response_extensions']:
             name = extension['extn_id'].native
             attribute_name = '_%s_value' % name
