@@ -15,6 +15,7 @@ Other type classes are defined that help compose the types listed above.
 
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import datetime
 from contextlib import contextmanager
 from encodings import idna  # noqa
 import hashlib
@@ -30,6 +31,7 @@ from ._ordereddict import OrderedDict
 from ._types import type_name, str_cls, bytes_to_list
 from .algos import AlgorithmIdentifier, AnyAlgorithmIdentifier, DigestAlgorithm, SignedDigestAlgorithm
 from .core import (
+    _parse_build,
     Any,
     BitString,
     BMPString,
@@ -47,6 +49,7 @@ from .core import (
     OctetBitString,
     OctetString,
     ParsableOctetString,
+    Primitive,
     PrintableString,
     Sequence,
     SequenceOf,
@@ -1812,6 +1815,255 @@ class EntrustVersionInfo(Sequence):
         ('entrust_info_flags', BitString)
     ]
 
+# Attestation definitions from https://source.android.com/docs/security/features/keystore/attestation
+class AttestationVersion(Integer):
+    _map = {
+        0: 'Keymaster version 1.0',
+        1: 'Keymaster version 2.0',
+        2: 'Keymaster version 3.0',
+        3: 'Keymaster version 4.0',
+        4: 'Keymaster version 4.1',
+        100: 'KeyMint version 1.0',
+        200: 'KeyMint version 2.0',
+    }
+
+class KeyMasterVersion(Integer):
+    _map = {
+        0: 'Keymaster version 0.2 or 0.3',
+        1: 'Keymaster version 1.0',
+        2: 'Keymaster version 2.0',
+        3: 'Keymaster version 3.0',
+        4: 'Keymaster version 4.0',
+        41: 'Keymaster version 4.1',
+        100: 'KeyMint version 1.0',
+        200: 'KeyMint version 2.0',
+    }
+
+class AttestationSecurityLevel(Enumerated):
+    _map = {
+        0: 'Software',
+        1: 'TrustedEnvironment',
+        2: 'StrongBox',
+    }
+
+class Origin(Integer):
+    _map = {
+        0: 'GENERATED',
+        1: '-',
+        2: 'IMPORTED',
+        3: 'UNKNOWN',
+        4: 'SECURELY_IMPORTED',
+        }
+
+class Purpose(Integer):
+    _map = {
+        0: 'ENCRYPT',
+        1: 'DECRYPT',
+        2: 'SIGN',
+        3: 'VERIFY',
+        4: 'DERIVE_KEY',
+        5: 'WRAP_KEY',
+        }
+
+class SetOfPurposes(SetOf):
+    _child_spec = Purpose
+
+class Padding(Integer):
+    _map = {
+        1: 'NONE',
+        2: 'RSA_OAEP',
+        3: 'RSA_PSS',
+        4: 'RSA_PKCS1_1_5_ENCRYPT',
+        5: 'RSA_PKCS1_1_5_SIGN',
+        64: 'PKCS7',
+        }
+
+class SetOfPadding(SetOf):
+    _child_spec = Padding
+
+class SetOfOctetStrings(SetOf):
+    _child_spec = OctetString
+
+class SetOfInteger(SetOf):
+    _child_spec = Integer
+
+class AlgorithmType(Integer):
+    _map = {
+        1: 'RSA',
+        3: 'EC',
+        32: 'AES',
+        33: '3DES',
+        128: 'HMAC',
+    }
+
+class DigestType(Integer):
+    _map = {
+        0: 'NONE',
+        1: 'MD5',
+        2: 'SHA1',
+        3: 'SHA_2_224',
+        4: 'SHA_2_256',
+        5: 'SHA_2_384',
+        6: 'SHA_2_512',
+    }
+
+class SetOfDigests(SetOf):
+    _child_spec = DigestType
+
+class EllipticCurveType(Integer):
+    _map = {
+        0: 'EC_CURVE_P_224',
+        1: 'EC_CURVE_P_256',
+        2: 'EC_CURVE_P_384',
+        3: 'EC_CURVE_P_521',
+    }
+
+class UserAuthenticationType(Integer):
+    _map = {
+        0: 'NONE',
+        1: 'PASSWORD',
+        2: 'FINGERPRINT',
+        3: 'ANY',
+    }
+
+class VerifiedBootState(Enumerated):
+    _map = {
+        0: 'Verified',
+        1: 'SelfSigned',
+        2: 'Unverified',
+        3: 'Failed',
+    }
+
+class PackageInfo(Sequence):
+    _fields = [
+        ('package_info', OctetString),
+        ('version', Integer),
+    ]
+
+class SetOfPackageInfos(SetOf):
+    _child_spec = PackageInfo
+
+class AttestationApplicationId(Sequence):
+    _fields = [
+        ('package_infos', SetOfPackageInfos),
+        ('signature_digests', SetOfOctetStrings),
+    ]
+
+class AttestationApplicationIdWrapper(ParsableOctetString):
+
+    def parse(self, spec=AttestationApplicationId, spec_params=None):
+        if self._parsed is None or self._parsed[1:3] != (spec, spec_params):
+            parsed_value, _ = _parse_build(self.__bytes__(), spec=spec, spec_params=spec_params)
+            self._parsed = (parsed_value, spec, spec_params)
+        return self._parsed[0]
+
+    @property
+    def native(self):
+        if self._native is None:
+            byte_string = self.__bytes__()
+        self.parse()
+        return self.parsed.native
+
+
+class UnixTimestamp(Integer):
+    def parse(self, spec=None, spec_params=None):
+        """
+        This method is not applicable to IP addresses
+        """
+
+        raise ValueError(unwrap(
+            '''
+            IP address values can not be parsed
+            '''
+        ))
+
+    def set(self, value):
+        if not isinstance(value, int):
+            raise TypeError(unwrap(
+                '''
+                %s value must be a unicode string, not %s
+                ''',
+                type_name(self),
+                type_name(value)
+            ))
+
+        self._native=value
+        self.contents=datetime.datetime.fromtimestamp(value/1000)
+
+    @property
+    def native(self):
+        if self._native is None:
+            i = int.from_bytes(self.contents, "big")
+            dt = datetime.datetime.fromtimestamp(i / 1000)
+            self._native = str(dt)
+
+        return self._native
+
+
+class RootOfTrust(Sequence):
+    _fields = [
+        ('verified_boot_key', OctetString),
+        ('device_locked', Boolean),
+        ('verified_boot_state', VerifiedBootState),
+        ('verified_boot_hash', OctetString),
+    ]
+
+class AuthorizationList(Sequence):
+    _fields = [
+        ('purpose',SetOfPurposes,{'explicit': 1, 'optional': True}),
+        ('algorithm', AlgorithmType, {'explicit': 2,'optional': True}),
+        ('key_size', Integer, {'explicit': 3, 'optional': True}),
+        ('digest', SetOfDigests, {'explicit': 5,'optional': True}),
+        ('padding', SetOfPadding, {'explicit': 6, 'optional': True}),
+        ('ec_curve', EllipticCurveType, {'explicit': 10, 'optional': True}),
+        ('rsa_public_exponent', Integer, {'explicit': 200, 'optional': True}),
+        ('mfg_digest', SetOfInteger, {'explicit': 203, 'optional': True}),
+        ('rollback_resistance', Null, {'explicit': 303, 'optional': True}),
+        ('early_boot_only', Null, {'explicit': 305, 'optional': True}),
+        ('active_date_time', UnixTimestamp, {'explicit': 400, 'optional': True}),
+        ('origination_expire_date_time', UnixTimestamp, {'explicit': 401,'optional': True}),
+        ('usage_expire_date_time', UnixTimestamp, {'explicit': 402,'optional': True}),
+        ('usage_count_limit', Integer, {'explicit': 405, 'optional': True}),
+        ('no_auth_required', Null, {'explicit': 503, 'optional': True}),
+        ('user_auth_type', UserAuthenticationType, {'explicit': 504,'optional': True}),
+        ('auth_timeout', Integer, {'explicit': 505,'optional': True}),
+        ('allow_while_on_body', Null, {'explicit': 506, 'optional': True}),
+        ('trusted_user_presence_required', Null, {'explicit': 507, 'optional': True}),
+        ('trusted_confirmation_required', Null, {'explicit': 508, 'optional': True}),
+        ('unlocked_device_required', Null, {'explicit': 509, 'optional': True}),
+        ('all_applications', Null, {'explicit': 600, 'optional': True}),
+        ('application_id', OctetString,{'explicit': 601,'optional': True}),
+        ('creation_date_time', UnixTimestamp, {'explicit': 701,'optional': True}),
+        ('origin', Origin, {'explicit': 702,'optional': True}),
+        ('rollback_resistant', Null, {'explicit': 703, 'optional': True}),
+        ('root_of_trust', RootOfTrust, {'explicit': 704,'optional': True}),
+        ('os_version', Integer, {'explicit': 705,'optional': True}),
+        ('os_patch_level', Integer, {'explicit': 706,'optional': True}),
+        ('attestation_application_id', AttestationApplicationIdWrapper, {'explicit': 709,'optional':True}),
+        ('attestation_id_brand', OctetString, {'explicit': 710,'optional': True}),
+        ('attestation_id_device', OctetString, {'explicit': 711,'optional': True}),
+        ('attestation_id_product', OctetString, {'explicit': 712, 'optional': True}),
+        ('attestation_id_serial', OctetString, {'explicit': 713,'optional': True}),
+        ('attestation_id_imei', OctetString, {'explicit': 714,'optional': True}),
+        ('attestation_id_meid', OctetString, {'explicit': 715,'optional': True}),
+        ('attestation_id_manufacturer', OctetString, {'explicit': 716,'optional': True}),
+        ('attestation_id_model', OctetString, {'explicit': 717,'optional': True}),
+        ('vendor_patch_level', Integer, {'explicit': 718,'optional': True}),
+        ('boot_patch_level', Integer, {'explicit': 719,'optional': True}),
+        ('device_unique_attestation', Null, {'explicit': 720, 'optional': True}),
+    ]
+
+class Attestation(Sequence):
+    _fields = [
+        ('attestation_version', AttestationVersion, {'default': 'Keymaster version 1.0'}),
+        ('attestation_security_level', AttestationSecurityLevel),
+        ('keymaster_version', KeyMasterVersion),
+        ('keymaster_security_level', AttestationSecurityLevel),
+        ('attestation_challenge', OctetString),
+        ('unique_id', OctetString),
+        ('software_enforced', AuthorizationList),
+        ('tee_enforced', AuthorizationList),
+    ]
 
 class NetscapeCertificateType(BitString):
     _map = {
@@ -2081,6 +2333,8 @@ class ExtensionId(ObjectIdentifier):
         '1.3.6.1.4.1.11129.2.4.2': 'signed_certificate_timestamp_list',
         # https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-wcce/3aec3e50-511a-42f9-a5d5-240af503e470
         '1.3.6.1.4.1.311.20.2': 'microsoft_enroll_certtype',
+        # https://source.android.com/docs/security/features/keystore/attestation
+        '1.3.6.1.4.1.11129.2.1.17': 'attestation_extension',
     }
 
 
@@ -2119,6 +2373,7 @@ class Extension(Sequence):
         # Not UTF8String as Microsofts docs claim, see:
         # https://www.alvestrand.no/objectid/1.3.6.1.4.1.311.20.2.html
         'microsoft_enroll_certtype': BMPString,
+        'attestation_extension': Attestation,
     }
 
 
@@ -3034,3 +3289,4 @@ class CertificateAux(Sequence):
 
 class TrustedCertificate(Concat):
     _child_specs = [Certificate, CertificateAux]
+
