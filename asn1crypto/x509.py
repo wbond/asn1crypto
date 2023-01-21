@@ -1815,6 +1815,7 @@ class EntrustVersionInfo(Sequence):
         ('entrust_info_flags', BitString)
     ]
 
+
 # Attestation definitions from https://source.android.com/docs/security/features/keystore/attestation
 class AttestationVersion(Integer):
     _map = {
@@ -1826,6 +1827,7 @@ class AttestationVersion(Integer):
         100: 'KeyMint version 1.0',
         200: 'KeyMint version 2.0',
     }
+
 
 class KeyMasterVersion(Integer):
     _map = {
@@ -1839,12 +1841,14 @@ class KeyMasterVersion(Integer):
         200: 'KeyMint version 2.0',
     }
 
+
 class AttestationSecurityLevel(Enumerated):
     _map = {
         0: 'Software',
         1: 'TrustedEnvironment',
         2: 'StrongBox',
     }
+
 
 class Origin(Integer):
     _map = {
@@ -1854,6 +1858,7 @@ class Origin(Integer):
         3: 'UNKNOWN',
         4: 'SECURELY_IMPORTED',
         }
+
 
 class Purpose(Integer):
     _map = {
@@ -1865,8 +1870,10 @@ class Purpose(Integer):
         5: 'WRAP_KEY',
         }
 
+
 class SetOfPurposes(SetOf):
     _child_spec = Purpose
+
 
 class Padding(Integer):
     _map = {
@@ -1878,14 +1885,18 @@ class Padding(Integer):
         64: 'PKCS7',
         }
 
+
 class SetOfPadding(SetOf):
     _child_spec = Padding
+
 
 class SetOfOctetStrings(SetOf):
     _child_spec = OctetString
 
+
 class SetOfInteger(SetOf):
     _child_spec = Integer
+
 
 class AlgorithmType(Integer):
     _map = {
@@ -1895,6 +1906,7 @@ class AlgorithmType(Integer):
         33: '3DES',
         128: 'HMAC',
     }
+
 
 class DigestType(Integer):
     _map = {
@@ -1907,8 +1919,10 @@ class DigestType(Integer):
         6: 'SHA_2_512',
     }
 
+
 class SetOfDigests(SetOf):
     _child_spec = DigestType
+
 
 class EllipticCurveType(Integer):
     _map = {
@@ -1918,6 +1932,7 @@ class EllipticCurveType(Integer):
         3: 'EC_CURVE_P_521',
     }
 
+
 class UserAuthenticationType(Integer):
     _map = {
         0: 'NONE',
@@ -1925,6 +1940,7 @@ class UserAuthenticationType(Integer):
         2: 'FINGERPRINT',
         3: 'ANY',
     }
+
 
 class VerifiedBootState(Enumerated):
     _map = {
@@ -1934,14 +1950,17 @@ class VerifiedBootState(Enumerated):
         3: 'Failed',
     }
 
+
 class PackageInfo(Sequence):
     _fields = [
         ('package_info', OctetString),
         ('version', Integer),
     ]
 
+
 class SetOfPackageInfos(SetOf):
     _child_spec = PackageInfo
+
 
 class AttestationApplicationId(Sequence):
     _fields = [
@@ -1949,8 +1968,8 @@ class AttestationApplicationId(Sequence):
         ('signature_digests', SetOfOctetStrings),
     ]
 
-class AttestationApplicationIdWrapper(ParsableOctetString):
 
+class AttestationApplicationIdWrapper(ParsableOctetString):
     def parse(self, spec=AttestationApplicationId, spec_params=None):
         if self._parsed is None or self._parsed[1:3] != (spec, spec_params):
             parsed_value, _ = _parse_build(self.__bytes__(), spec=spec, spec_params=spec_params)
@@ -1959,9 +1978,8 @@ class AttestationApplicationIdWrapper(ParsableOctetString):
 
     @property
     def native(self):
-        if self._native is None:
-            byte_string = self.__bytes__()
-        self.parse()
+        if not self.parsed.native:
+            self.parse()
         return self.parsed.native
 
 
@@ -1988,7 +2006,7 @@ class UnixTimestamp(Integer):
             ))
 
         self._native=value
-        self.contents=datetime.datetime.fromtimestamp(value/1000)
+        self.contents=datetime.datetime.fromtimestamp(value / 1000)
 
     @property
     def native(self):
@@ -2007,6 +2025,7 @@ class RootOfTrust(Sequence):
         ('verified_boot_state', VerifiedBootState),
         ('verified_boot_hash', OctetString),
     ]
+
 
 class AuthorizationList(Sequence):
     _fields = [
@@ -2053,6 +2072,7 @@ class AuthorizationList(Sequence):
         ('device_unique_attestation', Null, {'explicit': 720, 'optional': True}),
     ]
 
+
 class Attestation(Sequence):
     _fields = [
         ('attestation_version', AttestationVersion, {'default': 'Keymaster version 1.0'}),
@@ -2064,6 +2084,7 @@ class Attestation(Sequence):
         ('software_enforced', AuthorizationList),
         ('tee_enforced', AuthorizationList),
     ]
+
 
 class NetscapeCertificateType(BitString):
     _map = {
