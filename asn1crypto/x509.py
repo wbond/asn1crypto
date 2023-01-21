@@ -2005,8 +2005,8 @@ class UnixTimestamp(Integer):
                 type_name(value)
             ))
 
-        self._native=value
-        self.contents=datetime.datetime.fromtimestamp(value / 1000)
+        self._native = value
+        self.contents = datetime.datetime.fromtimestamp(value / 1000)
 
     @property
     def native(self):
@@ -2030,9 +2030,9 @@ class RootOfTrust(Sequence):
 class AuthorizationList(Sequence):
     _fields = [
         ('purpose',SetOfPurposes,{'explicit': 1, 'optional': True}),
-        ('algorithm', AlgorithmType, {'explicit': 2,'optional': True}),
+        ('algorithm', AlgorithmType, {'explicit': 2, 'optional': True}),
         ('key_size', Integer, {'explicit': 3, 'optional': True}),
-        ('digest', SetOfDigests, {'explicit': 5,'optional': True}),
+        ('digest', SetOfDigests, {'explicit': 5, 'optional': True}),
         ('padding', SetOfPadding, {'explicit': 6, 'optional': True}),
         ('ec_curve', EllipticCurveType, {'explicit': 10, 'optional': True}),
         ('rsa_public_exponent', Integer, {'explicit': 200, 'optional': True}),
@@ -2040,35 +2040,35 @@ class AuthorizationList(Sequence):
         ('rollback_resistance', Null, {'explicit': 303, 'optional': True}),
         ('early_boot_only', Null, {'explicit': 305, 'optional': True}),
         ('active_date_time', UnixTimestamp, {'explicit': 400, 'optional': True}),
-        ('origination_expire_date_time', UnixTimestamp, {'explicit': 401,'optional': True}),
-        ('usage_expire_date_time', UnixTimestamp, {'explicit': 402,'optional': True}),
+        ('origination_expire_date_time', UnixTimestamp, {'explicit': 401, 'optional': True}),
+        ('usage_expire_date_time', UnixTimestamp, {'explicit': 402, 'optional': True}),
         ('usage_count_limit', Integer, {'explicit': 405, 'optional': True}),
         ('no_auth_required', Null, {'explicit': 503, 'optional': True}),
-        ('user_auth_type', UserAuthenticationType, {'explicit': 504,'optional': True}),
-        ('auth_timeout', Integer, {'explicit': 505,'optional': True}),
+        ('user_auth_type', UserAuthenticationType, {'explicit': 504, 'optional': True}),
+        ('auth_timeout', Integer, {'explicit': 505, 'optional': True}),
         ('allow_while_on_body', Null, {'explicit': 506, 'optional': True}),
         ('trusted_user_presence_required', Null, {'explicit': 507, 'optional': True}),
         ('trusted_confirmation_required', Null, {'explicit': 508, 'optional': True}),
         ('unlocked_device_required', Null, {'explicit': 509, 'optional': True}),
         ('all_applications', Null, {'explicit': 600, 'optional': True}),
-        ('application_id', OctetString,{'explicit': 601,'optional': True}),
-        ('creation_date_time', UnixTimestamp, {'explicit': 701,'optional': True}),
-        ('origin', Origin, {'explicit': 702,'optional': True}),
+        ('application_id', OctetString,{'explicit': 601, 'optional': True}),
+        ('creation_date_time', UnixTimestamp, {'explicit': 701, 'optional': True}),
+        ('origin', Origin, {'explicit': 702, 'optional': True}),
         ('rollback_resistant', Null, {'explicit': 703, 'optional': True}),
-        ('root_of_trust', RootOfTrust, {'explicit': 704,'optional': True}),
-        ('os_version', Integer, {'explicit': 705,'optional': True}),
-        ('os_patch_level', Integer, {'explicit': 706,'optional': True}),
-        ('attestation_application_id', AttestationApplicationIdWrapper, {'explicit': 709,'optional':True}),
-        ('attestation_id_brand', OctetString, {'explicit': 710,'optional': True}),
-        ('attestation_id_device', OctetString, {'explicit': 711,'optional': True}),
+        ('root_of_trust', RootOfTrust, {'explicit': 704, 'optional': True}),
+        ('os_version', Integer, {'explicit': 705, 'optional': True}),
+        ('os_patch_level', Integer, {'explicit': 706, 'optional': True}),
+        ('attestation_application_id', AttestationApplicationIdWrapper, {'explicit': 709, 'optional':True}),
+        ('attestation_id_brand', OctetString, {'explicit': 710, 'optional': True}),
+        ('attestation_id_device', OctetString, {'explicit': 711, 'optional': True}),
         ('attestation_id_product', OctetString, {'explicit': 712, 'optional': True}),
-        ('attestation_id_serial', OctetString, {'explicit': 713,'optional': True}),
-        ('attestation_id_imei', OctetString, {'explicit': 714,'optional': True}),
-        ('attestation_id_meid', OctetString, {'explicit': 715,'optional': True}),
-        ('attestation_id_manufacturer', OctetString, {'explicit': 716,'optional': True}),
-        ('attestation_id_model', OctetString, {'explicit': 717,'optional': True}),
-        ('vendor_patch_level', Integer, {'explicit': 718,'optional': True}),
-        ('boot_patch_level', Integer, {'explicit': 719,'optional': True}),
+        ('attestation_id_serial', OctetString, {'explicit': 713, 'optional': True}),
+        ('attestation_id_imei', OctetString, {'explicit': 714, 'optional': True}),
+        ('attestation_id_meid', OctetString, {'explicit': 715, 'optional': True}),
+        ('attestation_id_manufacturer', OctetString, {'explicit': 716, 'optional': True}),
+        ('attestation_id_model', OctetString, {'explicit': 717, 'optional': True}),
+        ('vendor_patch_level', Integer, {'explicit': 718, 'optional': True}),
+        ('boot_patch_level', Integer, {'explicit': 719, 'optional': True}),
         ('device_unique_attestation', Null, {'explicit': 720, 'optional': True}),
     ]
 
@@ -3310,4 +3310,3 @@ class CertificateAux(Sequence):
 
 class TrustedCertificate(Concat):
     _child_specs = [Certificate, CertificateAux]
-
