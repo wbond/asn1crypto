@@ -49,7 +49,6 @@ from .core import (
     OctetBitString,
     OctetString,
     ParsableOctetString,
-    Primitive,
     PrintableString,
     Sequence,
     SequenceOf,
@@ -2029,7 +2028,7 @@ class RootOfTrust(Sequence):
 
 class AuthorizationList(Sequence):
     _fields = [
-        ('purpose',SetOfPurposes,{'explicit': 1, 'optional': True}),
+        ('purpose', SetOfPurposes, {'explicit': 1, 'optional': True}),
         ('algorithm', AlgorithmType, {'explicit': 2, 'optional': True}),
         ('key_size', Integer, {'explicit': 3, 'optional': True}),
         ('digest', SetOfDigests, {'explicit': 5, 'optional': True}),
@@ -2051,14 +2050,14 @@ class AuthorizationList(Sequence):
         ('trusted_confirmation_required', Null, {'explicit': 508, 'optional': True}),
         ('unlocked_device_required', Null, {'explicit': 509, 'optional': True}),
         ('all_applications', Null, {'explicit': 600, 'optional': True}),
-        ('application_id', OctetString,{'explicit': 601, 'optional': True}),
+        ('application_id', OctetString, {'explicit': 601, 'optional': True}),
         ('creation_date_time', UnixTimestamp, {'explicit': 701, 'optional': True}),
         ('origin', Origin, {'explicit': 702, 'optional': True}),
         ('rollback_resistant', Null, {'explicit': 703, 'optional': True}),
         ('root_of_trust', RootOfTrust, {'explicit': 704, 'optional': True}),
         ('os_version', Integer, {'explicit': 705, 'optional': True}),
         ('os_patch_level', Integer, {'explicit': 706, 'optional': True}),
-        ('attestation_application_id', AttestationApplicationIdWrapper, {'explicit': 709, 'optional':True}),
+        ('attestation_application_id', AttestationApplicationIdWrapper, {'explicit': 709, 'optional': True}),
         ('attestation_id_brand', OctetString, {'explicit': 710, 'optional': True}),
         ('attestation_id_device', OctetString, {'explicit': 711, 'optional': True}),
         ('attestation_id_product', OctetString, {'explicit': 712, 'optional': True}),
