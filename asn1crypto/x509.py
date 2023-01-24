@@ -372,7 +372,7 @@ class IPAddress(OctetString):
         self._native = original_value
         self.contents = inet_pton(family, value) + cidr_bytes
         self._bytes = self.contents
-        self._header = None
+        self._header = 'None'
         if self._trailer != b'':
             self._trailer = b''
 
@@ -1961,6 +1961,31 @@ class SetOfPackageInfos(SetOf):
     _child_spec = PackageInfo
 
 
+# if set it is True
+class StatusSet(Null):
+    def set(self, value):
+        """
+        Sets the value of the object
+
+        :param value:
+            None or 'True'
+        """
+
+        if value is not None and value != 'True' and not isinstance(value, Null):
+            raise ValueError(unwrap(
+                '''
+                value must be one of None, "True", not %s
+                ''',
+                repr(value)
+            ))
+
+        self.contents = b''
+
+    @property
+    def native(self):
+        return 'True'
+
+
 class AttestationApplicationId(Sequence):
     _fields = [
         ('package_infos', SetOfPackageInfos),
@@ -2036,24 +2061,24 @@ class AuthorizationList(Sequence):
         ('ec_curve', EllipticCurveType, {'explicit': 10, 'optional': True}),
         ('rsa_public_exponent', Integer, {'explicit': 200, 'optional': True}),
         ('mfg_digest', SetOfInteger, {'explicit': 203, 'optional': True}),
-        ('rollback_resistance', Null, {'explicit': 303, 'optional': True}),
-        ('early_boot_only', Null, {'explicit': 305, 'optional': True}),
+        ('rollback_resistance', StatusSet, {'explicit': 303, 'optional': True}),
+        ('early_boot_only', StatusSet, {'explicit': 305, 'optional': True}),
         ('active_date_time', UnixTimestamp, {'explicit': 400, 'optional': True}),
         ('origination_expire_date_time', UnixTimestamp, {'explicit': 401, 'optional': True}),
         ('usage_expire_date_time', UnixTimestamp, {'explicit': 402, 'optional': True}),
         ('usage_count_limit', Integer, {'explicit': 405, 'optional': True}),
-        ('no_auth_required', Null, {'explicit': 503, 'optional': True}),
+        ('no_auth_required', StatusSet, {'explicit': 503, 'optional': True}),
         ('user_auth_type', UserAuthenticationType, {'explicit': 504, 'optional': True}),
         ('auth_timeout', Integer, {'explicit': 505, 'optional': True}),
-        ('allow_while_on_body', Null, {'explicit': 506, 'optional': True}),
-        ('trusted_user_presence_required', Null, {'explicit': 507, 'optional': True}),
-        ('trusted_confirmation_required', Null, {'explicit': 508, 'optional': True}),
-        ('unlocked_device_required', Null, {'explicit': 509, 'optional': True}),
-        ('all_applications', Null, {'explicit': 600, 'optional': True}),
+        ('allow_while_on_body', StatusSet, {'explicit': 506, 'optional': True}),
+        ('trusted_user_presence_required', StatusSet, {'explicit': 507, 'optional': True, }),
+        ('trusted_confirmation_required', StatusSet, {'explicit': 508, 'optional': True}),
+        ('unlocked_device_required', StatusSet, {'explicit': 509, 'optional': True}),
+        ('all_applications', StatusSet, {'explicit': 600, 'optional': True}),
         ('application_id', OctetString, {'explicit': 601, 'optional': True}),
         ('creation_date_time', UnixTimestamp, {'explicit': 701, 'optional': True}),
         ('origin', Origin, {'explicit': 702, 'optional': True}),
-        ('rollback_resistant', Null, {'explicit': 703, 'optional': True}),
+        ('rollback_resistant', StatusSet, {'explicit': 703, 'optional': True}),
         ('root_of_trust', RootOfTrust, {'explicit': 704, 'optional': True}),
         ('os_version', Integer, {'explicit': 705, 'optional': True}),
         ('os_patch_level', Integer, {'explicit': 706, 'optional': True}),
@@ -2068,7 +2093,7 @@ class AuthorizationList(Sequence):
         ('attestation_id_model', OctetString, {'explicit': 717, 'optional': True}),
         ('vendor_patch_level', Integer, {'explicit': 718, 'optional': True}),
         ('boot_patch_level', Integer, {'explicit': 719, 'optional': True}),
-        ('device_unique_attestation', Null, {'explicit': 720, 'optional': True}),
+        ('device_unique_attestation', StatusSet, {'explicit': 720, 'optional': True}),
     ]
 
 
