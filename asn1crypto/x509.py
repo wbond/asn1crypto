@@ -372,7 +372,7 @@ class IPAddress(OctetString):
         self._native = original_value
         self.contents = inet_pton(family, value) + cidr_bytes
         self._bytes = self.contents
-        self._header = 'None'
+        self._header = None
         if self._trailer != b'':
             self._trailer = b''
 
