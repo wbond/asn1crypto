@@ -2010,12 +2010,12 @@ class AttestationApplicationIdWrapper(ParsableOctetString):
 class UnixTimestamp(Integer):
     def parse(self, spec=None, spec_params=None):
         """
-        This method is not applicable to IP addresses
+        This method is not applicable to UnixTimestamp
         """
 
         raise ValueError(unwrap(
             '''
-            IP address values can not be parsed
+            UnixTimestamp values can not be parsed
             '''
         ))
 
@@ -2023,7 +2023,7 @@ class UnixTimestamp(Integer):
         if not isinstance(value, int):
             raise TypeError(unwrap(
                 '''
-                %s value must be a unicode string, not %s
+                %s value must be a int value, not %s
                 ''',
                 type_name(self),
                 type_name(value)
