@@ -5565,7 +5565,7 @@ def _build(class_, method, tag, header, contents, trailer, spec=None, spec_param
                 if method != value.method:
                     # Allow parsing a primitive method as constructed if the value
                     # is indefinite length. This is to allow parsing BER.
-                    ber_indef = method == 1 and value.method == 0 and trailer == b'\x00\x00'
+                    ber_indef = method == 1 and value.method == 0 and trailer in [ b'\x00\x00', b'']
                     if not ber_indef or not isinstance(value, Constructable):
                         raise ValueError(unwrap(
                             '''
