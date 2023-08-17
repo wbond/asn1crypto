@@ -5,7 +5,7 @@ import os
 import sys
 import unittest
 
-if sys.version_info < (3,):
+if sys.version_info < (3, 5):
     import imp
 else:
     import importlib
@@ -43,7 +43,7 @@ def _import_from(mod, path, mod_dir=None):
         return None
 
     try:
-        if sys.version_info < (3,):
+        if sys.version_info < (3, 5):
             mod_info = imp.find_module(mod_dir, [path])
             return imp.load_module(mod, *mod_info)
         else:
