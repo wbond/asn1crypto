@@ -1,9 +1,15 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import imp
 import sys
 import os
+
+if sys.version_info < (3, 5):
+    import imp
+else:
+    import importlib
+    import importlib.machinery
+    import importlib.util
 
 from . import build_root, package_name, package_root
 
@@ -34,6 +40,14 @@ def _import_from(mod, path, mod_dir=None, allow_error=False):
         None if not loaded, otherwise the module
     """
 
+    if mod in sys.modules:
+        return sys.modules[mod]
+
+    if mod_dir is None:
+        full_mod = mod
+    else:
+        full_mod = mod_dir
+
     if mod_dir is None:
         mod_dir = mod.replace('.', os.sep)
 
@@ -49,8 +63,20 @@ def _import_from(mod, path, mod_dir=None, allow_error=False):
         path = os.path.join(path, append)
 
     try:
-        mod_info = imp.find_module(mod_dir, [path])
-        return imp.load_module(mod, *mod_info)
+        if sys.version_info < (3, 5):
+            mod_info = imp.find_module(mod_dir, [path])
+            return imp.load_module(mod, *mod_info)
+        else:
+            loader_details = (
+                importlib.machinery.SourceFileLoader,
+                importlib.machinery.SOURCE_SUFFIXES
+            )
+            finder = importlib.machinery.FileFinder(path, loader_details)
+            spec = finder.find_spec(full_mod)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[mod] = module
+            spec.loader.exec_module(module)
+            return module
     except ImportError:
         if allow_error:
             raise
