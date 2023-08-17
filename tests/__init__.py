@@ -47,8 +47,10 @@ def _import_from(mod, path, mod_dir=None):
             mod_info = imp.find_module(mod_dir, [path])
             return imp.load_module(mod, *mod_info)
         else:
-            mod_info = importlib.machinery.PathFinder().find_spec(mod_dir, [path])
-            return importlib.import_module(mod, *mod_info)
+            spec = importlib.machinery.PathFinder().find_spec(mod_dir, [path])
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[mod] = module
+            spec.loader.exec_module(module)
     except ImportError:
         return None
 
