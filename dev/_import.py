@@ -4,6 +4,8 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import sys
 import os
 
+from . import build_root, package_name, package_root
+
 if sys.version_info < (3, 5):
     import imp
 else:
@@ -11,7 +13,6 @@ else:
     import importlib.machinery
     import importlib.util
 
-from . import build_root, package_name, package_root
 
 if sys.version_info < (3,):
     getcwd = os.getcwdu
