@@ -1,9 +1,14 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import imp
 import os
+import sys
 import unittest
+
+if sys.version_info < (3,):
+    import imp
+else:
+    import importlib
 
 
 __version__ = '1.5.1'
@@ -38,8 +43,12 @@ def _import_from(mod, path, mod_dir=None):
         return None
 
     try:
-        mod_info = imp.find_module(mod_dir, [path])
-        return imp.load_module(mod, *mod_info)
+        if sys.version_info < (3,):
+            mod_info = imp.find_module(mod_dir, [path])
+            return imp.load_module(mod, *mod_info)
+        else:
+            mod_info = importlib.machinery.PathFinder().find_spec(mod_dir, [path])
+            return importlib.import_module(mod, *mod_info)
     except ImportError:
         return None
 
