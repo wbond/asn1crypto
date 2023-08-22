@@ -67,6 +67,7 @@ def _import_from(mod, path, mod_dir=None, allow_error=False):
         if sys.version_info < (3, 5):
             mod_info = imp.find_module(mod_dir, [path])
             return imp.load_module(mod, *mod_info)
+
         else:
             loader_details = (
                 importlib.machinery.SourceFileLoader,
@@ -78,6 +79,7 @@ def _import_from(mod, path, mod_dir=None, allow_error=False):
             sys.modules[mod] = module
             spec.loader.exec_module(module)
             return module
+
     except ImportError:
         if allow_error:
             raise
