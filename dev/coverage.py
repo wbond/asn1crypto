@@ -103,7 +103,7 @@ def _load_package_tests(name):
     if not os.path.exists(package_dir):
         return []
 
-    _import_from('%s.tests' % name, package_dir, 'tests').test_classes()
+    return _import_from('%s_tests' % name, package_dir, 'tests').test_classes()
 
 
 def _env_info():

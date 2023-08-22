@@ -54,7 +54,6 @@ if sys.version_info >= (3, 5):
                 submodule_search_locations=submodule_locations
             )
 
-
     CUSTOM_FINDER = ModCryptoMetaFinder()
     CUSTOM_FINDER.setup()
 
