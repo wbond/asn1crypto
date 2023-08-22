@@ -10,7 +10,7 @@ if sys.version_info < (3, 5):
     import imp
 else:
     import importlib
-    import importlib.machinery
+    import importlib.abc
     import importlib.util
 
 
@@ -18,6 +18,48 @@ if sys.version_info < (3,):
     getcwd = os.getcwdu
 else:
     getcwd = os.getcwd
+
+
+class ModCryptoMetaFinder(importlib.abc.MetaPathFinder):
+    def setup(self):
+        self.modules = {}
+        sys.meta_path.insert(0, self)
+
+    def add_module(self, package_name, package_path):
+        if package_name not in self.modules:
+            self.modules[package_name] = package_path
+
+    def find_spec(self, fullname, path, target=None):
+        name_parts = fullname.split('.')
+        if name_parts[0] not in self.modules:
+            return None
+
+        package = name_parts[0]
+        package_path = self.modules[package]
+
+        fullpath = os.path.join(package_path, *name_parts[1:])
+
+        if os.path.isdir(fullpath):
+            filename = os.path.join(fullpath, "__init__.py")
+            submodule_locations = [fullpath]
+        else:
+            filename = fullpath + ".py"
+            submodule_locations = None
+
+        if not os.path.exists(filename):
+            return None
+
+        return importlib.util.spec_from_file_location(
+            fullname,
+            filename,
+            loader=None,
+            submodule_search_locations=submodule_locations
+        )
+
+
+if sys.version_info >= (3, 5):
+    CUSTOM_FINDER = ModCryptoMetaFinder()
+    CUSTOM_FINDER.setup()
 
 
 def _import_from(mod, path, mod_dir=None, allow_error=False):
@@ -47,7 +89,7 @@ def _import_from(mod, path, mod_dir=None, allow_error=False):
     if mod_dir is None:
         full_mod = mod
     else:
-        full_mod = mod_dir
+        full_mod = mod_dir.replace(os.sep, '.')
 
     if mod_dir is None:
         mod_dir = mod.replace('.', os.sep)
@@ -55,8 +97,11 @@ def _import_from(mod, path, mod_dir=None, allow_error=False):
     if not os.path.exists(path):
         return None
 
-    if not os.path.exists(os.path.join(path, mod_dir)) \
-            and not os.path.exists(os.path.join(path, mod_dir + '.py')):
+    source_path = os.path.join(path, mod_dir, '__init__.py')
+    if not os.path.exists(source_path):
+        source_path = os.path.join(path, mod_dir + '.py')
+
+    if not os.path.exists(source_path):
         return None
 
     if os.sep in mod_dir:
@@ -69,16 +114,12 @@ def _import_from(mod, path, mod_dir=None, allow_error=False):
             return imp.load_module(mod, *mod_info)
 
         else:
-            loader_details = (
-                importlib.machinery.SourceFileLoader,
-                importlib.machinery.SOURCE_SUFFIXES
-            )
-            finder = importlib.machinery.FileFinder(path, loader_details)
-            spec = finder.find_spec(full_mod)
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[mod] = module
-            spec.loader.exec_module(module)
-            return module
+            package = mod.split('.', 1)[0]
+            package_dir = full_mod.split('.', 1)[0]
+            package_path = os.path.join(path, package_dir)
+            CUSTOM_FINDER.add_module(package, package_path)
+
+            return importlib.import_module(mod)
 
     except ImportError:
         if allow_error:

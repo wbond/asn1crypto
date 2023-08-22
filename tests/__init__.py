@@ -9,6 +9,8 @@ if sys.version_info < (3, 5):
     import imp
 else:
     import importlib
+    import importlib.abc
+    import importlib.util
 
 
 __version__ = '1.5.1'
