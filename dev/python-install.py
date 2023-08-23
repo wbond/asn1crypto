@@ -32,7 +32,7 @@ def run(version=None, arch=None):
     if sys.platform != 'win32':
         raise ValueError('python-install is only designed for Windows')
 
-    if version not in set(['2.6', '3.3']):
+    if version not in set(['2.6', '2.7', '3.3']):
         raise ValueError('Invalid version: %r' % version)
 
     if arch not in set(['x86', 'x64']):
@@ -43,6 +43,11 @@ def run(version=None, arch=None):
             url = 'https://www.python.org/ftp/python/2.6.6/python-2.6.6.amd64.msi'
         else:
             url = 'https://www.python.org/ftp/python/2.6.6/python-2.6.6.msi'
+    elif version == '2.7':
+        if arch == 'x64':
+            url = 'https://www.python.org/ftp/python/2.7.18/python-2.7.18.amd64.msi'
+        else:
+            url = 'https://www.python.org/ftp/python/2.7.18/python-2.7.18.msi'
     else:
         if arch == 'x64':
             url = 'https://www.python.org/ftp/python/3.3.5/python-3.3.5.amd64.msi'

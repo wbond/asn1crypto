@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import imp
 import os
 import tarfile
 import zipfile
@@ -9,6 +8,7 @@ import zipfile
 import setuptools.sandbox
 
 from . import package_root, package_name, has_tests_package
+from ._import import _import_from
 
 
 def _list_zip(filename):
@@ -45,8 +45,8 @@ def run():
 
     # Trying to call setuptools.sandbox.run_setup(setup, ['--version'])
     # resulted in a segfault, so we do this instead
-    module_info = imp.find_module('version', [os.path.join(package_root, package_name)])
-    version_mod = imp.load_module('%s.version' % package_name, *module_info)
+    package_dir = os.path.join(package_root, package_name)
+    version_mod = _import_from('%s.version' % package_name, package_dir, 'version')
 
     pkg_name_info = (package_name, version_mod.__version__)
     print('Building %s-%s' % pkg_name_info)
