@@ -4,7 +4,6 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import cgi
 import codecs
 import coverage
-import imp
 import json
 import os
 import unittest
@@ -17,6 +16,7 @@ import subprocess
 from fnmatch import fnmatch
 
 from . import package_name, package_root, other_packages
+from ._import import _import_from
 
 if sys.version_info < (3,):
     str_cls = unicode  # noqa
@@ -103,9 +103,7 @@ def _load_package_tests(name):
     if not os.path.exists(package_dir):
         return []
 
-    tests_module_info = imp.find_module('tests', [package_dir])
-    tests_module = imp.load_module('%s.tests' % name, *tests_module_info)
-    return tests_module.test_classes()
+    return _import_from('%s_tests' % name, package_dir, 'tests').test_classes()
 
 
 def _env_info():
