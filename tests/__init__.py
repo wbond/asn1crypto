@@ -102,6 +102,8 @@ def test_classes():
     from .test_util import UtilTests
     from .test_parser import ParserTests
     from .test_core import CoreTests
+    from .test_issue_228 import Issue228WithUniqueIdentifierTests
+    from .test_issue_228 import Issue228WithoutUniqueIdentifierTests
 
     return [
         AlgoTests,
@@ -117,5 +119,7 @@ def test_classes():
         UtilTests,
         ParserTests,
         X509Tests,
-        CoreTests
+        CoreTests,
+        Issue228WithUniqueIdentifierTests,
+        Issue228WithoutUniqueIdentifierTests,
     ]
