@@ -729,6 +729,10 @@ class RecipientKeyIdentifier(Sequence):
         ('other', OtherKeyAttribute, {'optional': True}),
     ]
 
+    def _setup(self):
+        super(RecipientKeyIdentifier, self)._setup()
+        self._field_map['subjectKeyIdentifier'] = self._field_map['subject_key_identifier']
+
 
 class KeyAgreementRecipientIdentifier(Choice):
     _alternatives = [
@@ -927,14 +931,6 @@ class CompressedData(Sequence):
                 raise SystemError('The zlib module is not available')
             self._decompressed = zlib.decompress(self['encap_content_info']['content'].native)
         return self._decompressed
-
-
-class RecipientKeyIdentifier(Sequence):
-    _fields = [
-        ('subjectKeyIdentifier', OctetString),
-        ('date', GeneralizedTime, {'optional': True}),
-        ('other', OtherKeyAttribute, {'optional': True}),
-    ]
 
 
 class SMIMEEncryptionKeyPreference(Choice):
