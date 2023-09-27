@@ -347,6 +347,47 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
         'rsassa_pss': RSASSAPSSParams,
     }
 
+    _algo_map = {
+        'md2_rsa': 'md2',
+        'md5_rsa': 'md5',
+        'sha1_rsa': 'sha1',
+        'sha224_rsa': 'sha224',
+        'sha256_rsa': 'sha256',
+        'sha384_rsa': 'sha384',
+        'sha512_rsa': 'sha512',
+        'sha1_dsa': 'sha1',
+        'sha224_dsa': 'sha224',
+        'sha256_dsa': 'sha256',
+        'sha384_dsa': 'sha384',
+        'sha512_dsa': 'sha512',
+        'sha1_ecdsa': 'sha1',
+        'sha1_ecdsa_plain': 'sha1',
+        'sha224_ecdsa': 'sha224',
+        'sha256_ecdsa': 'sha256',
+        'sha384_ecdsa': 'sha384',
+        'sha512_ecdsa': 'sha512',
+        'sha224_ecdsa_plain': 'sha224',
+        'sha256_ecdsa_plain': 'sha256',
+        'sha384_ecdsa_plain': 'sha384',
+        'sha512_ecdsa_plain': 'sha512',
+        'sha3_224_dsa': 'sha3_224',
+        'sha3_256_dsa': 'sha3_256',
+        'sha3_384_dsa': 'sha3_384',
+        'sha3_512_dsa': 'sha3_512',
+        'sha3_224_ecdsa': 'sha3_224',
+        'sha3_256_ecdsa': 'sha3_256',
+        'sha3_384_ecdsa': 'sha3_384',
+        'sha3_512_ecdsa': 'sha3_512',
+        'sha3_224_ecdsa_plain': 'sha3_224',
+        'sha3_256_ecdsa_plain': 'sha3_256',
+        'sha3_384_ecdsa_plain': 'sha3_384',
+        'sha3_512_ecdsa_plain': 'sha3_512',
+        'sha3_224_rsa': 'sha3_224',
+        'sha3_256_rsa': 'sha3_256',
+        'sha3_384_rsa': 'sha3_384',
+        'sha3_512_rsa': 'sha3_512',
+    }
+
     @property
     def signature_algo(self):
         """
@@ -422,54 +463,52 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
         """
 
         algorithm = self['algorithm'].native
-
-        algo_map = {
-            'md2_rsa': 'md2',
-            'md5_rsa': 'md5',
-            'sha1_rsa': 'sha1',
-            'sha224_rsa': 'sha224',
-            'sha256_rsa': 'sha256',
-            'sha384_rsa': 'sha384',
-            'sha512_rsa': 'sha512',
-            'sha1_dsa': 'sha1',
-            'sha224_dsa': 'sha224',
-            'sha256_dsa': 'sha256',
-            'sha384_dsa': 'sha384',
-            'sha512_dsa': 'sha512',
-            'sha1_ecdsa': 'sha1',
-            'sha1_ecdsa_plain': 'sha1',
-            'sha224_ecdsa': 'sha224',
-            'sha256_ecdsa': 'sha256',
-            'sha384_ecdsa': 'sha384',
-            'sha512_ecdsa': 'sha512',
-            'sha224_ecdsa_plain': 'sha224',
-            'sha256_ecdsa_plain': 'sha256',
-            'sha384_ecdsa_plain': 'sha384',
-            'sha512_ecdsa_plain': 'sha512',
-            'sha3_224_dsa': 'sha3_224',
-            'sha3_256_dsa': 'sha3_256',
-            'sha3_384_dsa': 'sha3_384',
-            'sha3_512_dsa': 'sha3_512',
-            'sha3_224_ecdsa': 'sha3_224',
-            'sha3_256_ecdsa': 'sha3_256',
-            'sha3_384_ecdsa': 'sha3_384',
-            'sha3_512_ecdsa': 'sha3_512',
-            'sha3_224_ecdsa_plain': 'sha3_224',
-            'sha3_256_ecdsa_plain': 'sha3_256',
-            'sha3_384_ecdsa_plain': 'sha3_384',
-            'sha3_512_ecdsa_plain': 'sha3_512',
-            'sha3_224_rsa': 'sha3_224',
-            'sha3_256_rsa': 'sha3_256',
-            'sha3_384_rsa': 'sha3_384',
-            'sha3_512_rsa': 'sha3_512',
-            'ed25519': 'sha512',
-            'ed448': 'shake256',
-        }
-        if algorithm in algo_map:
-            return algo_map[algorithm]
+        if algorithm in self._algo_map:
+            return self._algo_map[algorithm]
 
         if algorithm == 'rsassa_pss':
             return self['parameters']['hash_algorithm']['algorithm'].native
+
+        if algorithm == 'ed25519' or algorithm == 'ed448':
+            raise ValueError(unwrap(
+                '''
+                Hash algorithm not known for %s - use .cms_hash_algorithm for CMS purposes.
+                More info at https://github.com/wbond/asn1crypto/pull/230.
+                ''',
+                algorithm
+            ))
+
+        raise ValueError(unwrap(
+            '''
+            Hash algorithm not known for %s
+            ''',
+            algorithm
+        ))
+
+    @property
+    def cms_hash_algo(self):
+        """
+        The hash algorithm for CMS hashing
+
+        :return:
+            A unicode string of "md2", "md5", "sha1", "sha224", "sha256",
+            "sha384", "sha512", "sha512_224", "sha512_256" or "shake256"
+        """
+
+        algorithm = self['algorithm'].native
+
+        if algorithm in self._algo_map:
+            return self._algo_map[algorithm]
+
+        if algorithm == 'rsassa_pss':
+            return self['parameters']['hash_algorithm']['algorithm'].native
+
+        cms_algo_map = {
+            'ed25519': 'sha512',
+            'ed448': 'shake256',
+        }
+        if algorithm in cms_algo_map:
+            return cms_algo_map[algorithm]
 
         raise ValueError(unwrap(
             '''

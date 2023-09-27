@@ -549,13 +549,60 @@ class X509Tests(unittest.TestCase):
                 'rsassa_pss',
                 'sha256'
             ),
+            (
+                'keys/test-ed448.crt',
+                'ed448',
+                ValueError
+            ),
         )
 
     @data('signature_algo_info')
     def signature_algo(self, relative_path, signature_algo, hash_algo):
         cert = self._load_cert(relative_path)
         self.assertEqual(signature_algo, cert['signature_algorithm'].signature_algo)
-        self.assertEqual(hash_algo, cert['signature_algorithm'].hash_algo)
+        if isinstance(hash_algo, type) and issubclass(hash_algo, Exception):
+            with self.assertRaises(hash_algo):
+                self.assertEqual(hash_algo, cert['signature_algorithm'].hash_algo)
+        else:
+            self.assertEqual(hash_algo, cert['signature_algorithm'].hash_algo)
+
+    @staticmethod
+    def cms_hash_algo_info():
+        return (
+            (
+                'keys/test-der.crt',
+                'sha256'
+            ),
+            (
+                'keys/test-inter-der.crt',
+                'sha256'
+            ),
+            (
+                'keys/test-dsa-der.crt',
+                'sha256'
+            ),
+            (
+                'keys/test-third-der.crt',
+                'sha256'
+            ),
+            (
+                'keys/test-ec-der.crt',
+                'sha256'
+            ),
+            (
+                'keys/test-rsapss.crt',
+                'sha256'
+            ),
+            (
+                'keys/test-ed448.crt',
+                'shake256'
+            ),
+        )
+
+    @data('cms_hash_algo_info')
+    def cms_hash_algo(self, relative_path, hash_algo):
+        cert = self._load_cert(relative_path)
+        self.assertEqual(hash_algo, cert['signature_algorithm'].cms_hash_algo)
 
     @staticmethod
     def critical_extensions_info():
