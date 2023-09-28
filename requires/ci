@@ -1,5 +1,5 @@
 setuptools == 36.8.0 ; python_version == '2.6'
-setuptools == 44.1.1 ; python_version == '2.7' and sys_platform == 'win32'
+setuptools == 44.1.1 ; python_version == '2.7' and (sys_platform == 'win32' or sys_platform == 'darwin')
 setuptools == 18.4 ; python_version == '3.2'
 setuptools == 39.2.0 ; python_version == '3.3'
 https://github.com/wbond/asn1crypto/archive/master.zip
