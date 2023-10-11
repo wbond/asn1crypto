@@ -3429,6 +3429,17 @@ class Sequence(Asn1Value):
                         self.__setitem__(key, value[key])
                         unused_keys.remove(key)
 
+                # This handles the situation where there is field name
+                # mapping going on due to a field be renamed. Normally
+                # the keys are checked against the primary field list.
+                # If there are still keys left over, check to see if they
+                # are mapped via checking the _field_map.
+                if len(unused_keys):
+                    for key in list(unused_keys):
+                        if key in self._field_map:
+                            self.__setitem__(key, value[key])
+                            unused_keys.remove(key)
+
                 if len(unused_keys):
                     raise ValueError(unwrap(
                         '''
