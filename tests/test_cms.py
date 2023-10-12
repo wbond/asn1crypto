@@ -1001,3 +1001,41 @@ class CMSTests(unittest.TestCase):
             ]),
             rs.native
         )
+
+    def test_backwards_compat_field_name(self):
+        new_version = cms.RecipientKeyIdentifier({'subject_key_identifier': b'\x08\x09\x10'})
+        old_version = cms.RecipientKeyIdentifier({'subjectKeyIdentifier': b'\x08\x09\x10'})
+        self.assertEqual(
+            new_version.dump(True),
+            old_version.dump(True),
+        )
+        self.assertEqual(
+            new_version.native,
+            old_version.native,
+        )
+
+    def test_backwards_compat_choice_names(self):
+        rki = cms.RecipientKeyIdentifier({'subject_key_identifier': b'\x08\x09\x10'})
+        new_sekp = cms.SMIMEEncryptionKeyPreference({'recipient_key_id': rki})
+        old_sekp = cms.SMIMEEncryptionKeyPreference({'recipientKeyId': rki})
+
+        self.assertEqual(
+            new_sekp.dump(True),
+            old_sekp.dump(True),
+        )
+        self.assertEqual(
+            new_sekp.native,
+            old_sekp.native,
+        )
+        self.assertEqual(
+            new_sekp.chosen.untag().dump(True),
+            rki.dump(True),
+        )
+        self.assertEqual(
+            'recipient_key_id',
+            new_sekp.name,
+        )
+        self.assertEqual(
+            'recipient_key_id',
+            old_sekp.name,
+        )
