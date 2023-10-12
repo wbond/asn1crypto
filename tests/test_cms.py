@@ -1027,3 +1027,15 @@ class CMSTests(unittest.TestCase):
             new_sekp.native,
             old_sekp.native,
         )
+        self.assertEqual(
+            new_sekp.chosen.untag().dump(True),
+            rki.dump(True),
+        )
+        self.assertEqual(
+            'recipient_key_id',
+            new_sekp.name,
+        )
+        self.assertEqual(
+            'recipient_key_id',
+            old_sekp.name,
+        )
