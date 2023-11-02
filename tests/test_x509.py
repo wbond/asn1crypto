@@ -466,6 +466,25 @@ class X509Tests(unittest.TestCase):
         self.assertIsInstance(printable_name.chosen[2][0]['value'].chosen, core.PrintableString)
         self.assertEqual('common_name', printable_name.chosen[2][0]['type'].native)
 
+    def test_build_name_type_by_oid(self):
+        complex_name = x509.Name.build(
+            {
+                'country_name': 'US',
+                'tpm_manufacturer': 'Acme Co',
+                'unique_identifier': b'\x04\x10\x03\x09',
+                'email_address': 'will@codexns.io'
+            }
+        )
+        self.assertEqual("country_name", complex_name.chosen[0][0]['type'].native)
+        self.assertIsInstance(complex_name.chosen[0][0]['value'], x509.DirectoryString)
+        self.assertIsInstance(complex_name.chosen[0][0]['value'].chosen, core.PrintableString)
+        self.assertEqual("email_address", complex_name.chosen[1][0]['type'].native)
+        self.assertIsInstance(complex_name.chosen[1][0]['value'], x509.EmailAddress)
+        self.assertEqual("tpm_manufacturer", complex_name.chosen[2][0]['type'].native)
+        self.assertIsInstance(complex_name.chosen[2][0]['value'], core.UTF8String)
+        self.assertEqual("unique_identifier", complex_name.chosen[3][0]['type'].native)
+        self.assertIsInstance(complex_name.chosen[3][0]['value'], core.OctetBitString)
+
     def test_v1_cert(self):
         cert = self._load_cert('chromium/ndn.ca.crt')
         tbs_cert = cert['tbs_certificate']
