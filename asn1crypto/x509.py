@@ -27,7 +27,7 @@ import unicodedata
 from ._errors import unwrap
 from ._iri import iri_to_uri, uri_to_iri
 from ._ordereddict import OrderedDict
-from ._types import type_name, str_cls, bytes_to_list
+from ._types import type_name, str_cls, byte_cls, bytes_to_list
 from .algos import AlgorithmIdentifier, AnyAlgorithmIdentifier, DigestAlgorithm, SignedDigestAlgorithm
 from .core import (
     Any,
@@ -708,7 +708,13 @@ class NameTypeAndValue(Sequence):
         """
 
         if self._prepped is None:
-            self._prepped = self._ldap_string_prep(self['value'].native)
+            native = self['value'].native
+            if isinstance(native, str_cls):
+                self._prepped = self._ldap_string_prep(native)
+            else:
+                if isinstance(native, byte_cls):
+                    native = ' ' + native.decode('cp1252') + ' '
+                self._prepped = native
         return self._prepped
 
     def __ne__(self, other):
