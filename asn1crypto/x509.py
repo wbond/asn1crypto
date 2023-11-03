@@ -1015,15 +1015,27 @@ class Name(Choice):
 
         for attribute_name, attribute_value in name_dict.items():
             attribute_name = NameType.map(attribute_name)
-            if attribute_name == 'email_address':
-                value = EmailAddress(attribute_value)
-            elif attribute_name == 'domain_component':
-                value = DNSName(attribute_value)
+            attribute_class = NameTypeAndValue._oid_specs.get(attribute_name)
+            if not attribute_class:
+                raise ValueError(unwrap(
+                    '''
+                    No encoding specification found for %s
+                    ''',
+                    attribute_name
+                ))
+
+            if isinstance(attribute_value, attribute_class):
+                value = attribute_value
+
+            elif attribute_class is not DirectoryString:
+                value = attribute_class(attribute_value)
+
             elif attribute_name in set(['dn_qualifier', 'country_name', 'serial_number']):
                 value = DirectoryString(
                     name='printable_string',
                     value=PrintableString(attribute_value)
                 )
+
             else:
                 value = DirectoryString(
                     name=encoding_name,
