@@ -485,6 +485,23 @@ class X509Tests(unittest.TestCase):
         self.assertEqual("unique_identifier", complex_name.chosen[3][0]['type'].native)
         self.assertIsInstance(complex_name.chosen[3][0]['value'], core.OctetBitString)
 
+    def test_name_hashable(self):
+        complex_name = x509.Name.build(
+            {
+                'country_name': 'US',
+                'tpm_manufacturer': 'Acme Co',
+                'unique_identifier': b'\x04\x10\x03\x09',
+                'email_address': 'will@codexns.io'
+            }
+        )
+        self.assertEqual(
+            "country_name:  us \x1e"
+            "email_address:  will@codexns.io \x1e"
+            "tpm_manufacturer:  acme  co \x1e"
+            "unique_identifier:  \x04\x10\x03\x09 ",
+            complex_name.hashable
+        )
+
     def test_v1_cert(self):
         cert = self._load_cert('chromium/ndn.ca.crt')
         tbs_cert = cert['tbs_certificate']
