@@ -35,6 +35,7 @@ from .algos import (
     KdfAlgorithm,
     RSAESOAEPParams,
     SignedDigestAlgorithm,
+    KeyWrapAlgorithm,
 )
 from .core import (
     Any,
@@ -671,6 +672,21 @@ class KeyEncryptionAlgorithmId(ObjectIdentifier):
         '2.16.840.1.101.3.4.1.28': 'aes192_wrap_pad',
         '2.16.840.1.101.3.4.1.45': 'aes256_wrap',
         '2.16.840.1.101.3.4.1.48': 'aes256_wrap_pad',
+        '1.3.133.16.840.63.0.2':'dhSinglePass_stdDH_sha1kdf_scheme',
+        '1.3.132.1.11.0':'dhSinglePass_stdDH_sha224kdf_scheme',
+        '1.3.132.1.11.1':'dhSinglePass_stdDH_sha256kdf_scheme',
+        '1.3.132.1.11.2':'dhSinglePass_stdDH_sha384kdf_scheme',
+        '1.3.132.1.11.3':'dhSinglePass_stdDH_sha512kdf_scheme',
+        '1.3.133.16.840.63.0.3':'dhSinglePass_cofactorDH_sha1kdf_scheme',
+        '1.3.132.1.14.0':'dhSinglePass_cofactorDH_sha224kdf_scheme',
+        '1.3.132.1.14.1':'dhSinglePass_cofactorDH_sha256kdf_scheme',
+        '1.3.132.1.14.2':'dhSinglePass_cofactorDH_sha384kdf_scheme',
+        '1.3.132.1.14.3':'dhSinglePass_cofactorDH_sha512kdf_scheme',
+        '1.3.133.16.840.63.0.16':'mqvSinglePass_sha1kdf_scheme',
+        '1.3.132.1.15.0':'mqvSinglePass_sha224kdf_scheme',
+        '1.3.132.1.15.1':'mqvSinglePass_sha256kdf_scheme',
+        '1.3.132.1.15.2':'mqvSinglePass_sha384kdf_scheme',
+        '1.3.132.1.15.3':'mqvSinglePass_sha512kdf_scheme',
     }
 
     _reverse_map = {
@@ -683,6 +699,21 @@ class KeyEncryptionAlgorithmId(ObjectIdentifier):
         'aes192_wrap_pad': '2.16.840.1.101.3.4.1.28',
         'aes256_wrap': '2.16.840.1.101.3.4.1.45',
         'aes256_wrap_pad': '2.16.840.1.101.3.4.1.48',
+        'dhSinglePass_stdDH_sha1kdf_scheme':'1.3.133.16.840.63.0.2',
+        'dhSinglePass_stdDH_sha224kdf_scheme':'1.3.132.1.11.0',
+        'dhSinglePass_stdDH_sha256kdf_scheme':'1.3.132.1.11.1',
+        'dhSinglePass_stdDH_sha384kdf_scheme':'1.3.132.1.11.2',
+        'dhSinglePass_stdDH_sha512kdf_scheme':'1.3.132.1.11.3',
+        'dhSinglePass_cofactorDH_sha1kdf_scheme':'1.3.133.16.840.63.0.3',
+        'dhSinglePass_cofactorDH_sha224kdf_scheme':'1.3.132.1.14.0',
+        'dhSinglePass_cofactorDH_sha256kdf_scheme':'1.3.132.1.14.1',
+        'dhSinglePass_cofactorDH_sha384kdf_scheme':'1.3.132.1.14.2',
+        'dhSinglePass_cofactorDH_sha512kdf_scheme':'1.3.132.1.14.3',
+        'mqvSinglePass_sha1kdf_scheme':'1.3.133.16.840.63.0.16',
+        'mqvSinglePass_sha224kdf_scheme':'1.3.132.1.15.0',
+        'mqvSinglePass_sha256kdf_scheme':'1.3.132.1.15.1',
+        'mqvSinglePass_sha384kdf_scheme':'1.3.132.1.15.2',
+        'mqvSinglePass_sha512kdf_scheme':'1.3.132.1.15.3',
     }
 
 
@@ -694,7 +725,22 @@ class KeyEncryptionAlgorithm(_ForceNullParameters, Sequence):
 
     _oid_pair = ('algorithm', 'parameters')
     _oid_specs = {
-        'rsaes_oaep': RSAESOAEPParams,
+        'rsaes_oaep': RSAESOAEPParams,        
+        'dhSinglePass_stdDH_sha1kdf_scheme':KeyWrapAlgorithm,
+        'dhSinglePass_stdDH_sha224kdf_scheme':KeyWrapAlgorithm,
+        'dhSinglePass_stdDH_sha256kdf_scheme':KeyWrapAlgorithm,
+        'dhSinglePass_stdDH_sha384kdf_scheme':KeyWrapAlgorithm,
+        'dhSinglePass_stdDH_sha512kdf_scheme':KeyWrapAlgorithm,
+        'dhSinglePass_cofactorDH_sha1kdf_scheme':KeyWrapAlgorithm,
+        'dhSinglePass_cofactorDH_sha224kdf_scheme':KeyWrapAlgorithm,
+        'dhSinglePass_cofactorDH_sha256kdf_scheme':KeyWrapAlgorithm,
+        'dhSinglePass_cofactorDH_sha384kdf_scheme':KeyWrapAlgorithm,
+        'dhSinglePass_cofactorDH_sha512kdf_scheme':KeyWrapAlgorithm,
+        'mqvSinglePass_sha1kdf_scheme':KeyWrapAlgorithm,
+        'mqvSinglePass_sha224kdf_scheme':KeyWrapAlgorithm,
+        'mqvSinglePass_sha256kdf_scheme':KeyWrapAlgorithm,
+        'mqvSinglePass_sha384kdf_scheme':KeyWrapAlgorithm,
+        'mqvSinglePass_sha512kdf_scheme':KeyWrapAlgorithm,
     }
 
 
