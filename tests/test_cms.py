@@ -1039,3 +1039,138 @@ class CMSTests(unittest.TestCase):
             'recipient_key_id',
             old_sekp.name,
         )
+
+    def test_ec_key_wrap(self):
+        rfc_tests = {
+            #   KA=ECDH standard KDF=SHA-1 Wrap=Triple-DES
+            "30 1c 06 09 2b 81 05 10 86 48 3f 00 02 30 0f 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06 05 00":("dhSinglePass_stdDH_sha1kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH standard KDF=SHA-224 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0B 00 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("dhSinglePass_stdDH_sha224kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH standard KDF=SHA-256 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0B 01 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("dhSinglePass_stdDH_sha256kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH standard KDF=SHA-384 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0B 02 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("dhSinglePass_stdDH_sha384kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH standard KDF=SHA-512 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0B 03 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("dhSinglePass_stdDH_sha512kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH standard KDF=SHA-1 Wrap=AES-128
+            "30 18 06 09 2b 81 05 10 86 48 3f 00 02 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_stdDH_sha1kdf_scheme","aes128_wrap"),
+            #   KA=ECDH standard KDF=SHA-224 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0B 00 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_stdDH_sha224kdf_scheme","aes128_wrap"),
+            #   KA=ECDH standard KDF=SHA-256 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0B 01 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_stdDH_sha256kdf_scheme","aes128_wrap"),
+            #   KA=ECDH standard KDF=SHA-384 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0B 02 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_stdDH_sha384kdf_scheme","aes128_wrap"),
+            #   KA=ECDH standard KDF=SHA-512 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0B 03 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_stdDH_sha512kdf_scheme","aes128_wrap"),
+            #   KA=ECDH standard KDF=SHA-1 Wrap=AES-192
+            "30 18 06 09 2b 81 05 10 86 48 3f 00 02 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_stdDH_sha1kdf_scheme","aes192_wrap"),
+            #   KA=ECDH standard KDF=SHA-224 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0B 00 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_stdDH_sha224kdf_scheme","aes192_wrap"),
+            #   KA=ECDH standard KDF=SHA-256 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0B 01 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_stdDH_sha256kdf_scheme","aes192_wrap"),
+            #   KA=ECDH standard KDF=SHA-384 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0B 02 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_stdDH_sha384kdf_scheme","aes192_wrap"),
+            #   KA=ECDH standard KDF=SHA-512 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0B 03 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_stdDH_sha512kdf_scheme","aes192_wrap"),
+            #   KA=ECDH standard KDF=SHA-1 Wrap=AES-256
+            "30 18 06 09 2b 81 05 10 86 48 3f 00 02 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("dhSinglePass_stdDH_sha1kdf_scheme","aes256_wrap"),
+            #   KA=ECDH standard KDF=SHA-224 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0B 00 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("dhSinglePass_stdDH_sha224kdf_scheme","aes256_wrap"),
+            #   KA=ECDH standard KDF=SHA-256 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0B 01 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("dhSinglePass_stdDH_sha256kdf_scheme","aes256_wrap"),
+            #   KA=ECDH standard KDF=SHA-384 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0B 02 30 0b 06 09 60 86 48 01 65 03 04 01 2D 05 00":("dhSinglePass_stdDH_sha384kdf_scheme","aes256_wrap"),
+            #   KA=ECDH standard KDF=SHA-512 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0B 03 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("dhSinglePass_stdDH_sha512kdf_scheme","aes256_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-1 Wrap=Triple-DES
+            "30 1c 06 09 2b 81 05 10 86 48 3f 00 03 30 0f 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06 05 00":("dhSinglePass_cofactorDH_sha1kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-224 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0E 00 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("dhSinglePass_cofactorDH_sha224kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-256 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0E 01 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("dhSinglePass_cofactorDH_sha256kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-384 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0E 02 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("dhSinglePass_cofactorDH_sha384kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-512 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0E 03 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("dhSinglePass_cofactorDH_sha512kdf_scheme","tripledes_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-1 Wrap=AES-128
+            "30 18 06 09 2b 81 05 10 86 48 3f 00 03 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_cofactorDH_sha1kdf_scheme","aes128_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-224 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0E 00 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_cofactorDH_sha224kdf_scheme","aes128_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-256 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0E 01 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_cofactorDH_sha256kdf_scheme","aes128_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-384 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0E 02 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_cofactorDH_sha384kdf_scheme","aes128_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-512 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0E 03 30 0b 06 09 60 86 48 01 65 03 04 01 05":("dhSinglePass_cofactorDH_sha512kdf_scheme","aes128_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-1 Wrap=AES-192
+            "30 18 06 09 2b 81 05 10 86 48 3f 00 03 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_cofactorDH_sha1kdf_scheme","aes192_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-224 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0E 00 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_cofactorDH_sha224kdf_scheme","aes192_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-256 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0E 01 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_cofactorDH_sha256kdf_scheme","aes192_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-384 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0E 02 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_cofactorDH_sha384kdf_scheme","aes192_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-512 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0E 03 30 0b 06 09 60 86 48 01 65 03 04 01 19":("dhSinglePass_cofactorDH_sha512kdf_scheme","aes192_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-1 Wrap=AES-256 #RFC bug 30 15 replaced with 30 18 at start
+            "30 18 06 09 2b 81 05 10 86 48 3f 00 03 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("dhSinglePass_cofactorDH_sha1kdf_scheme","aes256_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-224 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0E 00 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("dhSinglePass_cofactorDH_sha224kdf_scheme","aes256_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-256 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0E 01 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("dhSinglePass_cofactorDH_sha256kdf_scheme","aes256_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-384 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0E 02 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("dhSinglePass_cofactorDH_sha384kdf_scheme","aes256_wrap"),
+            #   KA=ECDH cofactor KDF=SHA-512 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0E 03 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("dhSinglePass_cofactorDH_sha512kdf_scheme","aes256_wrap"),    
+            #   KA=ECMQV 1-Pass KDF=SHA-1 Wrap=Triple-DES
+            "30 1c 06 09 2b 81 05 10 86 48 3f 00 10 30 0f 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06 05 00":("mqvSinglePass_sha1kdf_scheme","tripledes_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-224 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0F 00 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("mqvSinglePass_sha224kdf_scheme","tripledes_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-256 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0F 01 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("mqvSinglePass_sha256kdf_scheme","tripledes_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-384 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0F 02 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("mqvSinglePass_sha384kdf_scheme","tripledes_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-512 Wrap=Triple-DES
+            "30 17 06 06 2b 81 04 01 0F 03 30 0d 06 0b 2a 86 48 86 f7 0d 01 09 10 03 06":("mqvSinglePass_sha512kdf_scheme","tripledes_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-1 Wrap=AES-128
+            "30 18 06 09 2b 81 05 10 86 48 3f 00 10 30 0b 06 09 60 86 48 01 65 03 04 01 05":("mqvSinglePass_sha1kdf_scheme","aes128_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-224 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0F 00 30 0b 06 09 60 86 48 01 65 03 04 01 05":("mqvSinglePass_sha224kdf_scheme","aes128_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-256 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0F 01 30 0b 06 09 60 86 48 01 65 03 04 01 05":("mqvSinglePass_sha256kdf_scheme","aes128_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-384 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0F 02 30 0b 06 09 60 86 48 01 65 03 04 01 05":("mqvSinglePass_sha384kdf_scheme","aes128_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-512 Wrap=AES-128
+            "30 15 06 06 2b 81 04 01 0F 03 30 0b 06 09 60 86 48 01 65 03 04 01 05":("mqvSinglePass_sha512kdf_scheme","aes128_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-1 Wrap=AES-192
+            "30 18 06 09 2b 81 05 10 86 48 3f 00 10 30 0b 06 09 60 86 48 01 65 03 04 01 19":("mqvSinglePass_sha1kdf_scheme","aes192_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-224 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0F 00 30 0b 06 09 60 86 48 01 65 03 04 01 19":("mqvSinglePass_sha224kdf_scheme","aes192_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-256 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0F 01 30 0b 06 09 60 86 48 01 65 03 04 01 19":("mqvSinglePass_sha256kdf_scheme","aes192_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-384 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0F 02 30 0b 06 09 60 86 48 01 65 03 04 01 19":("mqvSinglePass_sha384kdf_scheme","aes192_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-512 Wrap=AES-192
+            "30 15 06 06 2b 81 04 01 0F 03 30 0b 06 09 60 86 48 01 65 03 04 01 19":("mqvSinglePass_sha512kdf_scheme","aes192_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-1 Wrap=AES-256
+            "30 18 06 09 2b 81 05 10 86 48 3f 00 10 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("mqvSinglePass_sha1kdf_scheme","aes256_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-224 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0F 00 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("mqvSinglePass_sha224kdf_scheme","aes256_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-256 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0F 01 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("mqvSinglePass_sha256kdf_scheme","aes256_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-384 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0F 02 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("mqvSinglePass_sha384kdf_scheme","aes256_wrap"),
+            #   KA=ECMQV 1-Pass KDF=SHA-512 Wrap=AES-256
+            "30 15 06 06 2b 81 04 01 0F 03 30 0b 06 09 60 86 48 01 65 03 04 01 2D":("mqvSinglePass_sha512kdf_scheme","aes256_wrap"),
+        }
+
+        for hex_string,test_rezults in rfc_tests.items():
+            clean_hex_string = hex_string.replace(" ", "")
+            byte_object = bytes.fromhex(clean_hex_string)
+
+            ea = cms.KeyEncryptionAlgorithm.load(byte_object)        
+            self.assertEqual(ea["algorithm"].native,test_rezults[0])
+            self.assertEqual(ea["parameters"]["algorithm"].native,test_rezults[1])
+            self.assertEqual(ea["parameters"]["parameters"].native,None)
+            
+

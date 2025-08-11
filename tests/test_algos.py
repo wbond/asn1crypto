@@ -46,6 +46,16 @@ class AlgoTests(unittest.TestCase):
         self.assertEqual(scheme['parameters']['aes_icvlen'].__class__, core.Integer)
         self.assertEqual(scheme['parameters']['aes_icvlen'].native, 8)
 
+    def test_gcm_parameters(self):
+        with open(os.path.join(fixtures_dir, 'aesgcm_algo.der'), 'rb') as f:            
+            algo = algos.EncryptionAlgorithm().load(f.read())
+        ea_params = algo['parameters']
+        self.assertEqual(ea_params.__class__, algos.GcmParams)
+        self.assertEqual(ea_params['aes_nonce'].__class__, core.OctetString)
+        self.assertEqual(ea_params['aes_nonce'].native, b'z\xb7\xbd\xb7\xe1\xc6\xc0\x11\xc1?\xf00')
+        self.assertEqual(ea_params['aes_icvlen'].__class__, core.Integer)
+        self.assertEqual(ea_params['aes_icvlen'].native, 12)        
+        
     def test_scrypt_parameters(self):
         with open(os.path.join(fixtures_dir, 'scrypt_algo.der'), 'rb') as f:
             # PBES2 AlgorithmIdentifier
