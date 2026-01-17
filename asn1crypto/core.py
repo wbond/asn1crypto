@@ -4829,8 +4829,17 @@ class SetOf(SequenceOf):
         child_encodings = []
         for child in self:
             child_encodings.append(child.dump(force=force))
-
-        self._contents = b''.join(sorted(child_encodings))
+         # Check environment variable to preserve insertion order for compatibility
+        # with implementations that preserve order (e.g., BouncyCastle)
+        import os
+        preserve_order = os.environ.get('ASN1CRYPTO_PRESERVE_SETOF_ORDER', 'false').lower() == 'true'
+        
+        if preserve_order:
+            # Preserve insertion order (for compatibility with BouncyCastle)
+            self._contents = b''.join(child_encodings)
+        else:
+            # Standard DER encoding: sort by DER encoding (ASN.1 SET OF requirement)
+            self._contents = b''.join(sorted(child_encodings))
         self._header = None
         if self._trailer != b'':
             self._trailer = b''
