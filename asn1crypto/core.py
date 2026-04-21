@@ -3877,7 +3877,9 @@ class Sequence(Asn1Value):
 
         return new_value
 
-    def _parse_children(self, recurse=False):
+    _MAX_RECURSION_DEPTH = 500
+
+    def _parse_children(self, recurse=False, _depth=0):
         """
         Parses the contents and generates Asn1Value objects based on the
         definitions from _fields.
@@ -3886,9 +3888,18 @@ class Sequence(Asn1Value):
             If child objects that are Sequence or SequenceOf objects should
             be recursively parsed
 
+        :param _depth:
+            Internal recursion depth counter
+
         :raises:
             ValueError - when an error occurs parsing child objects
         """
+
+        if _depth > self._MAX_RECURSION_DEPTH:
+            raise ValueError('Maximum recursion depth (%d) exceeded while '
+                             'parsing %s - input may be malformed or contain '
+                             'excessively nested structures' %
+                             (self._MAX_RECURSION_DEPTH, type_name(self)))
 
         cls = self.__class__
         if self._contents is None:
@@ -3985,7 +3996,7 @@ class Sequence(Asn1Value):
                 if recurse:
                     child = _build(*child)
                     if isinstance(child, (Sequence, SequenceOf)):
-                        child._parse_children(recurse=True)
+                        child._parse_children(recurse=True, _depth=_depth+1)
 
                 self.children.append(child)
                 field += 1
@@ -4518,7 +4529,7 @@ class SequenceOf(Asn1Value):
                 if recurse:
                     child = _build(*child)
                     if isinstance(child, (Sequence, SequenceOf)):
-                        child._parse_children(recurse=True)
+                        child._parse_children(recurse=True, _depth=_depth+1)
                 self.children.append(child)
         except (ValueError, TypeError) as e:
             self.children = None
@@ -4722,7 +4733,7 @@ class Set(Sequence):
                 if recurse:
                     child = _build(*child)
                     if isinstance(child, (Sequence, SequenceOf)):
-                        child._parse_children(recurse=True)
+                        child._parse_children(recurse=True, _depth=_depth+1)
 
                 child_map[field] = child
                 seen_field += 1
