@@ -644,7 +644,7 @@ class Asn1Value(object):
         contents = self.contents
 
         # If the length is indefinite, force the re-encoding
-        if self._header is not None and self._header[-1:] == b'\x80':
+        if self._header is not None and len(self._header) >= 2 and self._header[1] == 0x80:
             force = True
 
         if self._header is None or force:
@@ -1350,7 +1350,7 @@ class Choice(Asn1Value):
         """
 
         # If the length is indefinite, force the re-encoding
-        if self._header is not None and self._header[-1:] == b'\x80':
+        if self._header is not None and len(self._header) >= 2 and self._header[1] == 0x80:
             force = True
 
         self._contents = self.chosen.dump(force=force)
@@ -1727,7 +1727,7 @@ class Primitive(Asn1Value):
         """
 
         # If the length is indefinite, force the re-encoding
-        if self._header is not None and self._header[-1:] == b'\x80':
+        if self._header is not None and len(self._header) >= 2 and self._header[1] == 0x80:
             force = True
 
         if force:
@@ -4136,7 +4136,7 @@ class Sequence(Asn1Value):
         """
 
         # If the length is indefinite, force the re-encoding
-        if self._header is not None and self._header[-1:] == b'\x80':
+        if self._header is not None and len(self._header) >= 2 and self._header[1] == 0x80:
             force = True
 
         # We can't force encoding if we don't have a spec
@@ -4608,7 +4608,7 @@ class SequenceOf(Asn1Value):
         """
 
         # If the length is indefinite, force the re-encoding
-        if self._header is not None and self._header[-1:] == b'\x80':
+        if self._header is not None and len(self._header) >= 2 and self._header[1] == 0x80:
             force = True
 
         if force:
