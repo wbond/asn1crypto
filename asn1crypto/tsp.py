@@ -156,7 +156,7 @@ class PKIStatusInfo(Sequence):
 class TimeStampResp(Sequence):
     _fields = [
         ('status', PKIStatusInfo),
-        ('time_stamp_token', ContentInfo),
+        ('time_stamp_token', ContentInfo, {'optional': True}),
     ]
 
 
