@@ -1188,6 +1188,9 @@ class AnotherName(Sequence):
         ('value', Any, {'explicit': 0}),
     ]
 
+    _oid_pair = ('type_id', 'value')
+    _oid_specs = {}
+
 
 class CountryName(Choice):
     class_ = 1
