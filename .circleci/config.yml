@@ -2,7 +2,7 @@ version: 2
 jobs:
   python2.7:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:current
     resource_class: arm.medium
     steps:
       - checkout
@@ -10,7 +10,7 @@ jobs:
       - run: python run.py ci-driver
   python3.9:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:current
     resource_class: arm.medium
     steps:
       - checkout
