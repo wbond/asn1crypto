@@ -1,7 +1,11 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
-import cgi
+try:
+    import cgi
+except ImportError:
+    cgi = None
+    from email.message import Message
 import codecs
 import coverage
 import json
@@ -620,7 +624,13 @@ def _do_request(method, url, headers, data=None, query_params=None, timeout=20):
         content_type = 'text/plain'
         encoding = 'utf-8'
     else:
-        content_type, params = cgi.parse_header(content_type_header)
+        if cgi:
+            content_type, params = cgi.parse_header(content_type_header)
+        else:
+            m = Message()
+            m['Content-Type'] = content_type_header
+            content_type = m.get_content_type()
+            params = dict(m.get_params())
         encoding = params.get('charset')
 
     return (content_type, encoding, body)
