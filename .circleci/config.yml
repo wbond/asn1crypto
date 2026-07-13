@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  python2.7:
+  python27:
     machine:
       image: ubuntu-2004:current
     resource_class: arm.medium
@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run: python run.py deps
       - run: python run.py ci-driver
-  python3.9:
+  python39:
     machine:
       image: ubuntu-2004:current
     resource_class: arm.medium
@@ -20,5 +20,5 @@ workflows:
   version: 2
   arm64:
     jobs:
-      - python2.7
-      - python3.9
+      - python27
+      - python39
