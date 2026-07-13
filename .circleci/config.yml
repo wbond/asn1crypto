@@ -1,14 +1,14 @@
 version: 2.1
 jobs:
   python27:
-    docker:
-      - image: cimg/python:2.7
+    machine:
+      image: ubuntu-2004:current
     resource_class: arm.medium
     steps:
       - checkout
       - run: sudo apt-get update && sudo apt-get install -y python-setuptools
-      - run: python run.py deps
-      - run: python run.py ci-driver
+      - run: python2 run.py deps
+      - run: python2 run.py ci-driver
   python39:
     docker:
       - image: cimg/python:3.9
