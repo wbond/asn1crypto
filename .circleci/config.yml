@@ -6,7 +6,6 @@ jobs:
     resource_class: arm.medium
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y python-setuptools
       - run: python2 run.py deps
       - run: python2 run.py ci-driver
   python39:
@@ -15,9 +14,8 @@ jobs:
     resource_class: arm.medium
     steps:
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y python3-setuptools
       - run: python run.py deps
-      - run: python3 run.py ci-driver
+      - run: python run.py ci-driver
 workflows:
   version: 2
   arm64:
