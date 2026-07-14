@@ -48,7 +48,7 @@ jobs:
 
       - name: Cache Python
         id: cache-python
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/AppData/Local/Python${{ matrix.python }}-${{ matrix.arch }}
           key: windows-2019-python-${{ matrix.python }}-${{ matrix.arch }}
