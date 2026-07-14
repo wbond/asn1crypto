@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 
-from . import build_root, package_name
+from . import build_root, package_name, other_packages
 
 
 run_args = [
@@ -88,6 +88,22 @@ def run(container=None):
 
     print('Running CI inside docker container: %s' % container)
     print('Mounting %s -> %s' % (build_root, mount_path))
+
+    docker_args = [
+        'docker', 'run', '--rm',
+        '-v', '%s:%s' % (build_root, mount_path),
+        '-w', workdir,
+    ]
+
+    # Mount any sibling modularcrypto packages that exist locally so that
+    # coverage data can be collected from their source checkouts
+    for other_package in other_packages:
+        pkg_dir = os.path.join(build_root, other_package)
+        if os.path.exists(pkg_dir):
+            container_path = os.path.join(mount_path, other_package)
+            print('Mounting %s -> %s' % (pkg_dir, container_path))
+            docker_args.extend(['-v', '%s:%s' % (pkg_dir, container_path)])
+
     print('Working directory: %s\n' % workdir)
     sys.stdout.flush()
 
@@ -120,18 +136,11 @@ def run(container=None):
     if os.path.exists(cidfile):
         os.remove(cidfile)
 
+    docker_args.extend(['--cidfile', cidfile, container, 'sh', '-c', command])
+
     proc = None
     try:
-        proc = subprocess.Popen(
-            [
-                'docker', 'run', '--rm',
-                '--cidfile', cidfile,
-                '-v', '%s:%s' % (build_root, mount_path),
-                '-w', workdir,
-                container,
-                'sh', '-c', command,
-            ]
-        )
+        proc = subprocess.Popen(docker_args)
         proc.communicate()
         return proc.returncode == 0
 
