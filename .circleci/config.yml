@@ -17,7 +17,6 @@ jobs:
       - run: python run.py deps
       - run: python run.py ci-driver
 workflows:
-  version: 2
   arm64:
     jobs:
       - python27
