@@ -157,7 +157,7 @@ if sys.version_info <= (3,):
                 A boolean
             """
 
-            if type(other) != timezone:
+            if type(other) is not timezone:
                 return False
             return self._offset == other._offset
 
