@@ -61,7 +61,7 @@ def _is_ubuntu():
         A bool - if the OS is Ubuntu
     """
 
-    if sys.platform != 'linux':
+    if not sys.platform.startswith('linux'):
         return False
     try:
         with open('/etc/os-release', 'r') as f:
