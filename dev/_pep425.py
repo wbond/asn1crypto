@@ -114,7 +114,7 @@ def _pep425_get_abi():
 
     impl = _pep425_implementation()
     suffix = ''
-    if impl == 'cp':
+    if impl == 'cp' and sys.version_info < (3, 8):
         suffix += 'm'
     if sys.maxunicode == 0x10ffff and sys.version_info < (3, 3):
         suffix += 'u'
