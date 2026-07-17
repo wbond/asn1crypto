@@ -114,9 +114,7 @@ def run(container=None):
     if _is_ubuntu_image(container):
         print('Installing Python 3 and setuptools for ubuntu image\n')
         sys.stdout.flush()
-        prep_commands.append(
-            'apt-get update && apt-get install -y python3 python3-setuptools curl ca-certificates git'
-        )
+        prep_commands.append('dev/ubuntu.sh py3')
 
     else:
         if _is_slim_image(container):

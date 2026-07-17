@@ -23,60 +23,6 @@ run_args = [
 ]
 
 
-# DigiCert Global Root CA.  This root has been removed from some newer Linux
-# distributions (e.g. Ubuntu 22.04) but is still needed by the test fixtures in
-# sibling modularcrypto repos.  It is installed into the system trust store so
-# that oscrypto's trust_list.get_list() can find it.
-_digicert_global_root_ca_pem = """\
------BEGIN CERTIFICATE-----
-MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
-MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
-d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
-QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
-MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
-b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
-9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
-CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
-nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
-43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
-T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
-gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
-BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
-TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
-DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
-hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
-06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
-PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
-YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
-CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
------END CERTIFICATE-----
-"""
-
-
-def _is_ubuntu():
-    """
-    Determines if the current operating system is Ubuntu
-
-    :return:
-        A bool - if the OS is Ubuntu
-    """
-
-    if not sys.platform.startswith('linux'):
-        return False
-    try:
-        with open('/etc/os-release', 'r') as f:
-            contents = f.read()
-    except (IOError, OSError):
-        return False
-    for line in contents.splitlines():
-        parts = line.split('=', 1)
-        if len(parts) == 2 and parts[0] in ('ID', 'ID_LIKE'):
-            values = parts[1].strip().strip('"').split()
-            if 'ubuntu' in values:
-                return True
-    return False
-
-
 def _write_env(env, key, value):
     sys.stdout.write("%s: %s\n" % (key, value))
     sys.stdout.flush()
@@ -96,26 +42,6 @@ def run(**_):
 
     env = os.environ.copy()
     options = set(sys.argv[2:])
-
-    # Some newer Ubuntu releases (e.g. 22.04) have removed the DigiCert
-    # Global Root CA that the test fixtures still rely on.  The PEM is
-    # written to the system CA directory and registered via
-    # update-ca-certificates so that oscrypto's trust_list.get_list() can
-    # find it.
-    if _is_ubuntu():
-        print('Installing DigiCert Global Root CA for Ubuntu\n')
-        sys.stdout.flush()
-        ca_dir = '/usr/local/share/ca-certificates'
-        ca_path = os.path.join(ca_dir, 'digicert-global-root-ca.crt')
-        try:
-            if not os.path.exists(ca_dir):
-                os.makedirs(ca_dir)
-            with open(ca_path, 'w') as f:
-                f.write(_digicert_global_root_ca_pem)
-        except (IOError, OSError) as e:
-            print('Unable to write CA file %s: %s' % (ca_path, e))
-        else:
-            subprocess.call(['update-ca-certificates'])
 
     newline = False
     if 'cffi' not in options:
