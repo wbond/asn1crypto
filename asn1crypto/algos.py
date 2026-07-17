@@ -717,10 +717,14 @@ class DSASignature(Sequence):
         s = int_from_bytes(data[len(data) // 2:])
         return cls({'r': r, 's': s})
 
-    def to_p1363(self):
+    def to_p1363(self, width=None):
         """
         Dumps a signature to a byte string compatible with Microsoft's
         BCryptVerifySignature() function.
+
+        :param width:
+            The width to use for each integer, in bytes. If not provided, the
+            width of the larger integer will be used.
 
         :return:
             A byte string compatible with BCryptVerifySignature()
@@ -729,9 +733,14 @@ class DSASignature(Sequence):
         r_bytes = int_to_bytes(self['r'].native)
         s_bytes = int_to_bytes(self['s'].native)
 
-        int_byte_length = max(len(r_bytes), len(s_bytes))
-        r_bytes = fill_width(r_bytes, int_byte_length)
-        s_bytes = fill_width(s_bytes, int_byte_length)
+        required_width = max(len(r_bytes), len(s_bytes))
+        if width is None:
+            width = required_width
+        elif width < required_width:
+            raise ValueError('width is too small for the signature')
+
+        r_bytes = fill_width(r_bytes, width)
+        s_bytes = fill_width(s_bytes, width)
 
         return r_bytes + s_bytes
 

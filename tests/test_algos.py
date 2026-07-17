@@ -27,6 +27,16 @@ fixtures_dir = os.path.join(tests_root, 'fixtures')
 @data_decorator
 class AlgoTests(unittest.TestCase):
 
+    def test_dsa_signature_to_p1363(self):
+        signature = algos.DSASignature({'r': 0x1234, 's': 0x5678})
+        self.assertEqual(b'\x12\x34\x56\x78', signature.to_p1363())
+        self.assertEqual(
+            b'\x00\x00\x12\x34\x00\x00\x56\x78',
+            signature.to_p1363(width=4)
+        )
+        with self.assertRaises(ValueError):
+            signature.to_p1363(width=1)
+
     def test_signed_digest_parameters(self):
         sha256_rsa = algos.SignedDigestAlgorithm({'algorithm': 'sha256_rsa'})
         self.assertEqual(core.Null, sha256_rsa['parameters'].__class__)
