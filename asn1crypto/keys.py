@@ -628,6 +628,18 @@ class DSAParams(Sequence):
         ('g', Integer),
     ]
 
+    @property
+    def q_byte_size(self):
+        """
+        :return:
+            The byte size of the subgroup order q, as an integer
+        """
+
+        contents = self['q'].contents
+        if contents[0:1] == b'\x00':
+            contents = contents[1:]
+        return len(contents)
+
 
 class Attribute(Sequence):
     """

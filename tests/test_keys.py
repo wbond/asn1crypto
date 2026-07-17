@@ -24,6 +24,14 @@ fixtures_dir = os.path.join(tests_root, 'fixtures')
 @data_decorator
 class KeysTests(unittest.TestCase):
 
+    def test_dsa_params_q_byte_size(self):
+        params = keys.DSAParams({'p': 1, 'q': 0x7f, 'g': 1})
+        self.assertEqual(1, params.q_byte_size)
+
+        params = keys.DSAParams({'p': 1, 'q': 0x80, 'g': 1})
+        self.assertEqual(b'\x00\x80', params['q'].contents)
+        self.assertEqual(1, params.q_byte_size)
+
     def test_parse_rsa_private_key(self):
         with open(os.path.join(fixtures_dir, 'keys/test-der.key'), 'rb') as f:
             key = keys.RSAPrivateKey.load(f.read())
