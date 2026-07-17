@@ -66,6 +66,20 @@ def _is_ubuntu_image(container):
     return bool(re.match(r'^ubuntu:', container))
 
 
+def _is_fedora_image(container):
+    """
+    Determines if a docker container is a fedora:* image
+
+    :param container:
+        A unicode string of the docker image name
+
+    :return:
+        A bool - if the image is a fedora variant
+    """
+
+    return bool(re.match(r'^fedora:', container))
+
+
 def run(container=None):
     """
     Runs CI inside of a docker container
@@ -107,7 +121,7 @@ def run(container=None):
     print('Working directory: %s\n' % workdir)
     sys.stdout.flush()
 
-    command = 'python3 run.py deps && python3 run.py ci-driver'
+    command = 'python run.py deps && python run.py ci-driver'
 
     prep_commands = []
 
@@ -116,16 +130,16 @@ def run(container=None):
         sys.stdout.flush()
         prep_commands.append('dev/ubuntu.sh py3')
 
+    elif _is_fedora_image(container):
+        print('Installing Python 3 and setuptools for fedora image\n')
+        sys.stdout.flush()
+        prep_commands.append('dnf install -y python3 python3-setuptools python-unversioned-command')
+
     else:
         if _is_slim_image(container):
             print('Installing tools for slim image\n')
             sys.stdout.flush()
             prep_commands.append('apt-get update && apt-get install -y curl ca-certificates git')
-
-        if _is_python_312_or_newer(container):
-            print('Installing setuptools for Python 3.12+\n')
-            sys.stdout.flush()
-            prep_commands.append('python3 -m pip install --root-user-action ignore setuptools')
 
     if prep_commands:
         command = ' && '.join(prep_commands) + ' && ' + command
