@@ -286,3 +286,11 @@ submitted to codecov.io.
 python run.py deps
 python run.py ci
 ```
+
+### CI via Docker
+
+You can run `ci-docker` to execute CI checks via a docker image:
+
+```bash
+python run.py ci-docker ubuntu:26.04
+```
