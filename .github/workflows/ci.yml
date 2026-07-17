@@ -9,17 +9,15 @@ jobs:
       fail-fast: false
       matrix:
         python:
+          - '3.14'
           - '3.11'
-          # - 'pypy-3.7-v7.3.5'
+          - '3.6'
         arch:
           - 'x86'
           - 'x64'
-        exclude:
-          - python: 'pypy-3.7-v7.3.5'
-            arch: x86
     steps:
-      - uses: actions/checkout@master
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
           architecture: ${{ matrix.arch }}
@@ -39,12 +37,11 @@ jobs:
         python:
           - '2.6'
           - '2.7'
-          - '3.3'
         arch:
           - 'x86'
           - 'x64'
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v6
 
       - name: Cache Python
         id: cache-python
@@ -64,19 +61,21 @@ jobs:
         run: python run.py ci-driver winlegacy
 
   build-mac:
-    name: Python ${{ matrix.python }} on macos-14
+    name: Python ${{ matrix.python }} on macos-14 arm64
     runs-on: macos-14
     strategy:
       fail-fast: false
       matrix:
         python:
+          - '3.14'
           - '3.11'
+          - '3.8'
     steps:
-      - uses: actions/checkout@master
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
-          architecture: x64
+          architecture: arm64
       - name: Install dependencies
         run: python run.py deps
       - name: Run test suite
@@ -88,12 +87,35 @@ jobs:
       - name: Run test suite (Mac OpenSSL/cffi)
         run: python run.py ci-driver cffi openssl
 
-  build-ubuntu-openssl3-py3:
-    name: Python 3 on (Docker) ubuntu-22.04 x64
-    runs-on: ubuntu-latest
-    container: ubuntu:22.04
+  build-ubuntu:
+    name: Python ${{ matrix.python }} on ubuntu-26.04 x64
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - '3.14'
+          - '3.11'
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: x64
+      - name: Prepare Ubuntu
+        run: dev/ubuntu.sh py3
+      - name: Install dependencies
+        run: python run.py deps
+      - name: Run test suite
+        run: python run.py ci-driver
+      - name: Run test suite (cffi)
+        run: python run.py ci-driver cffi
+
+  build-ubuntu-openssl3-py3:
+    name: Python 3 on ubuntu-22.04 x64
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
       - name: Install Python and OpenSSL
         run: dev/ubuntu.sh py3
       - name: Install dependencies
@@ -104,11 +126,10 @@ jobs:
         run: python run.py ci-driver cffi
 
   build-ubuntu-openssl3-py2:
-    name: Python 2 on (Docker) ubuntu-22.04 x64
-    runs-on: ubuntu-latest
-    container: ubuntu:22.04
+    name: Python 2 on ubuntu-22.04 x64
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v6
       - name: Install Python and OpenSSL
         run: dev/ubuntu.sh py2
       - name: Install dependencies
