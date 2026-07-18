@@ -171,6 +171,10 @@ def _unarmor(pem_bytes):
 
         if state == 'body':
             if line[0:5] in (b'-----', b'---- '):
+                # Python 2.6's binascii does not accept bytearray objects,
+                # so convert to a string before decoding on that version.
+                if sys.version_info < (2, 7):
+                    base64_data = str(base64_data)
                 der_bytes = base64.b64decode(base64_data)
 
                 yield (object_type, headers, der_bytes)
