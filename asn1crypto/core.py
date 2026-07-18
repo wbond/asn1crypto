@@ -3702,6 +3702,7 @@ class Sequence(Asn1Value):
                     continue
             contents.write(child_dump)
         self._contents = contents.getvalue()
+        self._mutated = False
 
         self._header = None
         if self._trailer != b'':
@@ -4486,6 +4487,7 @@ class SequenceOf(Asn1Value):
         for child in self:
             contents.write(child.dump(force=force))
         self._contents = contents.getvalue()
+        self._mutated = False
         self._header = None
         if self._trailer != b'':
             self._trailer = b''
@@ -4798,6 +4800,7 @@ class Set(Sequence):
         child_tag_encodings.sort(key=lambda ct: ct[0])
 
         self._contents = b''.join([ct[1] for ct in child_tag_encodings])
+        self._mutated = False
         self._header = None
         if self._trailer != b'':
             self._trailer = b''
@@ -4831,6 +4834,7 @@ class SetOf(SequenceOf):
             child_encodings.append(child.dump(force=force))
 
         self._contents = b''.join(sorted(child_encodings))
+        self._mutated = False
         self._header = None
         if self._trailer != b'':
             self._trailer = b''

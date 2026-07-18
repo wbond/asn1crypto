@@ -168,6 +168,25 @@ class SetOfTest(core.SetOf):
     _child_spec = core.Integer
 
 
+class RecursiveSequence(core.Sequence):
+    _set_contents_calls = 0
+
+    def _set_contents(self, force=False):
+        self.__class__._set_contents_calls += 1
+        super(RecursiveSequence, self)._set_contents(force=force)
+
+
+RecursiveSequence._fields = [
+    ('child', RecursiveSequence, {'optional': True}),
+]
+
+
+class SequenceWithDefault(core.Sequence):
+    _fields = [
+        ('value', core.Integer, {'default': 1}),
+    ]
+
+
 class ConcatTest(core.Concat):
     _child_specs = [Seq, core.Integer]
 
@@ -994,6 +1013,77 @@ class CoreTests(unittest.TestCase):
     def test_dump_set_of(self):
         st = SetOfTest([3, 2, 1])
         self.assertEqual(b'1\x09\x02\x01\x01\x02\x01\x02\x02\x01\x03', st.dump())
+
+    def test_dump_clears_mutation_state(self):
+        values_and_mutations = (
+            (Seq({'id': '1.2.3', 'value': 1}), lambda value: value.__setitem__('value', 2)),
+            (SequenceOfInts([2, 1]), lambda value: value.append(3)),
+            (SetTest({'two': 2, 'one': 1}), lambda value: value.__setitem__('one', 3)),
+            (SetOfTest([2, 1]), lambda value: value.append(3)),
+        )
+
+        for value, mutate in values_and_mutations:
+            value.dump()
+            mutate(value)
+            self.assertTrue(value._mutated)
+            value.dump()
+            self.assertFalse(value._mutated)
+
+    def test_dump_does_not_reencode_unchanged_nested_sequences(self):
+        value = RecursiveSequence.load(b'\x30\x00')
+        for _ in range(12):
+            value = RecursiveSequence({'child': value})
+
+        RecursiveSequence._set_contents_calls = 0
+        first_dump = value.dump()
+        self.assertEqual(1, RecursiveSequence._set_contents_calls)
+
+        self.assertEqual(first_dump, value.dump())
+        self.assertEqual(1, RecursiveSequence._set_contents_calls)
+
+    def test_nested_mutation_is_detected_after_dump(self):
+        inner = RecursiveSequence.load(b'\x30\x00')
+        outer = RecursiveSequence({'child': inner})
+        original_dump = outer.dump()
+
+        inner['child'] = RecursiveSequence.load(b'\x30\x00')
+        mutated_dump = outer.dump()
+
+        self.assertNotEqual(original_dump, mutated_dump)
+        self.assertEqual(b'0\x040\x020\x00', mutated_dump)
+        self.assertFalse(inner._mutated)
+        self.assertFalse(outer._mutated)
+
+    def test_mutation_after_dump_preserves_set_ordering(self):
+        value = SetTest({'two': 2, 'one': 1})
+        value.dump()
+        value['one'] = 3
+        self.assertEqual(b'1\x06\x81\x01\x03\x82\x01\x02', value.dump())
+        self.assertFalse(value._mutated)
+
+        value = SetOfTest([3, 2])
+        value.dump()
+        value.append(1)
+        self.assertEqual(b'1\x09\x02\x01\x01\x02\x01\x02\x02\x01\x03', value.dump())
+        self.assertFalse(value._mutated)
+
+    def test_force_dump_clears_mutation_state(self):
+        value = SequenceOfInts([1, 2])
+        self.assertEqual(b'0\x06\x02\x01\x01\x02\x01\x02', value.dump(force=True))
+        self.assertFalse(value._mutated)
+
+        value[1] = 3
+        self.assertEqual(b'0\x06\x02\x01\x01\x02\x01\x03', value.dump(force=True))
+        self.assertFalse(value._mutated)
+
+    def test_default_field_mutation_after_dump(self):
+        value = SequenceWithDefault.load(b'0\x00')
+        self.assertEqual(b'0\x00', value.dump())
+        self.assertFalse(value._mutated)
+
+        value['value'] = 2
+        self.assertEqual(b'0\x03\x02\x01\x02', value.dump())
+        self.assertFalse(value._mutated)
 
     def test_indefinite_length_octet_string(self):
         data = b'$\x80\x04\x02\x01\x01\x04\x01\x01\x00\x00'
