@@ -138,7 +138,7 @@ def _unarmor(pem_bytes):
     # Valid states include: "trash", "headers", "body"
     state = 'trash'
     headers = {}
-    base64_data = b''
+    base64_data = bytearray()
     object_type = None
 
     found_start = False
@@ -177,7 +177,7 @@ def _unarmor(pem_bytes):
 
                 state = 'trash'
                 headers = {}
-                base64_data = b''
+                base64_data = bytearray()
                 object_type = None
                 found_end = True
                 continue
