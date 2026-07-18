@@ -459,7 +459,8 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
         """
         :return:
             A unicode string of "md2", "md5", "sha1", "sha224", "sha256",
-            "sha384", "sha512", "sha512_224", "sha512_256" or "shake256"
+            "sha384", "sha512", "sha512_224", "sha512_256", "sha3_224",
+            "sha3_256", "sha3_384", "sha3_512" or "shake256"
         """
 
         algorithm = self['algorithm'].native
@@ -492,7 +493,8 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
 
         :return:
             A unicode string of "md2", "md5", "sha1", "sha224", "sha256",
-            "sha384", "sha512", "sha512_224", "sha512_256" or "shake256"
+            "sha384", "sha512", "sha512_224", "sha512_256", "sha3_224",
+            "sha3_256", "sha3_384", "sha3_512" or "shake256"
         """
 
         algorithm = self['algorithm'].native
@@ -886,7 +888,8 @@ class EncryptionAlgorithm(_ForceNullParameters, Sequence):
 
         :return:
             A unicode string of one of the following: "md2", "md5", "sha1",
-            "sha224", "sha256", "sha384", "sha512"
+            "sha224", "sha256", "sha384", "sha512", "sha3_224", "sha3_256",
+            "sha3_384" or "sha3_512"
         """
 
         encryption_algo = self['algorithm'].native
