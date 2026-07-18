@@ -1045,6 +1045,9 @@ class PublicKeyAlgorithmId(ObjectIdentifier):
         '1.3.101.111': 'x448',
         '1.3.101.112': 'ed25519',
         '1.3.101.113': 'ed448',
+        '1.2.643.2.2.19': 'gost2001',
+        '1.2.643.7.1.1.1.1': 'gost2012_256',
+        '1.2.643.7.1.1.1.2': 'gost2012_512',
     }
 
 
@@ -1097,6 +1100,9 @@ class PublicKeyInfo(Sequence):
             'x448': (OctetBitString, None),
             'ed25519': (OctetBitString, None),
             'ed448': (OctetBitString, None),
+            'gost2001': (OctetBitString, None),
+            'gost2012_256': (OctetBitString, None),
+            'gost2012_512': (OctetBitString, None),
         }[algorithm]
 
     _spec_callbacks = {

@@ -543,6 +543,12 @@ class NameType(ObjectIdentifier):
         '0.9.2342.19200300.100.1.25': 'domain_component',
         # http://www.alvestrand.no/objectid/0.2.262.1.10.7.20.html
         '0.2.262.1.10.7.20': 'name_distinguisher',
+        # GOST
+        '1.2.643.100.1': 'ogrn',
+        '1.2.643.100.3': 'snils',
+        '1.2.643.100.4': 'innle',
+        '1.2.643.100.5': 'ogrnip',
+        '1.2.643.3.131.1.1': 'inn',
     }
 
     # This order is largely based on observed order seen in EV certs from
@@ -582,6 +588,11 @@ class NameType(ObjectIdentifier):
         'platform_manufacturer',
         'platform_model',
         'platform_version',
+        'ogrn',
+        'ogrnip',
+        'inn',
+        'innle',
+        'snils',
     ]
 
     @classmethod
@@ -646,6 +657,12 @@ class NameType(ObjectIdentifier):
             'platform_model': 'Platform Model',
             'platform_version': 'Platform Version',
             'user_id': 'User ID',
+            # GOST
+            'ogrn': 'ОГРН',
+            'ogrnip': 'ОГРНИП',
+            'inn': 'ИНН',
+            'innle': 'ИНН ЮЛ',
+            'snils': 'СНИЛС',
         }.get(self.native, self.native)
 
 
@@ -693,6 +710,12 @@ class NameTypeAndValue(Sequence):
         'platform_model': UTF8String,
         'platform_version': UTF8String,
         'user_id': DirectoryString,
+        # GOST
+        'ogrn': NumericString,
+        'ogrnip': NumericString,
+        'inn': NumericString,
+        'innle': NumericString,
+        'snils': NumericString,
     }
 
     _prepped = None

@@ -285,6 +285,10 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         '0.4.0.127.0.7.1.1.4.1.9': 'sha3_256_ecdsa_plain',
         '0.4.0.127.0.7.1.1.4.1.10': 'sha3_384_ecdsa_plain',
         '0.4.0.127.0.7.1.1.4.1.11': 'sha3_512_ecdsa_plain',
+        # GOST
+        '1.2.643.2.2.3': 'gost2001',
+        '1.2.643.7.1.1.3.2': 'gost2012_256',
+        '1.2.643.7.1.1.3.3': 'gost2012_512',
     }
 
     _reverse_map = {
@@ -333,6 +337,10 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         'sha3_256_ecdsa_plain': '0.4.0.127.0.7.1.1.4.1.9',
         'sha3_384_ecdsa_plain': '0.4.0.127.0.7.1.1.4.1.10',
         'sha3_512_ecdsa_plain': '0.4.0.127.0.7.1.1.4.1.11',
+        # GOST
+        'gost2001': '1.2.643.2.2.3',
+        'gost2012_256': '1.2.643.7.1.1.3.2',
+        'gost2012_512': '1.2.643.7.1.1.3.3',
     }
 
 
@@ -386,6 +394,10 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
         'sha3_256_rsa': 'sha3_256',
         'sha3_384_rsa': 'sha3_384',
         'sha3_512_rsa': 'sha3_512',
+        # GOST
+        'gost2001': 'ГОСТ Р 34.11-94 256 бит',
+        'gost2012_256': 'ГОСТ Р 34.11-2012 256 бит',
+        'gost2012_512': 'ГОСТ Р 34.11-2012 512 бит',
     }
 
     @property
@@ -443,6 +455,10 @@ class SignedDigestAlgorithm(_ForceNullParameters, Sequence):
             'ecdsa': 'ecdsa',
             'ed25519': 'ed25519',
             'ed448': 'ed448',
+            # GOST
+            'gost2001': 'ГОСТ Р 34.11-94/34.10-2001 256 бит',
+            'gost2012_256': 'ГОСТ Р 34.11-2012/34.10-2012 256 бит',
+            'gost2012_512': 'ГОСТ Р 34.11-2012/34.10-2012 512 бит',
         }
         if algorithm in algo_map:
             return algo_map[algorithm]
