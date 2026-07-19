@@ -628,13 +628,14 @@ class OCSPResponse(Sequence):
 
         self._critical_extensions = set()
 
-        for extension in self['response_bytes']['response'].parsed['tbs_response_data']['response_extensions']:
-            name = extension['extn_id'].native
-            attribute_name = '_%s_value' % name
-            if hasattr(self, attribute_name):
-                setattr(self, attribute_name, extension['extn_value'].parsed)
-            if extension['critical'].native:
-                self._critical_extensions.add(name)
+        if self['response_bytes']:
+            for extension in self['response_bytes']['response'].parsed['tbs_response_data']['response_extensions']:
+                name = extension['extn_id'].native
+                attribute_name = '_%s_value' % name
+                if hasattr(self, attribute_name):
+                    setattr(self, attribute_name, extension['extn_value'].parsed)
+                if extension['critical'].native:
+                    self._critical_extensions.add(name)
 
         self._processed_extensions = True
 
@@ -689,7 +690,7 @@ class OCSPResponse(Sequence):
             None or an asn1crypto.ocsp.BasicOCSPResponse object
         """
 
-        return self['response_bytes']['response'].parsed
+        return self['response_bytes']['response'].parsed if self['response_bytes'] else None
 
     @property
     def response_data(self):
@@ -700,4 +701,4 @@ class OCSPResponse(Sequence):
             None or an asn1crypto.ocsp.ResponseData object
         """
 
-        return self['response_bytes']['response'].parsed['tbs_response_data']
+        return self['response_bytes']['response'].parsed['tbs_response_data'] if self['response_bytes'] else None
