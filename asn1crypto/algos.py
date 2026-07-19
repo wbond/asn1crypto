@@ -596,6 +596,22 @@ class KeyExchangeAlgorithm(Sequence):
     }
 
 
+class KeyWrapAlgorithmId(ObjectIdentifier):
+    _map = {
+        '2.16.840.1.101.3.4.1.5': 'aes128_wrap',        
+        '2.16.840.1.101.3.4.1.25': 'aes192_wrap',        
+        '2.16.840.1.101.3.4.1.45': 'aes256_wrap',
+        '1.2.840.113549.1.9.16.3.6':'tripledes_wrap'
+    }
+
+
+class KeyWrapAlgorithm(Sequence):
+    _fields = [
+        ('algorithm', KeyWrapAlgorithmId),
+        ('parameters', Any, {'optional': True}),
+    ]
+
+
 class Rc2Params(Sequence):
     _fields = [
         ('rc2_parameter_version', Integer, {'optional': True}),
@@ -628,6 +644,15 @@ class Pbes1Params(Sequence):
 class CcmParams(Sequence):
     # https://tools.ietf.org/html/rfc5084
     # aes_ICVlen: 4 | 6 | 8 | 10 | 12 | 14 | 16
+    _fields = [
+        ('aes_nonce', OctetString),
+        ('aes_icvlen', Integer),
+    ]
+
+
+class GcmParams(Sequence):
+    # https://tools.ietf.org/html/rfc5084
+    # aes_ICVlen: 12 | 13 | 14 | 15 | 16
     _fields = [
         ('aes_nonce', OctetString),
         ('aes_icvlen', Integer),
@@ -822,6 +847,9 @@ class EncryptionAlgorithm(_ForceNullParameters, Sequence):
         'aes128_ccm': CcmParams,
         'aes192_ccm': CcmParams,
         'aes256_ccm': CcmParams,
+        'aes128_gcm': GcmParams,
+        'aes192_gcm': GcmParams,
+        'aes256_gcm': GcmParams,
         # From PKCS#5
         'pbes1_md2_des': Pbes1Params,
         'pbes1_md5_des': Pbes1Params,
