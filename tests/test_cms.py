@@ -363,6 +363,21 @@ class CMSTests(unittest.TestCase):
             enveloped_data['unprotected_attrs'].native
         )
 
+    def test_parse_ip_as_extension(self):
+        with open(os.path.join(fixtures_dir, 'cms-as-ip-ext.der'), 'rb') as f:
+            info = cms.ContentInfo.load(f.read())
+        extensions = info.native["content"]["certificates"][0]["tbs_certificate"]["extensions"]
+        aut_id = False
+        ip_add_blocks = False
+        for ext in extensions:
+            if ext["extn_id"] == "autonomousSysIds":
+                aut_id = True
+            elif ext["extn_id"] == "ipAddrBlocks":
+                ip_add_blocks = True
+
+        self.assertTrue(aut_id, "autonomousSysIds extension was not parsed correctly")
+        self.assertTrue(ip_add_blocks, "IPAddrBlocks extension was not parsed correctly")
+
     def test_parse_content_info_cms_signed_data(self):
         with open(os.path.join(fixtures_dir, 'cms-signed.der'), 'rb') as f:
             info = cms.ContentInfo.load(f.read())
