@@ -109,6 +109,11 @@ def armor(type_name, der_bytes, headers=None):
     return output.getvalue()
 
 
+# RFC 7468#page-5
+LABEL_CHARS = '[!-,.-~]'  # 0x21-0x2C, 0x2E-0x7E
+LABEL_PAT = re.compile(f'^(?:---- |-----)BEGIN ({LABEL_CHARS}([- ]?{LABEL_CHARS})*)?(?: ----|-----)'.encode('ascii'))
+
+
 def _unarmor(pem_bytes):
     """
     Convert a PEM-encoded byte string into one or more DER-encoded byte strings
@@ -150,8 +155,9 @@ def _unarmor(pem_bytes):
 
         if state == "trash":
             # Look for a starting line since some CA cert bundle show the cert
-            # into in a parsed format above each PEM block
-            type_name_match = re.match(b'^(?:---- |-----)BEGIN ([A-Z0-9 ]+)(?: ----|-----)', line)
+            # info in a parsed format above each PEM block
+
+            type_name_match = LABEL_PAT.match(line)
             if not type_name_match:
                 continue
             object_type = type_name_match.group(1).decode('ascii')
