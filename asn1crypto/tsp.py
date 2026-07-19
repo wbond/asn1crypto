@@ -208,8 +208,12 @@ class ArchiveTimeStamp(Sequence):
     ]
 
 
-class ArchiveTimeStampSequence(SequenceOf):
+class ArchiveTimeStampChain(SequenceOf):
     _child_spec = ArchiveTimeStamp
+
+
+class ArchiveTimeStampSequence(SequenceOf):
+    _child_spec = ArchiveTimeStampChain
 
 
 class EvidenceRecord(Sequence):
