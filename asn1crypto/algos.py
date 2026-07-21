@@ -285,6 +285,10 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         '0.4.0.127.0.7.1.1.4.1.9': 'sha3_256_ecdsa_plain',
         '0.4.0.127.0.7.1.1.4.1.10': 'sha3_384_ecdsa_plain',
         '0.4.0.127.0.7.1.1.4.1.11': 'sha3_512_ecdsa_plain',
+        # https://tools.ietf.org/html/rfc9881
+        '2.16.840.1.101.3.4.3.17': 'mldsa44',
+        '2.16.840.1.101.3.4.3.18': 'mldsa65',
+        '2.16.840.1.101.3.4.3.19': 'mldsa87',
     }
 
     _reverse_map = {
@@ -333,6 +337,10 @@ class SignedDigestAlgorithmId(ObjectIdentifier):
         'sha3_256_ecdsa_plain': '0.4.0.127.0.7.1.1.4.1.9',
         'sha3_384_ecdsa_plain': '0.4.0.127.0.7.1.1.4.1.10',
         'sha3_512_ecdsa_plain': '0.4.0.127.0.7.1.1.4.1.11',
+        # https://tools.ietf.org/html/rfc9881
+        'mldsa44': '2.16.840.1.101.3.4.3.17',
+        'mldsa65': '2.16.840.1.101.3.4.3.18',
+        'mldsa87': '2.16.840.1.101.3.4.3.19',
     }
 
 

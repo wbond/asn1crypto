@@ -660,6 +660,29 @@ class Attributes(SetOf):
     _child_spec = Attribute
 
 
+class MLDSAPrivateKeyBoth(Sequence):
+    """
+    ML-DSA private key encoded with both seed and expanded form.
+    """
+
+    _fields = [
+        ('seed', OctetString),
+        ('expandedKey', OctetString),
+    ]
+
+
+class MLDSAPrivateKey(Choice):
+    """
+    ML-DSA private key encoding alternatives as defined in RFC 9881.
+    """
+
+    _alternatives = [
+        ('seed', OctetString, {'implicit': 0}),
+        ('expandedKey', OctetString),
+        ('both', MLDSAPrivateKeyBoth),
+    ]
+
+
 class PrivateKeyAlgorithmId(ObjectIdentifier):
     """
     These OIDs for various public keys are reused when storing private keys
@@ -683,6 +706,10 @@ class PrivateKeyAlgorithmId(ObjectIdentifier):
         '1.3.101.111': 'x448',
         '1.3.101.112': 'ed25519',
         '1.3.101.113': 'ed448',
+        # https://tools.ietf.org/html/rfc9881
+        '2.16.840.1.101.3.4.3.17': 'mldsa44',
+        '2.16.840.1.101.3.4.3.18': 'mldsa65',
+        '2.16.840.1.101.3.4.3.19': 'mldsa87',
     }
 
 
@@ -730,6 +757,9 @@ class PrivateKeyInfo(Sequence):
             'x448': OctetString,
             'ed25519': OctetString,
             'ed448': OctetString,
+            'mldsa44': MLDSAPrivateKey,
+            'mldsa65': MLDSAPrivateKey,
+            'mldsa87': MLDSAPrivateKey,
         }[algorithm]
 
     _spec_callbacks = {
@@ -1045,6 +1075,10 @@ class PublicKeyAlgorithmId(ObjectIdentifier):
         '1.3.101.111': 'x448',
         '1.3.101.112': 'ed25519',
         '1.3.101.113': 'ed448',
+        # https://tools.ietf.org/html/rfc9881
+        '2.16.840.1.101.3.4.3.17': 'mldsa44',
+        '2.16.840.1.101.3.4.3.18': 'mldsa65',
+        '2.16.840.1.101.3.4.3.19': 'mldsa87',
     }
 
 
@@ -1097,6 +1131,9 @@ class PublicKeyInfo(Sequence):
             'x448': (OctetBitString, None),
             'ed25519': (OctetBitString, None),
             'ed448': (OctetBitString, None),
+            'mldsa44': (OctetBitString, None),
+            'mldsa65': (OctetBitString, None),
+            'mldsa87': (OctetBitString, None),
         }[algorithm]
 
     _spec_callbacks = {
