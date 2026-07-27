@@ -3,6 +3,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 
 import os
 import platform
+import socket
 import sys
 import unittest
 from datetime import date, datetime, time, timedelta
@@ -360,3 +361,22 @@ class UtilTests(unittest.TestCase):
                 'O=D-Trust GmbH,C=DE?certificaterevocationlist'
             )
         )
+
+    def test_inet_pton_ipv6_double_colon(self):
+        # The pure-Python inet_pton shim (used on Windows) must accept a "::"
+        # at the start or end of an address, matching socket.inet_pton.
+        from asn1crypto._inet import inet_pton
+
+        cases = {
+            '::1': b'\x00' * 15 + b'\x01',
+            '::': b'\x00' * 16,
+            'fe80::': b'\xfe\x80' + b'\x00' * 14,
+            '2001:db8::': b'\x20\x01\x0d\xb8' + b'\x00' * 12,
+            '1::1': b'\x00\x01' + b'\x00' * 12 + b'\x00\x01',
+        }
+        for ip_string, expected in cases.items():
+            self.assertEqual(
+                expected,
+                inet_pton(socket.AF_INET6, ip_string),
+                ip_string,
+            )
