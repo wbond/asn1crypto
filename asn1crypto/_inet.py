@@ -146,8 +146,8 @@ def inet_pton(address_family, ip_string):
         error = len(octets) != 8
     else:
         begin, end = ip_string.split('::')
-        begin_octets = begin.split(':')
-        end_octets = end.split(':')
+        begin_octets = begin.split(':') if begin else []
+        end_octets = end.split(':') if end else []
         missing = 8 - len(begin_octets) - len(end_octets)
         octets = begin_octets + (['0'] * missing) + end_octets
 
