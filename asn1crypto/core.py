@@ -2019,6 +2019,11 @@ class _IntegerBitString(object):
             # return an empty chunk, for cases like \x23\x80\x00\x00
             return []
 
+        if not self.contents:
+            # X.690 §8.6.2.3 requires at least the initial octet recording the
+            # number of unused bits
+            raise ValueError('Insufficient data - 0 bytes received when at least 1 was expected')
+
         unused_bits_len = ord(self.contents[0]) if _PY2 else self.contents[0]
         value = int_from_bytes(self.contents[1:])
         bits = (len(self.contents) - 1) * 8
@@ -2449,6 +2454,11 @@ class OctetBitString(Constructable, Castable, Primitive):
         :return:
             List with one tuple, consisting of a byte string and an integer (unused bits)
         """
+
+        if not self.contents:
+            # X.690 §8.6.2.3 requires at least the initial octet recording the
+            # number of unused bits
+            raise ValueError('Insufficient data - 0 bytes received when at least 1 was expected')
 
         unused_bits_len = ord(self.contents[0]) if _PY2 else self.contents[0]
         if not unused_bits_len:
@@ -2948,6 +2958,11 @@ class ParsableOctetBitString(ParsableOctetString):
         :return:
             A byte string
         """
+
+        if not self.contents:
+            # X.690 §8.6.2.3 requires at least the initial octet recording the
+            # number of unused bits
+            raise ValueError('Insufficient data - 0 bytes received when at least 1 was expected')
 
         unused_bits_len = ord(self.contents[0]) if _PY2 else self.contents[0]
         if unused_bits_len:

@@ -538,6 +538,8 @@ class CoreTests(unittest.TestCase):
     @staticmethod
     def bit_string_error_values():
         return (
+            # zero-length contents is missing the mandatory unused-bits octet
+            (b'\x03\x00',),
             # unused bits in empty bit string
             (b'\x03\x01\x05',),
             # too many unused bits
@@ -550,6 +552,14 @@ class CoreTests(unittest.TestCase):
     def bit_string_errors(self, enc_bytes):
         with self.assertRaises(ValueError):
             core.BitString.load(enc_bytes).native
+
+    def test_bit_string_empty_contents(self):
+        # A BIT STRING with no content octets is malformed - X.690 §8.6.2.3
+        # requires at least the initial octet giving the number of unused bits.
+        # Reading .native used to raise IndexError instead of ValueError.
+        for cls in (core.BitString, core.OctetBitString, core.ParsableOctetBitString):
+            with self.assertRaises(ValueError):
+                cls.load(b'\x03\x00').native
 
     def test_cast(self):
         a = core.OctetBitString(b'\x00\x01\x02\x03')

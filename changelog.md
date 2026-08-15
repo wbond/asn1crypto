@@ -1,5 +1,12 @@
 # changelog
 
+## unreleased
+
+ - Fixed `core.BitString`, `core.OctetBitString` and
+   `core.ParsableOctetBitString` to raise a `ValueError` instead of an
+   `IndexError` when parsing an encoding whose contents are empty (missing the
+   mandatory initial octet that records the number of unused bits)
+
 ## 1.5.1
 
  - Handle RSASSA-PSS in `keys.PrivateKeyInfo.bit_size` and
