@@ -213,6 +213,14 @@ class Asn1Value(object):
     # some classes since they utilize _bytes or _unicode
     _native = None
 
+    # The maximum depth of nested Sequence/SequenceOf/Set values to allow when
+    # recursively parsing children. Real-world ASN.1 structures rarely nest
+    # more than ~20 levels deep; this limit prevents unbounded recursion (and
+    # the resulting RecursionError) when calling .native on maliciously deep
+    # data, and is low enough to trigger before CPython's default recursion
+    # limit is reached.
+    _max_recursion_depth = 100
+
     @classmethod
     def load(cls, encoded_data, strict=False, **kwargs):
         """
@@ -3878,7 +3886,7 @@ class Sequence(Asn1Value):
 
         return new_value
 
-    def _parse_children(self, recurse=False):
+    def _parse_children(self, recurse=False, _depth=0):
         """
         Parses the contents and generates Asn1Value objects based on the
         definitions from _fields.
@@ -3887,9 +3895,23 @@ class Sequence(Asn1Value):
             If child objects that are Sequence or SequenceOf objects should
             be recursively parsed
 
+        :param _depth:
+            The current nesting depth of the recursion, used to guard against
+            unbounded recursion on maliciously nested data
+
         :raises:
             ValueError - when an error occurs parsing child objects
         """
+
+        if _depth > self._max_recursion_depth:
+            raise ValueError(unwrap(
+                '''
+                Maximum recursion depth of %s exceeded while parsing %s - the
+                input may be malformed or contain excessively nested data
+                ''',
+                self._max_recursion_depth,
+                type_name(self)
+            ))
 
         cls = self.__class__
         if self._contents is None:
@@ -3986,7 +4008,7 @@ class Sequence(Asn1Value):
                 if recurse:
                     child = _build(*child)
                     if isinstance(child, (Sequence, SequenceOf)):
-                        child._parse_children(recurse=True)
+                        child._parse_children(recurse=True, _depth=_depth + 1)
 
                 self.children.append(child)
                 field += 1
@@ -4492,7 +4514,7 @@ class SequenceOf(Asn1Value):
         if self._trailer != b'':
             self._trailer = b''
 
-    def _parse_children(self, recurse=False):
+    def _parse_children(self, recurse=False, _depth=0):
         """
         Parses the contents and generates Asn1Value objects based on the
         definitions from _child_spec.
@@ -4501,9 +4523,23 @@ class SequenceOf(Asn1Value):
             If child objects that are Sequence or SequenceOf objects should
             be recursively parsed
 
+        :param _depth:
+            The current nesting depth of the recursion, used to guard against
+            unbounded recursion on maliciously nested data
+
         :raises:
             ValueError - when an error occurs parsing child objects
         """
+
+        if _depth > self._max_recursion_depth:
+            raise ValueError(unwrap(
+                '''
+                Maximum recursion depth of %s exceeded while parsing %s - the
+                input may be malformed or contain excessively nested data
+                ''',
+                self._max_recursion_depth,
+                type_name(self)
+            ))
 
         try:
             self.children = []
@@ -4520,7 +4556,7 @@ class SequenceOf(Asn1Value):
                 if recurse:
                     child = _build(*child)
                     if isinstance(child, (Sequence, SequenceOf)):
-                        child._parse_children(recurse=True)
+                        child._parse_children(recurse=True, _depth=_depth + 1)
                 self.children.append(child)
         except (ValueError, TypeError) as e:
             self.children = None
@@ -4660,7 +4696,7 @@ class Set(Sequence):
             else:
                 cls._precomputed_specs.append((field[0], field[1], field[1], field[2], None))
 
-    def _parse_children(self, recurse=False):
+    def _parse_children(self, recurse=False, _depth=0):
         """
         Parses the contents and generates Asn1Value objects based on the
         definitions from _fields.
@@ -4669,9 +4705,23 @@ class Set(Sequence):
             If child objects that are Sequence or SequenceOf objects should
             be recursively parsed
 
+        :param _depth:
+            The current nesting depth of the recursion, used to guard against
+            unbounded recursion on maliciously nested data
+
         :raises:
             ValueError - when an error occurs parsing child objects
         """
+
+        if _depth > self._max_recursion_depth:
+            raise ValueError(unwrap(
+                '''
+                Maximum recursion depth of %s exceeded while parsing %s - the
+                input may be malformed or contain excessively nested data
+                ''',
+                self._max_recursion_depth,
+                type_name(self)
+            ))
 
         cls = self.__class__
         if self._contents is None:
@@ -4724,7 +4774,7 @@ class Set(Sequence):
                 if recurse:
                     child = _build(*child)
                     if isinstance(child, (Sequence, SequenceOf)):
-                        child._parse_children(recurse=True)
+                        child._parse_children(recurse=True, _depth=_depth + 1)
 
                 child_map[field] = child
                 seen_field += 1
