@@ -7,6 +7,7 @@ import os
 from datetime import datetime, timedelta
 
 from asn1crypto import core, util
+from asn1crypto.parser import emit
 
 from .unittest_data import data_decorator, data
 from ._unittest_compat import patch
@@ -1474,3 +1475,40 @@ class CoreTests(unittest.TestCase):
         self.assertIn(b"unpickle_helper", pickled_bytes)
         unpickled = pickle.loads(pickled_bytes)
         self.assertEqual(orig.native, unpickled.native)
+
+
+class DeepNestingTests(unittest.TestCase):
+    """
+    Ensures that calling .native on deeply nested data raises a ValueError
+    instead of causing unbounded recursion (and a RecursionError)
+    """
+
+    def _nested_sequence_payload(self, depth):
+        payload = emit(0, 0, 5, b'')
+        for _ in range(depth):
+            payload = emit(0, 1, 16, payload)
+        return payload
+
+    def test_deeply_nested_native_raises_value_error(self):
+        parsed = core.load(self._nested_sequence_payload(5000))
+
+        with self.assertRaisesRegex(ValueError, "recursion depth"):
+            parsed.native
+
+    def test_moderately_nested_native_works(self):
+        parsed = core.load(self._nested_sequence_payload(50))
+
+        self.assertIsNotNone(parsed.native)
+
+    def test_nesting_just_over_limit_raises(self):
+        limit = core.Sequence._max_recursion_depth
+        parsed = core.load(self._nested_sequence_payload(limit + 2))
+
+        with self.assertRaisesRegex(ValueError, "recursion depth"):
+            parsed.native
+
+    def test_nesting_at_limit_works(self):
+        limit = core.Sequence._max_recursion_depth
+        parsed = core.load(self._nested_sequence_payload(limit + 1))
+
+        self.assertIsNotNone(parsed.native)

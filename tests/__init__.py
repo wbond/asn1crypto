@@ -175,7 +175,7 @@ def test_classes():
     from .test_x509 import X509Tests
     from .test_util import UtilTests
     from .test_parser import ParserTests
-    from .test_core import CoreTests
+    from .test_core import CoreTests, DeepNestingTests
 
     return [
         AlgoTests,
@@ -191,5 +191,6 @@ def test_classes():
         UtilTests,
         ParserTests,
         X509Tests,
-        CoreTests
+        CoreTests,
+        DeepNestingTests
     ]
