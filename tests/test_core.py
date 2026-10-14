@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals, division, absolute_import, print_function
 
+import copy
 import pickle
 import unittest
 import os
@@ -721,6 +722,75 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(a.contents, b.contents)
         self.assertEqual(a.dump(), b.dump())
 
+    @staticmethod
+    def copy_method_info():
+        return (
+            (copier, method, constructor)
+            for copier in (copy.copy, copy.deepcopy, core.Asn1Value.copy)
+            for method in (0, 1)
+            for constructor in (False, True)
+        )
+
+    @data('copy_method_info')
+    def copy_method(self, copier, method, constructor):
+        class MethodValue(core.Asn1Value):
+            class_ = 1
+            tag = 23
+
+        MethodValue.method = 1 - method
+        if constructor:
+            value = MethodValue(contents=b'', method=method)
+        else:
+            value = MethodValue(contents=b'')
+            value.method = method
+        value.tag = 22
+
+        copied = copier(value)
+        self.assertNotEqual(id(value), id(copied))
+        self.assertEqual(method, copied.method)
+        self.assertEqual(value.class_, copied.class_)
+        self.assertEqual(value.tag, copied.tag)
+        self.assertEqual(value.contents, copied.contents)
+        expected = b'\x56\x00' if method == 0 else b'\x76\x00'
+        self.assertEqual(expected, value.dump())
+        self.assertEqual(expected, copied.dump())
+        self.assertEqual(expected, copied.dump(force=True))
+
+    @staticmethod
+    def copy_functions():
+        return ((copy.copy,), (copy.deepcopy,), (core.Asn1Value.copy,))
+
+    @data('copy_functions')
+    def copy_manual_construction(self, copier):
+        value = core.Asn1Value(class_='universal', tag=16, method='constructed', contents=b'')
+        copied = copier(value)
+        self.assertEqual(1, copied.method)
+        self.assertEqual(b'\x30\x00', copied.dump())
+        self.assertEqual({}, core.Sequence.load(copied.dump()).native)
+
+    @staticmethod
+    def retag_method_info():
+        return ((0, False), (0, True), (1, False), (1, True))
+
+    @data('retag_method_info')
+    def retag_method(self, method, untag):
+        class MethodValue(core.Asn1Value):
+            class_ = 1
+            tag = 23
+
+        MethodValue.method = 1 - method
+        value = MethodValue(contents=b'', method=method, explicit=0 if untag else None)
+        copied = value.untag() if untag else value.retag({'explicit': 0})
+        self.assertNotEqual(id(value), id(copied))
+        self.assertEqual(method, copied.method)
+        expected = b'\x57\x00' if method == 0 else b'\x77\x00'
+        if untag:
+            self.assertEqual(None, copied.explicit)
+        else:
+            self.assertEqual(((2, 0),), copied.explicit)
+            expected = b'\xa0\x02' + expected
+        self.assertEqual(expected, copied.dump())
+
     def test_copy_mutable(self):
         a = CopySeq({'name': 'foo', 'pair': {'id': '1.2.3', 'value': 5}})
         # Cache the native representation so it is copied during the copy operation
@@ -887,10 +957,11 @@ class CoreTests(unittest.TestCase):
         v = NestedUTF8Sequence.load(data)
         self.assertEqual(b'\x30\x07\x30\x05\x0C\x03foo', v.dump())
 
-    def test_copy_indefinite(self):
+    @data('copy_functions')
+    def copy_indefinite(self, copier):
         v = core.BitString.load(b'\x23\x80\x03\x02\x00\x04\x00\x00')
         self.assertEqual(True, v._indefinite)
-        v2 = v.copy()
+        v2 = copier(v)
         self.assertEqual(0, v2.method)
         self.assertEqual(3, v2.tag)
         self.assertEqual(False, v2._indefinite)
@@ -899,7 +970,7 @@ class CoreTests(unittest.TestCase):
 
         v = core.OctetBitString.load(b'\x23\x80\x03\x02\x00\x04\x00\x00')
         self.assertEqual(True, v._indefinite)
-        v2 = v.copy()
+        v2 = copier(v)
         self.assertEqual(0, v2.method)
         self.assertEqual(3, v2.tag)
         self.assertEqual(False, v2._indefinite)
@@ -909,7 +980,7 @@ class CoreTests(unittest.TestCase):
         v = core.ParsableOctetBitString.load(b'\x23\x80\x03\x04\x00\x02\x01\x04\x00\x00')
         self.assertEqual(4, v.parsed.native)
         self.assertEqual(True, v._indefinite)
-        v2 = v.copy()
+        v2 = copier(v)
         self.assertEqual(0, v2.method)
         self.assertEqual(3, v2.tag)
         self.assertEqual(False, v2._indefinite)
@@ -918,7 +989,7 @@ class CoreTests(unittest.TestCase):
 
         v = core.IntegerBitString.load(b'\x23\x80\x03\x02\x00\x04\x00\x00')
         self.assertEqual(True, v._indefinite)
-        v2 = v.copy()
+        v2 = copier(v)
         self.assertEqual(0, v2.method)
         self.assertEqual(3, v2.tag)
         self.assertEqual(False, v2._indefinite)
@@ -927,7 +998,7 @@ class CoreTests(unittest.TestCase):
 
         v = core.OctetString.load(b'\x24\x80\x04\x03foo\x00\x00')
         self.assertEqual(True, v._indefinite)
-        v2 = v.copy()
+        v2 = copier(v)
         self.assertEqual(0, v2.method)
         self.assertEqual(4, v2.tag)
         self.assertEqual(False, v2._indefinite)
@@ -936,7 +1007,7 @@ class CoreTests(unittest.TestCase):
 
         v = core.IntegerOctetString.load(b'\x24\x80\x04\x01\x04\x00\x00')
         self.assertEqual(True, v._indefinite)
-        v2 = v.copy()
+        v2 = copier(v)
         self.assertEqual(0, v2.method)
         self.assertEqual(4, v2.tag)
         self.assertEqual(False, v2._indefinite)
@@ -946,7 +1017,7 @@ class CoreTests(unittest.TestCase):
         v = core.ParsableOctetString.load(b'\x24\x80\x04\x03\x02\x01\x04\x00\x00')
         self.assertEqual(4, v.parsed.native)
         self.assertEqual(True, v._indefinite)
-        v2 = v.copy()
+        v2 = copier(v)
         self.assertEqual(0, v2.method)
         self.assertEqual(4, v2.tag)
         self.assertEqual(False, v2._indefinite)
@@ -956,12 +1027,44 @@ class CoreTests(unittest.TestCase):
 
         v = core.UTF8String.load(b'\x2C\x80\x0C\x03foo\x00\x00')
         self.assertEqual(True, v._indefinite)
-        v2 = v.copy()
+        v2 = copier(v)
         self.assertEqual(0, v2.method)
         self.assertEqual(12, v2.tag)
         self.assertEqual(False, v2._indefinite)
         self.assertEqual('foo', v2.native)
         self.assertEqual(b'\x0C\x03foo', v2.dump())
+
+    @staticmethod
+    def copy_indefinite_tagged_info():
+        values = (
+            (core.OctetString, {'implicit': 5}, b'\xa5\x80\x04\x01f\x00\x00', b'\x85\x01f', b'f'),
+            (core.OctetBitString, {'explicit': 4}, b'\xa4\x08\x23\x80\x03\x02\x00\x04\x00\x00',
+             b'\xa4\x04\x03\x02\x00\x04', b'\x04'),
+            (core.UTF8String, {'explicit': 4}, b'\xa4\x07\x2c\x80\x0c\x01f\x00\x00',
+             b'\xa4\x03\x0c\x01f', 'f'),
+        )
+        return (
+            (copier,) + value
+            for copier in (copy.copy, copy.deepcopy, core.Asn1Value.copy)
+            for value in values
+        )
+
+    @data('copy_indefinite_tagged_info')
+    def copy_indefinite_tagged(self, copier, value_class, params, ber, der, native):
+        value = value_class.load(ber, **params)
+        copied = copier(value)
+        self.assertEqual(1, value.method)
+        self.assertTrue(value._indefinite)
+        self.assertEqual(0, copied.method)
+        self.assertFalse(copied._indefinite)
+        self.assertEqual(value.class_, copied.class_)
+        self.assertEqual(value.tag, copied.tag)
+        self.assertEqual(value.implicit, copied.implicit)
+        self.assertEqual(value.explicit, copied.explicit)
+        self.assertEqual(native, copied.native)
+        self.assertEqual(der, copied.dump())
+        self.assertEqual(der, copied.dump(force=True))
+        self.assertEqual(native, value_class.load(copied.dump(), **params).native)
 
     def test_concat(self):
         child1 = Seq({

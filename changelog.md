@@ -1,5 +1,11 @@
 # changelog
 
+## Unreleased
+
+ - Preserve instance-specific encoding methods when copying, retagging or
+   untagging ASN.1 values, while retaining DER normalization of indefinite-length
+   BER strings
+
 ## 1.5.1
 
  - Handle RSASSA-PSS in `keys.PrivateKeyInfo.bit_size` and
