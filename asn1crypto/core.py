@@ -585,7 +585,7 @@ class Asn1Value(object):
 
     def _copy(self, other, copy_func):
         """
-        Copies the contents of another Asn1Value object to itself
+        Copies the encoding method and contents of another Asn1Value object to itself
 
         :param object:
             Another instance of the same class
@@ -604,6 +604,7 @@ class Asn1Value(object):
                 type_name(self)
             ))
 
+        self.method = other.method
         self.contents = other.contents
         self._native = copy_func(other._native)
 
@@ -812,6 +813,7 @@ class Constructable(object):
         # We really don't want to dump BER encodings, so if we see an
         # indefinite encoding, let's re-encode it
         if other._indefinite:
+            self.method = 0
             self.set(other._setable_native())
 
 
