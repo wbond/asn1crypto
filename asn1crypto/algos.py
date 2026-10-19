@@ -104,6 +104,14 @@ class _ForceNullParameters(object):
         return res
 
 
+class GmacParams(Sequence):
+    # https://www.rfc-editor.org/rfc/rfc9044.html#section-3.1
+    _fields = [
+        ('nonce', OctetString),
+        ('length', Integer, {'default': 12}),
+    ]
+
+
 class HmacAlgorithmId(ObjectIdentifier):
     _map = {
         '1.3.14.3.2.10': 'des_mac',
@@ -118,14 +126,25 @@ class HmacAlgorithmId(ObjectIdentifier):
         '2.16.840.1.101.3.4.2.14': 'sha3_256',
         '2.16.840.1.101.3.4.2.15': 'sha3_384',
         '2.16.840.1.101.3.4.2.16': 'sha3_512',
+        '2.16.840.1.101.3.4.1.9': 'aes128_gmac',
+        '2.16.840.1.101.3.4.1.29': 'aes192_gmac',
+        '2.16.840.1.101.3.4.1.49': 'aes256_gmac',
     }
 
 
 class HmacAlgorithm(Sequence):
+    # This historical name also covers the MAC algorithms used by CMS.
     _fields = [
         ('algorithm', HmacAlgorithmId),
         ('parameters', Any, {'optional': True}),
     ]
+
+    _oid_pair = ('algorithm', 'parameters')
+    _oid_specs = {
+        'aes128_gmac': GmacParams,
+        'aes192_gmac': GmacParams,
+        'aes256_gmac': GmacParams,
+    }
 
 
 class DigestAlgorithmId(ObjectIdentifier):

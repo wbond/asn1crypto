@@ -7,7 +7,7 @@ import zlib
 import sys
 from datetime import datetime
 
-from asn1crypto import cms, util
+from asn1crypto import algos, cms, util
 from ._unittest_compat import patch
 
 patch()
@@ -46,6 +46,40 @@ class ClearanceTests(unittest.TestCase):
 
 
 class CMSTests(unittest.TestCase):
+
+    def test_authenticated_data(self):
+        # Manually DER-encoded, with an AES-GMAC tag computed using AESGCM
+        # (empty plaintext, content as AAD) and an AES-wrapped content key.
+        # Test-only content key: bytes 00..0f; wrapping key: bytes 10..1f.
+        with open(os.path.join(fixtures_dir, 'aes_gmac_authenticated_data.der'), 'rb') as f:
+            encoded = f.read()
+        info = cms.ContentInfo.load(encoded)
+        self.assertEqual(info['content_type'].native, 'authenticated_data')
+        auth = info['content']
+        self.assertEqual(auth['mac_algorithm']['algorithm'].native, 'aes128_gmac')
+        params = auth['mac_algorithm']['parameters']
+        self.assertIsInstance(params, algos.GmacParams)
+        self.assertEqual(params['length'].native, len(auth['mac'].native))
+        self.assertEqual(params['nonce'].native, b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b')
+        self.assertEqual(auth['encap_content_info']['content'].native, b'CMS GMAC regression')
+        values = info.native
+        # Choice values need their alternative name when constructing from native data.
+        recipient = auth['recipient_infos'][0]
+        values['content']['recipient_infos'] = [cms.RecipientInfo(name=recipient.name, value=recipient.chosen.native)]
+        self.assertEqual(cms.ContentInfo(values).dump(), encoded)
+        self.assertEqual(info.dump(force=True), encoded)
+
+    def test_algorithm_protection(self):
+        mac = algos.HmacAlgorithm({
+            'algorithm': 'aes256_gmac', 'parameters': {'nonce': b'\x01' * 12},
+        })
+        protection = cms.CMSAlgorithmProtection({
+            'digest_algorithm': {'algorithm': 'sha256'}, 'mac_algorithm': mac,
+        })
+        parsed = cms.CMSAlgorithmProtection.load(protection.dump())
+        self.assertEqual(parsed['mac_algorithm']['algorithm'].native, 'aes256_gmac')
+        self.assertIsInstance(parsed['mac_algorithm']['parameters'], algos.GmacParams)
+        self.assertEqual(parsed['mac_algorithm']['parameters']['length'].native, 12)
 
     def test_create_content_info_data(self):
         data = cms.SignedData({

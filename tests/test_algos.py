@@ -4,6 +4,7 @@ from __future__ import unicode_literals, division, absolute_import, print_functi
 import unittest
 import sys
 import os
+import binascii
 
 from asn1crypto import algos, core
 
@@ -26,6 +27,47 @@ fixtures_dir = os.path.join(tests_root, 'fixtures')
 
 @data_decorator
 class AlgoTests(unittest.TestCase):
+
+    def test_gmac_parameters(self):
+        nonce = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b'
+        for name, suffix in [('aes128_gmac', '09'), ('aes192_gmac', '1d'), ('aes256_gmac', '31')]:
+            for length in range(12, 17):
+                # RFC 9044: the default length 12 is omitted in DER.
+                params = b'\x30\x0e\x04\x0c' + nonce
+                if length != 12:
+                    params = b'\x30\x11\x04\x0c' + nonce + b'\x02\x01' + binascii.unhexlify('%02x' % length)
+                expected = (b'\x30\x1b' if length == 12 else b'\x30\x1e')
+                expected += binascii.unhexlify('06096086480165030401' + suffix) + params
+                algo = algos.HmacAlgorithm({
+                    'algorithm': name,
+                    'parameters': {'nonce': nonce, 'length': length},
+                })
+                self.assertEqual(algo.dump(), expected)
+                parsed = algos.HmacAlgorithm.load(expected)
+                self.assertEqual(parsed['algorithm'].native, name)
+                self.assertIsInstance(parsed['parameters'], algos.GmacParams)
+                self.assertEqual(parsed['parameters']['nonce'].native, nonce)
+                self.assertEqual(parsed['parameters']['length'].native, length)
+                self.assertEqual(parsed.dump(force=True), expected)
+
+    def test_gmac_default_and_nonce(self):
+        for nonce in [b'\x01', b'\x01' * 12, b'\x01' * 20]:
+            algo = algos.HmacAlgorithm({
+                'algorithm': 'aes128_gmac', 'parameters': {'nonce': nonce},
+            })
+            parsed = algos.HmacAlgorithm.load(algo.dump())
+            self.assertEqual(parsed['parameters']['nonce'].native, nonce)
+            self.assertEqual(parsed['parameters']['length'].native, 12)
+
+    def test_hmac_parameters_unchanged(self):
+        for name in ['sha1', 'sha256', 'des_mac', '1.2.3.4']:
+            for params in [{}, {'parameters': core.Null()}]:
+                values = {'algorithm': name}
+                values.update(params)
+                algo = algos.HmacAlgorithm(values)
+                parsed = algos.HmacAlgorithm.load(algo.dump())
+                self.assertEqual(parsed.native, algo.native)
+                self.assertEqual(parsed.dump(force=True), algo.dump())
 
     def test_dsa_signature_to_p1363(self):
         signature = algos.DSASignature({'r': 0x1234, 's': 0x5678})
