@@ -56,17 +56,21 @@ from .core import (
 from .crl import CertificateList
 from .keys import PublicKeyInfo
 from .ocsp import OCSPResponse
-from .x509 import Attributes, Certificate, Extensions, GeneralName, GeneralNames, Name
+from .x509 import Attribute, Attributes, Certificate, Extensions, GeneralName, GeneralNames, Name
 
 
 # These structures are taken from
 # ftp://ftp.rsasecurity.com/pub/pkcs/ascii/pkcs-6.asc
 
+class ExtendedCertificateAttributes(SetOf):
+    _child_spec = Attribute
+
+
 class ExtendedCertificateInfo(Sequence):
     _fields = [
         ('version', Integer),
         ('certificate', Certificate),
-        ('attributes', Attributes),
+        ('attributes', ExtendedCertificateAttributes),
     ]
 
 

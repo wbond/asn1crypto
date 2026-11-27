@@ -7,7 +7,7 @@ import zlib
 import sys
 from datetime import datetime
 
-from asn1crypto import cms, util
+from asn1crypto import cms, core, util, x509
 from ._unittest_compat import patch
 
 patch()
@@ -43,6 +43,30 @@ class ClearanceTests(unittest.TestCase):
             ]),
             clearance_obj.native
         )
+
+
+class ExtendedCertificateTests(unittest.TestCase):
+
+    def test_extended_certificate_attributes_are_set_of(self):
+        with open(os.path.join(fixtures_dir, 'keys/test-der.crt'), 'rb') as f:
+            certificate = x509.Certificate.load(f.read())
+        attribute = x509.Attribute({
+            'type': '2.5.4.3',
+            'values': [core.UTF8String('example')],
+        })
+        info = cms.ExtendedCertificateInfo({
+            'version': 0,
+            'certificate': certificate,
+            'attributes': [attribute],
+        })
+
+        # PKCS #6 and RFC 5652 section 10.2.5 define attributes as
+        # UnauthAttributes, a SET OF Attribute
+        self.assertEqual(b'\x31', info['attributes'].dump()[0:1])
+
+        parsed = cms.ExtendedCertificateInfo.load(info.dump())
+        self.assertEqual('2.5.4.3', parsed['attributes'][0]['type'].dotted)
+        self.assertEqual(['example'], parsed['attributes'][0]['values'].native)
 
 
 class CMSTests(unittest.TestCase):
